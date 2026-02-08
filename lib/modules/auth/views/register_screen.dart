@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/themes/app_colors.dart';
 
+
 /// Register Modal - Slide dari Bawah dengan Animasi Smooth
 class RegisterModal extends StatefulWidget {
   const RegisterModal({super.key});

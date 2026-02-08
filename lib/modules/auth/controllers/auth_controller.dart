@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/routes/app_routes.dart';
+import '../views/home_masyarakat_screen.dart';
+import '../views/home_paralegal_screen.dart';
 class AuthController extends GetxController {
   // --- 1. INI YANG BIKIN MERAH KALAU HILANG ---
   // Kita kenalan dulu sama Supabase & Variabel Loading
@@ -14,7 +16,7 @@ class AuthController extends GetxController {
     isPasswordHidden.value = !isPasswordHidden.value;
   }
 
-  // --- 2. FUNGSI LOGIN (Simpel) ---
+  // --- FUNGSI LOGIN UPDATE ---
   Future<void> login(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
       Get.snackbar('Error', 'Email dan password wajib diisi', backgroundColor: Colors.red, colorText: Colors.white);
@@ -23,18 +25,53 @@ class AuthController extends GetxController {
 
     try {
       isLoading.value = true;
+
+      // 1. Login ke Auth Supabase
       final AuthResponse res = await supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
 
       if (res.user != null) {
-        Get.snackbar('Berhasil', 'Login Berhasil!', backgroundColor: Colors.green, colorText: Colors.white);
-        // Nanti di sini diarahkan ke Home
+        String userId = res.user!.id;
+
+        // 2. CEK: Apakah dia Masyarakat?
+        // Kita cari data di tabel masyarakat yang ID-nya sama dengan User ID
+        final masyarakatData = await supabase
+            .from('masyarakat')
+            .select()
+            .eq('id', userId)
+            .maybeSingle(); // maybeSingle() aman kalau data tidak ditemukan (return null)
+
+        if (masyarakatData != null) {
+          // KETEMU! Dia Masyarakat
+          Get.snackbar('Berhasil', 'Login sebagai Masyarakat', backgroundColor: Colors.blue, colorText: Colors.white);
+          Get.offAll(() => const HomeMasyarakatScreen());
+          return; // Stop disini
+        }
+
+        // 3. Kalau bukan Masyarakat, CEK: Apakah dia Paralegal?
+        final paralegalData = await supabase
+            .from('paralegal')
+            .select()
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (paralegalData != null) {
+          // KETEMU! Dia Paralegal
+          Get.snackbar('Berhasil', 'Login sebagai Paralegal', backgroundColor: Colors.green, colorText: Colors.white);
+          Get.offAll(() => const HomeParalegalScreen());
+          return; // Stop disini
+        }
+
+        // 4. Kalau tidak ketemu di dua-duanya? (Kasus aneh/Admin belum input data)
+        Get.snackbar('Akses Ditolak', 'Data profil anda tidak ditemukan. Hubungi Admin.', backgroundColor: Colors.orange, colorText: Colors.white);
+        await supabase.auth.signOut(); // Logout paksa
       }
     } on AuthException catch (e) {
       Get.snackbar('Gagal Login', e.message, backgroundColor: Colors.red, colorText: Colors.white);
     } catch (e) {
+      print("Error Login: $e");
       Get.snackbar('Error', 'Terjadi kesalahan sistem', backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;

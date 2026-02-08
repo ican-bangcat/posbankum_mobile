@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/themes/app_colors.dart';
 import '../controllers/auth_controller.dart'; // Pastikan import ini benar
+import '../../../app/routes/app_routes.dart';
 
 class RegisterModal extends StatefulWidget {
   const RegisterModal({super.key});
@@ -377,7 +378,13 @@ class _RegisterModalState extends State<RegisterModal> {
             style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              // 1. Tutup Modal Register dulu
+              Get.back();
+
+              // 2. Arahkan paksa ke Halaman Login Form
+              Get.toNamed(AppRoutes.LOGIN_FORM);
+            },
             style: TextButton.styleFrom(
               padding: EdgeInsets.zero,
               minimumSize: const Size(0, 0),
