@@ -2,10 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/themes/app_colors.dart';
 import '../../../app/routes/app_routes.dart';
+import 'register_modal.dart'; // ✅ 1. IMPORT MODAL REGISTER
 
 /// Main Login Screen - 2 Button (Masuk & Daftar)
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
+
+  // ✅ 2. FUNGSI UNTUK MEMUNCULKAN MODAL
+  void _showRegisterModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const RegisterModal(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +34,7 @@ class LoginScreen extends StatelessWidget {
                       const SizedBox(height: 60),
                       _buildLogo(),
                       const SizedBox(height: 80),
-                      _buildButtons(),
+                      _buildButtons(context), // ✅ Kirim Context ke sini
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -57,23 +68,25 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildButtons() {
+  Widget _buildButtons(BuildContext context) {
     return Column(
       children: [
         _AnimatedButton(
           onPressed: () {
-            Get.toNamed(AppRoutes.LOGIN_FORM); // ✅ Navigate ke login form
+            // Tombol MASUK -> Pindah ke Halaman Form Login
+            Get.toNamed(AppRoutes.LOGIN_FORM);
           },
           isPrimary: true,
-          child: const Text('Masuk', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          child: const Text('MASUK', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 16),
         _AnimatedButton(
           onPressed: () {
-            Get.toNamed(AppRoutes.REGISTER); // ✅ Navigate ke register
+            // Tombol DAFTAR -> Buka Modal Register (JANGAN PINDAH HALAMAN)
+            _showRegisterModal(context);
           },
           isPrimary: false,
-          child: const Text('Daftar sebagai masyarakat', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          child: const Text('DAFTAR', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         ),
       ],
     );

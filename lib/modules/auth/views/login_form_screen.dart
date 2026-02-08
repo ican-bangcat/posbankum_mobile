@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/themes/app_colors.dart';
-import 'register_modal.dart';
+import '../controllers/auth_controller.dart'; // ✅ 1. Import Controller
+import 'register_modal.dart'; // ✅ 2. Import Register Modal
 
 /// Login Form Screen - Clean Design (No Animation Errors)
 class LoginFormScreen extends StatefulWidget {
@@ -12,6 +13,9 @@ class LoginFormScreen extends StatefulWidget {
 }
 
 class _LoginFormScreenState extends State<LoginFormScreen> {
+  // ✅ 3. Panggil Controller Biar Bisa Login
+  final authC = Get.put(AuthController());
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -24,6 +28,7 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
     super.dispose();
   }
 
+  // Fungsi Buka Modal Register
   void _showRegisterModal() {
     showModalBottomSheet(
       context: context,
@@ -47,12 +52,15 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    
-                    // Logo BESAR di kiri - PURE LOGO
-                    _buildLogoHeader(),
-                    
+
+                    // Logo BESAR di kiri - Bisa di klik buat BACK
+                    GestureDetector(
+                      onTap: () => Get.back(),
+                      child: _buildLogoHeader(),
+                    ),
+
                     const SizedBox(height: 40),
-                    
+
                     // Selamat Datang
                     const Text(
                       'Selamat Datang',
@@ -70,9 +78,9 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 40),
-                    
+
                     // Form
                     Form(
                       key: _formKey,
@@ -86,7 +94,9 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                Get.snackbar("Info", "Fitur Lupa Password segera hadir!");
+                              },
                               child: const Text(
                                 'Lupa kata sandi?',
                                 style: TextStyle(
@@ -97,7 +107,10 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
+
+                          // ✅ TOMBOL LOGIN YANG SUDAH AKTIF
                           _buildLoginButton(),
+
                           const SizedBox(height: 16),
                           _buildGoogleButton(),
                           const SizedBox(height: 24),
@@ -195,14 +208,21 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
     );
   }
 
+  // ✅ WIDGET BUTTON LOGIN (UPDATE BIAR KONEK CONTROLLER)
   Widget _buildLoginButton() {
     return SizedBox(
       width: double.infinity,
       height: 50,
-      child: ElevatedButton(
-        onPressed: () {
+      child: Obx(() => ElevatedButton( // Pake Obx buat Loading State
+        onPressed: authC.isLoading.value
+            ? null
+            : () {
           if (_formKey.currentState!.validate()) {
-            Get.snackbar('Success', 'Login berhasil!');
+            // Panggil Fungsi Login di Controller
+            authC.login(
+                _emailController.text,
+                _passwordController.text
+            );
           }
         },
         style: ElevatedButton.styleFrom(
@@ -210,11 +230,17 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 0,
         ),
-        child: const Text(
+        child: authC.isLoading.value
+            ? const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+        )
+            : const Text(
           'Masuk',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
         ),
-      ),
+      )),
     );
   }
 
@@ -223,7 +249,9 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
       width: double.infinity,
       height: 50,
       child: OutlinedButton.icon(
-        onPressed: () {},
+        onPressed: () {
+          Get.snackbar("Info", "Login Google menyusul!");
+        },
         icon: const Icon(Icons.g_mobiledata, size: 24, color: AppColors.textPrimary),
         label: const Text(
           'Masuk via Google',
@@ -248,7 +276,7 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
             style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
           ),
           TextButton(
-            onPressed: _showRegisterModal,
+            onPressed: _showRegisterModal, // ✅ Sudah benar membuka Modal
             style: TextButton.styleFrom(
               padding: EdgeInsets.zero,
               minimumSize: const Size(0, 0),
