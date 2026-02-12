@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter Mobile Chrome",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "chrome",
+        "--web-browser-flag=--window-size=390,844",
+        "--web-browser-flag=--auto-open-devtools-for-tabs=false"
+      ]
+    }
+  ]
+}
