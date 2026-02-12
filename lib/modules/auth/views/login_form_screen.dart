@@ -95,14 +95,34 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: () {
-                                Get.snackbar("Info", "Fitur Lupa Password segera hadir!");
+                                // MUNCULKAN DIALOG INPUT EMAIL
+                                Get.defaultDialog(
+                                  title: "Lupa Password",
+                                  content: Column(
+                                    children: [
+                                      const Text("Masukkan email akun Anda:"),
+                                      const SizedBox(height: 10),
+                                      TextField(
+                                        controller: _emailController, // Pakai controller yang udah ada aja
+                                        decoration: const InputDecoration(
+                                          hintText: "Email...",
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  textConfirm: "Kirim Link",
+                                  textCancel: "Batal",
+                                  confirmTextColor: Colors.white,
+                                  onConfirm: () {
+                                    Get.back(); // Tutup dialog
+                                    authC.resetPassword(_emailController.text); // Panggil fungsi tadi
+                                  },
+                                );
                               },
                               child: const Text(
                                 'Lupa kata sandi?',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
-                                ),
+                                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
                               ),
                             ),
                           ),

@@ -11,6 +11,69 @@ class AuthController extends GetxController {
   var isLoading = false.obs;
   var isPasswordHidden = true.obs;
 
+  @override
+  void onInit() {
+    super.onInit();
+
+    // DENGARKAN PERUBAHAN STATUS LOGIN (Deep Link)
+    supabase.auth.onAuthStateChange.listen((data) {
+      final AuthChangeEvent event = data.event;
+
+      // KALAU USER KLIK LINK RESET PASSWORD DI EMAIL
+      if (event == AuthChangeEvent.passwordRecovery) {
+        _showUpdatePasswordDialog(); // Panggil Dialog
+      }
+    });
+  }
+
+
+  void _showUpdatePasswordDialog() {
+    final newPassC = TextEditingController();
+
+    Get.defaultDialog(
+      title: "Password Baru",
+      barrierDismissible: false,
+      content: Column(
+        children: [
+          const Text("Silakan buat password baru Anda:"),
+          const SizedBox(height: 10),
+          TextField(
+            controller: newPassC,
+            obscureText: true,
+            decoration: const InputDecoration(
+                hintText: "Password Baru",
+                border: OutlineInputBorder()
+            ),
+          ),
+        ],
+      ),
+      textConfirm: "Simpan",
+      confirmTextColor: Colors.white,
+      onConfirm: () async {
+        if (newPassC.text.length < 6) {
+          Get.snackbar("Error", "Password minimal 6 karakter");
+          return;
+        }
+
+        try {
+          // UPDATE PASSWORD DI SUPABASE
+          await supabase.auth.updateUser(
+            UserAttributes(password: newPassC.text),
+          );
+
+          Get.back(); // Tutup Dialog
+          Get.snackbar("Sukses", "Password berhasil diubah! Silakan Login.",
+              backgroundColor: Colors.green, colorText: Colors.white);
+
+          // Arahkan ke Login
+          Get.offAllNamed(AppRoutes.LOGIN);
+
+        } catch (e) {
+          Get.snackbar("Gagal", e.toString());
+        }
+      },
+    );
+  }
   // Fungsi toggle mata password
   void togglePasswordVisibility() {
     isPasswordHidden.value = !isPasswordHidden.value;
@@ -131,6 +194,30 @@ class AuthController extends GetxController {
       Get.snackbar('Error', 'Terjadi kesalahan: $e', backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
+    }
+  }
+  // --- FUNGSI LUPA PASSWORD ---
+  Future<void> resetPassword(String email) async {
+    if (email.isEmpty) {
+      Get.snackbar('Error', 'Harap isi email Anda dulu', backgroundColor: Colors.red, colorText: Colors.white);
+      return;
+    }
+
+    try {
+      await supabase.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'io.posbankum.app://login-callback', // 👈 HARUS SAMA PERSIS dengan Tahap 1
+      );
+
+      Get.snackbar(
+        'Cek Email',
+        'Link reset password sudah dikirim ke email Anda. Cek Folder Spam juga ya!',
+        backgroundColor: Colors.blue,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 5),
+      );
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal mengirim email: $e', backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
 }
