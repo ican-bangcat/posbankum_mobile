@@ -9,6 +9,10 @@ import '../../modules/auth/views/home_masyarakat_screen.dart';
 import '../../modules/auth/views/home_paralegal_screen.dart';
 import '../../modules/pengaduan/views/form_pengaduan_screen.dart';
 import '../../modules/pengaduan/views/pengaduan_success_screen.dart';
+import '../../modules/auth/views/forgot_password_screen.dart';
+import '../../modules/auth/controllers/forgot_password_controller.dart';
+import '../../modules/auth/views/update_password_screen.dart';
+import '../../modules/auth/controllers/update_password_controller.dart';
 import 'app_routes.dart';
 
 /// App Pages Configuration
@@ -57,6 +61,29 @@ class AppPages {
       name: AppRoutes.HOME,
       page: () => const HomeMasyarakatScreen(),
       transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 400),
+    ),
+
+    // ✅ FORGOT PASSWORD (BARU)
+    GetPage(
+      name: AppRoutes.FORGOT_PASSWORD,
+      page: () => const ForgotPasswordScreen(),
+      binding: BindingsBuilder(() {
+        // LazyPut: Controller hanya dibuat saat halaman dibuka
+        Get.lazyPut<ForgotPasswordController>(() => ForgotPasswordController());
+      }),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
+    // ✅ UPDATE PASSWORD (BARU)
+    GetPage(
+      name: AppRoutes.UPDATE_PASSWORD,
+      page: () => const UpdatePasswordScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<UpdatePasswordController>(() => UpdatePasswordController());
+      }),
+      transition: Transition.fadeIn, // Fade in karena ini biasanya otomatis
       transitionDuration: const Duration(milliseconds: 400),
     ),
 

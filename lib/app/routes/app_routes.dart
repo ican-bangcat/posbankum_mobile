@@ -14,6 +14,7 @@ class AppRoutes {
   static const String FORGOT_PASSWORD = '/forgot-password';
   static const String VERIFY_OTP = '/verify-otp';
   static const String RESET_PASSWORD = '/reset-password';
+  static const UPDATE_PASSWORD = '/update-password';
   
   // Main
   static const String HOME = '/home';
@@ -37,7 +38,8 @@ class AppRoutes {
   // Paralegal
   static const String PARALEGAL_LIST = '/paralegal-list';
   static const String PARALEGAL_CHAT = '/paralegal-chat';
-  
+
+
   // Other
   static const String NOTIFICATION = '/notification';
   static const String HELP = '/help';

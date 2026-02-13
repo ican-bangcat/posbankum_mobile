@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../app/themes/app_colors.dart';
 import '../controllers/auth_controller.dart'; // ✅ 1. Import Controller
 import 'register_modal.dart'; // ✅ 2. Import Register Modal
+import '../../../app/routes/app_routes.dart';
 
 /// Login Form Screen - Clean Design (No Animation Errors)
 class LoginFormScreen extends StatefulWidget {
@@ -87,53 +88,49 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // 1. Input Email (Tetap)
                           _buildEmailField(),
+
                           const SizedBox(height: 16),
+
+                          // 2. Input Password (Tetap)
                           _buildPasswordField(),
+
                           const SizedBox(height: 8),
+
+                          // 3. Tombol Lupa Password (YANG DIUBAH) 👇
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: () {
-                                // MUNCULKAN DIALOG INPUT EMAIL
-                                Get.defaultDialog(
-                                  title: "Lupa Password",
-                                  content: Column(
-                                    children: [
-                                      const Text("Masukkan email akun Anda:"),
-                                      const SizedBox(height: 10),
-                                      TextField(
-                                        controller: _emailController, // Pakai controller yang udah ada aja
-                                        decoration: const InputDecoration(
-                                          hintText: "Email...",
-                                          border: OutlineInputBorder(),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  textConfirm: "Kirim Link",
-                                  textCancel: "Batal",
-                                  confirmTextColor: Colors.white,
-                                  onConfirm: () {
-                                    Get.back(); // Tutup dialog
-                                    authC.resetPassword(_emailController.text); // Panggil fungsi tadi
-                                  },
-                                );
+                                // ❌ DULU: Pakai Get.defaultDialog (Pop-up)
+
+                                // ✅ SEKARANG: Pindah ke Halaman Baru
+                                Get.toNamed(AppRoutes.FORGOT_PASSWORD);
                               },
                               child: const Text(
                                 'Lupa kata sandi?',
-                                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textSecondary
+                                ),
                               ),
                             ),
                           ),
+
                           const SizedBox(height: 24),
 
-                          // ✅ TOMBOL LOGIN YANG SUDAH AKTIF
+                          // 4. Tombol Login (Tetap)
                           _buildLoginButton(),
 
                           const SizedBox(height: 16),
+
+                          // 5. Tombol Google (Tetap)
                           _buildGoogleButton(),
+
                           const SizedBox(height: 24),
+
+                          // 6. Link Daftar (Tetap)
                           _buildRegisterLink(),
                         ],
                       ),
