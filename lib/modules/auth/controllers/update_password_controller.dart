@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../app/routes/app_routes.dart';
 
 class UpdatePasswordController extends GetxController {
   final newPasswordController = TextEditingController();
@@ -108,7 +109,7 @@ class UpdatePasswordController extends GetxController {
 
       // Wait a moment then navigate to login
       await Future.delayed(const Duration(seconds: 2));
-      Get.offAllNamed('/login'); // Replace with your Routes.LOGIN
+      Get.offAllNamed(AppRoutes.LOGIN_FORM); // Replace with your Routes.LOGIN
 
     } on AuthException catch (e) {
       isLoading.value = false;

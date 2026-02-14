@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../app/routes/app_routes.dart';
 import '../views/home_masyarakat_screen.dart';
 import '../views/home_paralegal_screen.dart';
+
 class AuthController extends GetxController {
-  // --- 1. INI YANG BIKIN MERAH KALAU HILANG ---
-  // Kita kenalan dulu sama Supabase & Variabel Loading
+  // 1. Inisialisasi Supabase & Variabel Reactive
   final supabase = Supabase.instance.client;
   var isLoading = false.obs;
   var isPasswordHidden = true.obs;
@@ -15,74 +16,28 @@ class AuthController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // DENGARKAN PERUBAHAN STATUS LOGIN (Deep Link)
+    // DENGARKAN PERUBAHAN STATUS LOGIN (Deep Link & Auth State)
     supabase.auth.onAuthStateChange.listen((data) {
       final AuthChangeEvent event = data.event;
 
       // KALAU USER KLIK LINK RESET PASSWORD DI EMAIL
       if (event == AuthChangeEvent.passwordRecovery) {
-        _showUpdatePasswordDialog(); // Panggil Dialog
+        // ✅ SEKARANG: Pindah ke Halaman Update Password (Bukan Dialog lagi)
+        Get.toNamed(AppRoutes.UPDATE_PASSWORD);
       }
     });
   }
 
-
-  void _showUpdatePasswordDialog() {
-    final newPassC = TextEditingController();
-
-    Get.defaultDialog(
-      title: "Password Baru",
-      barrierDismissible: false,
-      content: Column(
-        children: [
-          const Text("Silakan buat password baru Anda:"),
-          const SizedBox(height: 10),
-          TextField(
-            controller: newPassC,
-            obscureText: true,
-            decoration: const InputDecoration(
-                hintText: "Password Baru",
-                border: OutlineInputBorder()
-            ),
-          ),
-        ],
-      ),
-      textConfirm: "Simpan",
-      confirmTextColor: Colors.white,
-      onConfirm: () async {
-        if (newPassC.text.length < 6) {
-          Get.snackbar("Error", "Password minimal 6 karakter");
-          return;
-        }
-
-        try {
-          // UPDATE PASSWORD DI SUPABASE
-          await supabase.auth.updateUser(
-            UserAttributes(password: newPassC.text),
-          );
-
-          Get.back(); // Tutup Dialog
-          Get.snackbar("Sukses", "Password berhasil diubah! Silakan Login.",
-              backgroundColor: Colors.green, colorText: Colors.white);
-
-          // Arahkan ke Login
-          Get.offAllNamed(AppRoutes.LOGIN);
-
-        } catch (e) {
-          Get.snackbar("Gagal", e.toString());
-        }
-      },
-    );
-  }
-  // Fungsi toggle mata password
+  // --- FUNGSI TOGGLE MATA PASSWORD ---
   void togglePasswordVisibility() {
     isPasswordHidden.value = !isPasswordHidden.value;
   }
 
-  // --- FUNGSI LOGIN UPDATE ---
+  // --- FUNGSI LOGIN EMAIL/PASSWORD ---
   Future<void> login(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
-      Get.snackbar('Error', 'Email dan password wajib diisi', backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Email dan password wajib diisi',
+          backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
 
@@ -95,61 +50,125 @@ class AuthController extends GetxController {
         password: password,
       );
 
+      // 2. Cek Role User (Masyarakat / Paralegal)
       if (res.user != null) {
-        String userId = res.user!.id;
-
-        // 2. CEK: Apakah dia Masyarakat?
-        // Kita cari data di tabel masyarakat yang ID-nya sama dengan User ID
-        final masyarakatData = await supabase
-            .from('masyarakat')
-            .select()
-            .eq('id', userId)
-            .maybeSingle(); // maybeSingle() aman kalau data tidak ditemukan (return null)
-
-        if (masyarakatData != null) {
-          // KETEMU! Dia Masyarakat
-          Get.snackbar('Berhasil', 'Login sebagai Masyarakat', backgroundColor: Colors.blue, colorText: Colors.white);
-          Get.offAll(() => const HomeMasyarakatScreen());
-          return; // Stop disini
-        }
-
-        // 3. Kalau bukan Masyarakat, CEK: Apakah dia Paralegal?
-        final paralegalData = await supabase
-            .from('paralegal')
-            .select()
-            .eq('id', userId)
-            .maybeSingle();
-
-        if (paralegalData != null) {
-          // KETEMU! Dia Paralegal
-          Get.snackbar('Berhasil', 'Login sebagai Paralegal', backgroundColor: Colors.green, colorText: Colors.white);
-          Get.offAll(() => const HomeParalegalScreen());
-          return; // Stop disini
-        }
-
-        // 4. Kalau tidak ketemu di dua-duanya? (Kasus aneh/Admin belum input data)
-        Get.snackbar('Akses Ditolak', 'Data profil anda tidak ditemukan. Hubungi Admin.', backgroundColor: Colors.orange, colorText: Colors.white);
-        await supabase.auth.signOut(); // Logout paksa
+        await _checkRoleAndRedirect(res.user!.id);
       }
+
     } on AuthException catch (e) {
-      Get.snackbar('Gagal Login', e.message, backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Gagal Login', e.message,
+          backgroundColor: Colors.red, colorText: Colors.white);
     } catch (e) {
       print("Error Login: $e");
-      Get.snackbar('Error', 'Terjadi kesalahan sistem', backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Terjadi kesalahan sistem',
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
   }
 
-  // --- FUNGSI REGISTER UPDATE ---
+  // --- ✅ FUNGSI BARU: LOGIN WITH GOOGLE ---
+  Future<void> loginWithGoogle() async {
+    try {
+      isLoading.value = true;
+
+      // ⚠️ GANTI DENGAN WEB CLIENT ID DARI GOOGLE CLOUD (TIPE WEB) ⚠️
+      const webClientId = '544639004251-hpijg9mt4k9eqmj4hqetcae06ga64ooc.apps.googleusercontent.com';
+
+      // 1. Buka Pop-up Google Sign In Native
+
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        clientId: webClientId,       // ✅ TAMBAHKAN INI (Biar Web/Emulator ga bingung)
+        serverClientId: webClientId, // ✅ INI TETAP ADA (Biar Supabase bisa baca tokennya)
+      );
+
+      final googleUser = await googleSignIn.signIn();
+      final googleAuth = await googleUser?.authentication;
+
+      // Kalau user batal milih akun
+      if (googleAuth == null) {
+        isLoading.value = false;
+        return;
+      }
+
+      final accessToken = googleAuth.accessToken;
+      final idToken = googleAuth.idToken;
+
+      if (idToken == null) {
+        throw 'No ID Token found.';
+      }
+
+      // 2. Tukar Token Google dengan Session Supabase
+      final AuthResponse res = await supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+
+      // 3. LOGIKA AUTO-REGISTER KE TABEL MASYARAKAT
+      if (res.user != null) {
+        final user = res.user!;
+
+        // Cek apakah sudah ada di tabel masyarakat?
+        final existingMasyarakat = await supabase
+            .from('masyarakat')
+            .select()
+            .eq('id', user.id)
+            .maybeSingle();
+
+        // Cek apakah sudah ada di tabel paralegal?
+        final existingParalegal = await supabase
+            .from('paralegal')
+            .select()
+            .eq('id', user.id)
+            .maybeSingle();
+
+        // JIKA BELUM ADA DI KEDUANYA -> Berarti User Baru -> Masukkan ke Masyarakat
+        if (existingMasyarakat == null && existingParalegal == null) {
+
+          final String namaGoogle = user.userMetadata?['full_name'] ?? 'Warga Baru';
+          final String emailGoogle = user.email ?? '';
+          final String fotoGoogle = user.userMetadata?['avatar_url'] ?? '';
+
+          // Insert ke tabel masyarakat
+          // Pastikan kolom 'email' dan 'foto_profil' ada di tabel masyarakat kamu
+          // Kalau belum ada kolomnya, hapus baris email & foto di bawah ini
+          await supabase.from('masyarakat').insert({
+            'id': user.id,
+            'nama': namaGoogle,
+            // 'email': emailGoogle, // Uncomment kalau ada kolom email
+            // 'foto_profil': fotoGoogle, // Uncomment kalau ada kolom foto_profil
+            'created_at': DateTime.now().toIso8601String(),
+          });
+
+          Get.snackbar('Selamat Datang', 'Akun berhasil dibuat otomatis!',
+              backgroundColor: Colors.green, colorText: Colors.white);
+        }
+
+        // 4. Redirect sesuai Role
+        await _checkRoleAndRedirect(user.id);
+      }
+
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal Login Google: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
+      print("Google Sign In Error: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // --- FUNGSI REGISTER EMAIL/PASSWORD ---
   Future<void> register(String name, String email, String password, String confirmPassword) async {
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      Get.snackbar('Error', 'Semua field harus diisi', backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Semua field harus diisi',
+          backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
 
     if (password != confirmPassword) {
-      Get.snackbar('Error', 'Password konfirmasi tidak sama', backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Password konfirmasi tidak sama',
+          backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
 
@@ -167,57 +186,59 @@ class AuthController extends GetxController {
         await supabase.from('masyarakat').insert({
           'id': res.user!.id,
           'nama': name,
+          'created_at': DateTime.now().toIso8601String(),
         });
 
-        // C. SUKSES!
         Get.snackbar(
-          'Berhasil',
-          'Akun berhasil dibuat! Mengalihkan...',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+          'Berhasil', 'Akun berhasil dibuat! Silakan Login.',
+          backgroundColor: Colors.green, colorText: Colors.white,
           duration: const Duration(seconds: 2),
         );
 
-        // D. Tunggu 1.5 detik saja (jangan kelamaan)
         await Future.delayed(const Duration(milliseconds: 1500));
-
-        // E. PAKSA PINDAH KE HALAMAN LOGIN (Reset Route)
-        // Ini akan menutup semua modal, dialog, sheet, dan balik ke Login
         Get.offAllNamed(AppRoutes.LOGIN_FORM);
-
-        // Catatan: Kalau AppRoutes.LOGIN merah, coba ganti jadi Routes.LOGIN
-        // (Sesuai isi file app_routes.dart temanmu)
       }
     } on AuthException catch (e) {
-      Get.snackbar('Gagal Daftar', e.message, backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Gagal Daftar', e.message,
+          backgroundColor: Colors.red, colorText: Colors.white);
     } catch (e) {
-      Get.snackbar('Error', 'Terjadi kesalahan: $e', backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Terjadi kesalahan: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
   }
-  // --- FUNGSI LUPA PASSWORD ---
-  Future<void> resetPassword(String email) async {
-    if (email.isEmpty) {
-      Get.snackbar('Error', 'Harap isi email Anda dulu', backgroundColor: Colors.red, colorText: Colors.white);
+
+  // --- HELPER: CEK ROLE & REDIRECT ---
+  Future<void> _checkRoleAndRedirect(String userId) async {
+    // 1. Cek Masyarakat
+    final masyarakatData = await supabase
+        .from('masyarakat')
+        .select()
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (masyarakatData != null) {
+      Get.offAllNamed(AppRoutes.HOME); // Sesuaikan dengan route Home Masyarakat
       return;
     }
 
-    try {
-      await supabase.auth.resetPasswordForEmail(
-        email,
-        redirectTo: 'io.posbankum.app://login-callback', // 👈 HARUS SAMA PERSIS dengan Tahap 1
-      );
+    // 2. Cek Paralegal
+    final paralegalData = await supabase
+        .from('paralegal')
+        .select()
+        .eq('id', userId)
+        .maybeSingle();
 
-      Get.snackbar(
-        'Cek Email',
-        'Link reset password sudah dikirim ke email Anda. Cek Folder Spam juga ya!',
-        backgroundColor: Colors.blue,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 5),
-      );
-    } catch (e) {
-      Get.snackbar('Error', 'Gagal mengirim email: $e', backgroundColor: Colors.red, colorText: Colors.white);
+    if (paralegalData != null) {
+      // Asumsi route home paralegal belum didaftarkan di AppRoutes, pakai class langsung dulu
+      Get.offAll(() => const HomeParalegalScreen());
+      return;
     }
+
+    // 3. Tidak Ketemu
+    Get.snackbar('Akses Ditolak', 'Data profil anda tidak ditemukan.',
+        backgroundColor: Colors.orange, colorText: Colors.white);
+    await supabase.auth.signOut();
   }
 }
