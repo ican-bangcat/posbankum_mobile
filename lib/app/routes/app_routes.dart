@@ -30,7 +30,7 @@ class AppRoutes {
   // ✅ PENGADUAN (BARU - TAMBAHKAN 2 ROUTE INI)
   static const String FORM_PENGADUAN = '/form-pengaduan';
   static const String PENGADUAN_SUCCESS = '/pengaduan-success';
-  
+  static const RIWAYAT_PENGADUAN = '/riwayat-pengaduan';
   // Legal Info
   static const String LEGAL_INFO = '/legal-info';
   static const String LEGAL_DETAIL = '/legal-detail';

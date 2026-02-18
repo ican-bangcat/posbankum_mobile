@@ -417,6 +417,7 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
   Widget _buildMenuButtons() {
     return Column(
       children: [
+        // TOMBOL 1: BUAT PENGADUAN (Sudah aktif navigasinya)
         TweenAnimationBuilder<double>(
           tween: Tween(begin: 0.0, end: 1.0),
           duration: const Duration(milliseconds: 600),
@@ -433,11 +434,15 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
             title: 'Buat Pengaduan',
             subtitle: 'Kirim Pengaduan Anda',
             onTap: () {
-              Get.toNamed(AppRoutes.FORM_PENGADUAN); // ✅ NAVIGATE KE FORM PENGADUAN
+              // ✅ NAVIGATE KE FORM PENGADUAN
+              Get.toNamed(AppRoutes.FORM_PENGADUAN);
             },
           ),
         ),
+
         const SizedBox(height: 12),
+
+        // TOMBOL 2: RIWAYAT PENGADUAN (Masih placeholder)
         TweenAnimationBuilder<double>(
           tween: Tween(begin: 0.0, end: 1.0),
           duration: const Duration(milliseconds: 700),
@@ -454,7 +459,7 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
             title: 'Riwayat Pengaduan',
             subtitle: 'Lihat status Pengaduan',
             onTap: () {
-              Get.snackbar('Info', 'Halaman Riwayat Pengaduan akan segera tersedia');
+              Get.toNamed(AppRoutes.RIWAYAT_PENGADUAN);
             },
           ),
         ),
