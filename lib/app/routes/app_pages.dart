@@ -16,6 +16,8 @@ import '../../modules/auth/views/update_password_screen.dart';
 import '../../modules/auth/controllers/update_password_controller.dart';
 import '../../modules/riwayatPengaduan/views/riwayat_pengaduan_view.dart';
 import '../../modules/riwayatPengaduan/controllers/riwayat_pengaduan_controller.dart';
+import '../../modules/detail_kasus/views/detail_kasus_view.dart';
+import '../../modules/detail_kasus/bindings/detail_kasus_binding.dart';
 import 'app_routes.dart';
 
 /// App Pages Configuration
@@ -120,6 +122,12 @@ class AppPages {
         Get.lazyPut<RiwayatPengaduanController>(() => RiwayatPengaduanController());
       }),
       transition: Transition.rightToLeft, // Animasi geser dari kanan
+    ),
+    GetPage(
+      name: AppRoutes.DETAIL_KASUS,
+      page: () => const DetailKasusView(),
+      binding: DetailKasusBinding(),
+      transition: Transition.rightToLeft, // Animasi geser yang smooth
     ),
   ];
 }

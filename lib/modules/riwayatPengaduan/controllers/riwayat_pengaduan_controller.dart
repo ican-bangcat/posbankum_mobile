@@ -76,10 +76,14 @@ class RiwayatPengaduanController extends GetxController {
   List<PengaduanItem> get filteredItems {
     List<PengaduanItem> items = allItems;
 
+    // Filter by tab
     if (selectedTab.value == StatusPengaduan.dalamProses) {
-      items = items.where((e) => e.status == 'Proses' || e.status == 'Diproses').toList();
+      // ✅ AMAN: Kita paksa jadi huruf kecil semua saat ngecek
+      items = items.where((e) =>
+      e.status.toLowerCase() == 'proses' ||
+          e.status.toLowerCase() == 'diproses').toList();
     } else if (selectedTab.value == StatusPengaduan.selesai) {
-      items = items.where((e) => e.status == 'Selesai').toList();
+      items = items.where((e) => e.status.toLowerCase() == 'selesai').toList();
     }
 
     if (searchQuery.value.isNotEmpty) {

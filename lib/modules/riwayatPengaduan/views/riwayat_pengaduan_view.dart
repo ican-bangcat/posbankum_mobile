@@ -288,110 +288,118 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
   }
 
   Widget _buildCardItem(PengaduanItem item) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(14),
-          topRight: Radius.circular(14),
-          bottomLeft: Radius.circular(14),
-          bottomRight: Radius.circular(40),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2A2E5E).withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+    // ✅ BUNGKUS DENGAN GESTURE DETECTOR
+    return GestureDetector(
+      onTap: () {
+        // Navigasi ke halaman Detail Kasus
+        // Nanti kalau pakai data database asli, kita bisa lempar datanya ke sini:
+        // Get.toNamed('/detail-kasus', arguments: item);
+        Get.toNamed('/detail-kasus');
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(14),
+            topRight: Radius.circular(14),
+            bottomLeft: Radius.circular(14),
+            bottomRight: Radius.circular(40),
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF2F4FB),
-                    borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2A2E5E).withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF2F4FB),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.gavel_rounded, color: Color(0xFF2A2E5E), size: 20),
                   ),
-                  child: const Icon(Icons.gavel_rounded, color: Color(0xFF2A2E5E), size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.judul,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2A2E5E),
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.calendar_month_outlined, size: 12, color: Colors.grey[500]),
-                          const SizedBox(width: 4),
-                          Text(
-                            item.tanggal,
-                            style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.judul,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2A2E5E),
+                            fontSize: 14,
                           ),
-                        ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.calendar_month_outlined, size: 12, color: Colors.grey[500]),
+                            const SizedBox(width: 4),
+                            Text(
+                              item.tanggal,
+                              style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  _buildStatusBadge(item.status),
+                ],
+              ),
+            ),
+            Divider(height: 1, color: Colors.grey[200]),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 0, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.confirmation_number_outlined, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        item.idTiket,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[600],
+                          fontFamily: 'Monospace',
+                        ),
                       ),
                     ],
                   ),
-                ),
-                _buildStatusBadge(item.status),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: Colors.grey[200]),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 0, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    // ✅ GANTI DI SINI: Ikon Tiket
-                    const Icon(Icons.confirmation_number_outlined, size: 14, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(
-                      item.idTiket,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[600],
-                        fontFamily: 'Monospace',
+                  Container(
+                    width: 46,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF2A2E5E),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(14),
+                        bottomRight: Radius.circular(40),
                       ),
                     ),
-                  ],
-                ),
-                Container(
-                  width: 46,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF2A2E5E),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(14),
-                      bottomRight: Radius.circular(40),
-                    ),
+                    child: const Icon(Icons.chevron_right, color: Colors.white),
                   ),
-                  child: const Icon(Icons.chevron_right, color: Colors.white),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
