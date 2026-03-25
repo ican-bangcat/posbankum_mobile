@@ -7,16 +7,17 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
 
   @override
   Widget build(BuildContext context) {
-    // --- DEFINISI WARNA ---
+    // --- DEFINISI WARNA (DARI KODE ASLI) ---
     const Color darkBlueColor = Color(0xFF2A2E5E);
     const Color whiteBgColor = Color(0xFFF2F4FB);
 
     return Scaffold(
       backgroundColor: darkBlueColor,
+
       body: Column(
         children: [
           // ============================================================
-          // 1. HEADER AREA
+          // 1. HEADER AREA (DIKEMBALIKAN KE KODE ASLI - TIDAK DIUBAH)
           // ============================================================
           Stack(
             children: [
@@ -52,7 +53,7 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
                           width: 300,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.location_city, size: 200, color: Colors.white10),
+                          const Icon(Icons.location_city, size: 200, color: Colors.white10),
                         ),
                       ),
                     ),
@@ -104,7 +105,7 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
               width: double.infinity,
               decoration: const BoxDecoration(
                 color: whiteBgColor,
-                // Body rounded 28 di kanan atas
+                // Body rounded 28 di kanan atas (KODE ASLI)
                 borderRadius: BorderRadius.only(
                   topRight: Radius.circular(28),
                   topLeft: Radius.zero,
@@ -114,7 +115,7 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
                 children: [
                   const SizedBox(height: 24),
 
-                  // Search Bar
+                  // Search Bar (KODE ASLI)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: _buildSearchBar(),
@@ -122,7 +123,7 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
 
                   const SizedBox(height: 16),
 
-                  // --- TAB FILTER ---
+                  // --- TAB FILTER (KODE ASLI - TIDAK DIUBAH) ---
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: _buildTabFilter(),
@@ -130,7 +131,7 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
 
                   const SizedBox(height: 16),
 
-                  // Label Jumlah Data
+                  // Label Jumlah Data (KODE ASLI)
                   Obx(() => Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Align(
@@ -160,7 +161,8 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
                           itemCount: controller.filteredItems.length,
                           separatorBuilder: (_, __) => const SizedBox(height: 16),
                           itemBuilder: (context, index) {
-                            return _buildCardItem(controller.filteredItems[index]);
+                            // MENGGUNAKAN DESAIN KARTU YANG BARU DAN LEBIH MENARIK
+                            return _buildCardItemMenarik(controller.filteredItems[index]);
                           },
                         ),
                       );
@@ -176,7 +178,7 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
   }
 
   // ========================================================================
-  // WIDGET PENDUKUNG
+  // WIDGET PENDUKUNG (SEARCH BAR & TABS ASLI)
   // ========================================================================
 
   Widget _buildSearchBar() {
@@ -205,7 +207,7 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
     );
   }
 
-  // ─── FILTER TAB (Radius 10) ───
+  // ─── FILTER TAB (Radius 10) - ASLI ───
   Widget _buildTabFilter() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -232,8 +234,8 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
   }
 
   Widget _buildTabButton({
-    required String text, 
-    required StatusPengaduan tab, 
+    required String text,
+    required StatusPengaduan tab,
     required Color activeColor
   }) {
     return Obx(() {
@@ -247,31 +249,31 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: isActive ? activeColor : Colors.white,
-              // Radius 10 sesuai request
+              // Radius asli
               borderRadius: const BorderRadius.only(
                 topRight: Radius.circular(10),
                 bottomLeft: Radius.circular(10),
-                topLeft: Radius.circular(4),  
+                topLeft: Radius.circular(4),
                 bottomRight: Radius.circular(4),
               ),
-              boxShadow: isActive 
-                ? [
-                    BoxShadow(
-                      color: activeColor.withOpacity(0.4),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    )
-                  ]
-                : [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    )
-                  ],
-              border: isActive 
-                ? null 
-                : Border.all(color: Colors.grey.shade300),
+              boxShadow: isActive
+                  ? [
+                BoxShadow(
+                  color: activeColor.withOpacity(0.4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                )
+              ]
+                  : [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                )
+              ],
+              border: isActive
+                  ? null
+                  : Border.all(color: Colors.grey.shade300),
             ),
             child: Text(
               text,
@@ -287,161 +289,230 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
     });
   }
 
-  Widget _buildCardItem(PengaduanItem item) {
-    // ✅ BUNGKUS DENGAN GESTURE DETECTOR
+  // ========================================================================
+  // DESAIN KARTU BARU YANG LEBIH MENARIK (PREMIUM FEEL)
+  // ========================================================================
+
+  Widget _buildCardItemMenarik(PengaduanItem item) {
+    const Color textPrimary = Color(0xFF0F172A);
+    const Color textSecondary = Color(0xFF64748B);
+    final Color statusColor = _getStatusColor(item.status);
+
     return GestureDetector(
-      onTap: () {
-        // Navigasi ke halaman Detail Kasus
-        // Nanti kalau pakai data database asli, kita bisa lempar datanya ke sini:
-        // Get.toNamed('/detail-kasus', arguments: item);
-        Get.toNamed('/detail-kasus');
-      },
+      onTap: () => Get.toNamed('/detail-kasus'),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(14),
-            topRight: Radius.circular(14),
-            bottomLeft: Radius.circular(14),
-            bottomRight: Radius.circular(40),
-          ),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF2A2E5E).withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF2F4FB),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.gavel_rounded, color: Color(0xFF2A2E5E), size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+        // Menggunakan ClipRRect untuk memotong border kiri agar melengkung rapi
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(
+                  color: statusColor, // Warna garis kiri menyesuaikan status
+                  width: 5,
+                ),
+              ),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // --- BARIS 1: ID Tiket & Status Badge ---
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
                       children: [
-                        Text(
-                          item.judul,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2A2E5E),
-                            fontSize: 14,
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                          child: const Icon(Icons.confirmation_num_rounded, size: 14, color: textSecondary),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(Icons.calendar_month_outlined, size: 12, color: Colors.grey[500]),
-                            const SizedBox(width: 4),
-                            Text(
-                              item.tanggal,
-                              style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-                            ),
-                          ],
+                        const SizedBox(width: 8),
+                        Text(
+                          item.idTiket,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: textSecondary,
+                            fontFamily: 'Monospace',
+                          ),
                         ),
                       ],
                     ),
+                    _buildStatusBadgeMenarik(item.status),
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+
+                // --- BARIS 2: Judul Pengaduan ---
+                Text(
+                  item.judul,
+                  style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: textPrimary,
+                      height: 1.3
                   ),
-                  _buildStatusBadge(item.status),
-                ],
-              ),
-            ),
-            Divider(height: 1, color: Colors.grey[200]),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 0, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.confirmation_number_outlined, size: 14, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Text(
-                        item.idTiket,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey[600],
-                          fontFamily: 'Monospace',
-                        ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 14),
+
+                // --- BARIS 3: Info Meta (Tanggal & Kategori) ---
+                Row(
+                  children: [
+                    _buildIconText(Icons.calendar_month_rounded, item.tanggal),
+                    const SizedBox(width: 16),
+                    _buildIconText(Icons.folder_open_rounded, 'Hukum Perdata'), // Kategori statis, bisa diganti dinamis
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+                _buildDashedLine(),
+                const SizedBox(height: 14),
+
+                // --- BARIS 4: Aksi (Lihat Detail) ---
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Ketuk untuk melihat detail',
+                      style: TextStyle(fontSize: 12, color: Colors.black38, fontStyle: FontStyle.italic),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF), // Biru sangat muda
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ],
-                  ),
-                  Container(
-                    width: 46,
-                    height: 40,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF2A2E5E),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(14),
-                        bottomRight: Radius.circular(40),
+                      child: Row(
+                        children: const [
+                          Text(
+                            'Detail',
+                            style: TextStyle(color: Color(0xFF2563EB), fontSize: 13, fontWeight: FontWeight.w700),
+                          ),
+                          SizedBox(width: 4),
+                          Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF2563EB)),
+                        ],
                       ),
                     ),
-                    child: const Icon(Icons.chevron_right, color: Colors.white),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildStatusBadge(String status) {
+  // Widget Pembantu untuk Ikon + Teks (Tanggal/Kategori)
+  Widget _buildIconText(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: const Color(0xFF94A3B8)),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  }
+
+  // Fungsi Mendapatkan Warna Berdasarkan Status (Untuk Garis Kiri Aksent)
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'selesai': return const Color(0xFF10B981); // Emerald Green
+      case 'proses':
+      case 'diproses': return const Color(0xFF3B82F6); // Blue
+      case 'ditolak': return const Color(0xFFEF4444); // Red
+      default: return const Color(0xFFF59E0B); // Amber/Yellow
+    }
+  }
+
+  // Desain Status Badge (Bentuk Pill)
+  Widget _buildStatusBadgeMenarik(String status) {
     Color bg;
     Color text;
     String label = status;
 
     switch (status.toLowerCase()) {
       case 'selesai':
-        bg = const Color(0xFFE8F5E9);
-        text = const Color(0xFF2E7D32);
+        bg = const Color(0xFFD1FAE5);
+        text = const Color(0xFF059669);
         break;
       case 'proses':
       case 'diproses':
-        bg = const Color(0xFFE3F2FD);
-        text = const Color(0xFF1565C0);
+        bg = const Color(0xFFDBEAFE);
+        text = const Color(0xFF2563EB);
         break;
       case 'ditolak':
-        bg = Colors.red.shade50;
-        text = Colors.red.shade700;
+        bg = const Color(0xFFFEE2E2);
+        text = const Color(0xFFDC2626);
         break;
       default:
-        bg = const Color(0xFFFFF3E0);
-        text = const Color(0xFFEF6C00);
+        bg = const Color(0xFFFEF3C7);
+        text = const Color(0xFFD97706);
         label = 'Pending';
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        label,
-        style: TextStyle(color: text, fontSize: 10, fontWeight: FontWeight.bold),
+        label.toUpperCase(),
+        style: TextStyle(color: text, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5),
       ),
     );
   }
 
+  // Fungsi Pembuat Garis Putus-putus
+  Widget _buildDashedLine() {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final boxWidth = constraints.constrainWidth();
+        const dashWidth = 6.0;
+        const dashHeight = 1.0;
+        final dashCount = (boxWidth / (2 * dashWidth)).floor();
+        return Flex(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          direction: Axis.horizontal,
+          children: List.generate(dashCount, (_) {
+            return const SizedBox(
+              width: dashWidth,
+              height: dashHeight,
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: Color(0xFFE2E8F0)), // Abu-abu terang
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
+  // Empty State ASLI
   Widget _buildEmptyState() {
     return Center(
       child: Column(

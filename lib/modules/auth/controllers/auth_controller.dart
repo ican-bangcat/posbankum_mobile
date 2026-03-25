@@ -219,7 +219,7 @@ class AuthController extends GetxController {
         .maybeSingle();
 
     if (masyarakatData != null) {
-      Get.offAllNamed(AppRoutes.HOME); // Sesuaikan dengan route Home Masyarakat
+      Get.offAllNamed(AppRoutes.MAIN_DASHBOARD); // Sesuaikan dengan route Home Masyarakat
       return;
     }
 

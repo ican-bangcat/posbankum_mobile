@@ -19,7 +19,8 @@ import '../../modules/riwayatPengaduan/controllers/riwayat_pengaduan_controller.
 import '../../modules/detail_kasus/views/detail_kasus_view.dart';
 import '../../modules/detail_kasus/bindings/detail_kasus_binding.dart';
 import 'app_routes.dart';
-
+import '../../modules/main_dashboard/views/main_dashboard_view.dart';
+import '../../modules/main_dashboard/bindings/main_dashboard_binding.dart';
 /// App Pages Configuration
 class AppPages {
   AppPages._();
@@ -128,6 +129,11 @@ class AppPages {
       page: () => const DetailKasusView(),
       binding: DetailKasusBinding(),
       transition: Transition.rightToLeft, // Animasi geser yang smooth
+    ),
+    GetPage(
+      name: AppRoutes.MAIN_DASHBOARD,
+      page: () => const MainDashboardView(),
+      binding: MainDashboardBinding(),
     ),
   ];
 }

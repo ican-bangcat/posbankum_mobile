@@ -87,9 +87,17 @@ class DetailKasusView extends GetView<DetailKasusController> {
                       ),
                     ),
 
-                    // 5) Tombol "Ambil Kasus" — HANYA jika Pending
-                    if (kasus.status.toLowerCase() == 'pending')
-                      _buildAmbilKasusButton(),
+                    // 5) Tombol "Ambil Kasus"
+                    // LOGIKANYA:
+                    // 1. Status harus 'Pending'
+                    // 2. User harus 'Paralegal' (controller.isParalegal.value)
+                    Obx(() {
+                      if (kasus.status.toLowerCase() == 'pending' &&
+                          controller.isParalegal.value == true) { // ✅ Cek Role Paralegal
+                        return _buildAmbilKasusButton();
+                      }
+                      return const SizedBox.shrink(); // Hide tombol kalau Masyarakat
+                    }),
                   ],
                 );
               }),

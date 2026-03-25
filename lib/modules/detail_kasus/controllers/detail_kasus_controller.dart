@@ -1,9 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 
-// ══════════════════════════════════════════════════════════════════════
-// MODEL
-// ══════════════════════════════════════════════════════════════════════
-
+// ── MODEL DATA (Disesuaikan dengan Schema Database) ──
 class TimelineItem {
   final String title;
   final String? tanggal;
@@ -17,10 +17,11 @@ class TimelineItem {
 }
 
 class DetailKasus {
+  final String id;
   final String judulKasus;
   final String idKasus;
   final String tanggalDibuat;
-  final String status; // 'pending', 'diproses', 'selesai'
+  final String status;
   final String kronologi;
   final List<TimelineItem> timeline;
   final String? catatanParalegal;
@@ -28,6 +29,7 @@ class DetailKasus {
   final String? catatanPenulis;
 
   DetailKasus({
+    required this.id,
     required this.judulKasus,
     required this.idKasus,
     required this.tanggalDibuat,
@@ -38,161 +40,158 @@ class DetailKasus {
     this.catatanTanggal,
     this.catatanPenulis,
   });
+
+  factory DetailKasus.fromJson(Map<String, dynamic> json) {
+    // Format Tanggal untuk Header
+    String formattedDate = '-';
+    if (json['tgl_lapor'] != null) {
+      final dt = DateTime.parse(json['tgl_lapor']).toLocal();
+      formattedDate = DateFormat('dd MMM yyyy').format(dt);
+    }
+
+    // Format Tanggal untuk Timeline
+    String timelineDate = '-';
+    if (json['tgl_lapor'] != null) {
+      final dt = DateTime.parse(json['tgl_lapor']).toLocal();
+      timelineDate = DateFormat('dd MMM yyyy, HH:mm').format(dt);
+    }
+
+    // Logic Sederhana untuk Timeline berdasarkan Status
+    String status = json['status'] ?? 'Pending';
+    List<TimelineItem> generatedTimeline = [
+      TimelineItem(
+        title: 'Pengaduan diterima',
+        tanggal: timelineDate,
+        isActive: true,
+      ),
+    ];
+
+    if (status.toLowerCase() == 'diproses') {
+      generatedTimeline.add(TimelineItem(title: 'Ditinjau oleh paralegal', isActive: true));
+    } else if (status.toLowerCase() == 'selesai') {
+      generatedTimeline.add(TimelineItem(title: 'Ditinjau oleh paralegal', isActive: true));
+      generatedTimeline.add(TimelineItem(title: 'Kasus Selesai', isActive: true));
+    } else {
+      generatedTimeline.add(TimelineItem(title: 'Menunggu tindak lanjut', isActive: false));
+    }
+
+    return DetailKasus(
+      id: json['id'] ?? '',
+      judulKasus: json['kategori_masalah'] ?? 'Tanpa Judul',
+      idKasus: json['id'].toString().substring(0, 13).toUpperCase(),
+      tanggalDibuat: formattedDate,
+      status: status,
+      // ✅ SESUAI TABEL: Kolomnya bernama 'kronologi'
+      kronologi: json['kronologi'] ?? 'Tidak ada kronologi',
+      timeline: generatedTimeline,
+      catatanParalegal: null,
+    );
+  }
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// CONTROLLER
-// ══════════════════════════════════════════════════════════════════════
-
 class DetailKasusController extends GetxController {
+  final supabase = Supabase.instance.client;
+
   final kasus = Rx<DetailKasus?>(null);
-  final isLoading = false.obs;
+  final isLoading = true.obs;
+
+  final isParalegal = false.obs;
 
   @override
   void onInit() {
     super.onInit();
-    _loadDummyData();
+    _checkUserRole();
+    fetchDetailKasus();
   }
 
-  void _loadDummyData() {
-    isLoading.value = true;
+  // ── 1. CEK ROLE USER (Sesuai 2 Tabel Database) ──
+  Future<void> _checkUserRole() async {
+    final user = supabase.auth.currentUser;
+    if (user != null) {
+      // Cek apakah ID user yang login ada di tabel 'paralegal'
+      final response = await supabase
+          .from('paralegal')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle(); // maybeSingle agar tidak error merah kalau tidak ketemu
 
-    // ── Ganti variabel ini untuk preview 3 variasi ──
-    // Opsi: 'pending', 'diproses', 'selesai'
-    const String demoStatus = 'pending';
-
-    switch (demoStatus) {
-      case 'pending':
-        kasus.value = _dummyPending();
-        break;
-      case 'diproses':
-        kasus.value = _dummyDiproses();
-        break;
-      case 'selesai':
-        kasus.value = _dummySelesai();
-        break;
+      if (response != null) {
+        // Jika ketemu di tabel paralegal, berarti dia paralegal
+        isParalegal.value = true;
+      } else {
+        // Jika tidak ketemu, berarti dia masyarakat
+        isParalegal.value = false;
+      }
     }
-
-    isLoading.value = false;
   }
 
-  // ── DUMMY: Pending ──
-  DetailKasus _dummyPending() {
-    return DetailKasus(
-      judulKasus: 'Sengketa Tanah Warisan',
-      idKasus: '#PBH-2024-001234',
-      tanggalDibuat: '12 Januari 2024',
-      status: 'pending',
-      kronologi:
-      'Saya memiliki masalah terkait pembagian tanah warisan dari orang tua. '
-          'Tanah tersebut seluas 500m2 yang seharusnya dibagi rata dengan 3 saudara kandung...',
-      timeline: [
-        TimelineItem(
-          title: 'Pengaduan diterima',
-          tanggal: '12 Jan 2024, 10:30',
-          isActive: true,
-        ),
-        TimelineItem(
-          title: 'Menunggu tindak lanjut',
-          tanggal: null,
-          isActive: false,
-        ),
-      ],
-      catatanParalegal: null,
-    );
+  // ── 2. TARIK DATA DETAIL KASUS ──
+  Future<void> fetchDetailKasus() async {
+    try {
+      isLoading.value = true;
+
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
+
+      // SEMENTARA: Agar bisa ngetes UI langsung tanpa error lempar ID,
+      // kita set ambil 1 data terakhir milik user ini.
+      // (Nanti di-update kalau navigasi bawa ID sudah fix)
+      final response = await supabase
+          .from('pengaduan')
+          .select()
+          .order('tgl_lapor', ascending: false)
+          .limit(1)
+          .single();
+
+      kasus.value = DetailKasus.fromJson(response);
+
+    } catch (e) {
+      print("Error Fetch Detail: $e");
+      Get.snackbar("Info", "Data pengaduan belum tersedia");
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  // ── DUMMY: Diproses ──
-  DetailKasus _dummyDiproses() {
-    return DetailKasus(
-      judulKasus: 'Sengketa Tanah Warisan',
-      idKasus: '#PBH-2024-001234',
-      tanggalDibuat: '12 Januari 2024',
-      status: 'diproses',
-      kronologi:
-      'Saya memiliki masalah terkait pembagian tanah warisan dari orang tua. '
-          'Tanah tersebut seluas 500m2 yang seharusnya dibagi rata dengan 3 saudara kandung...',
-      timeline: [
-        TimelineItem(
-          title: 'Pengaduan diterima',
-          tanggal: '12 Jan 2024, 10:30',
-          isActive: true,
-        ),
-        TimelineItem(
-          title: 'Ditinjau oleh paralegal',
-          tanggal: '12 Jan 2024, 14:20',
-          isActive: true,
-        ),
-        TimelineItem(
-          title: 'Sedang dijadwalkan mediasi',
-          tanggal: '13 Jan 2024, 09:15',
-          isActive: true,
-        ),
-        TimelineItem(
-          title: 'Menunggu tindak lanjut',
-          tanggal: null,
-          isActive: false,
-        ),
-      ],
-      catatanParalegal:
-      'Telah menghubungi pihak terkait untuk proses mediasi. '
-          'Jadwal akan diinfokan segera.',
-      catatanTanggal: '13 Jan 2024',
-      catatanPenulis: 'Paralegal Ahmad',
-    );
-  }
+  // ── 3. LOGIC AMBIL KASUS (PARALEGAL SAJA) ──
+  Future<void> ambilKasus() async {
+    if (kasus.value == null) return;
 
-  // ── DUMMY: Selesai ──
-  DetailKasus _dummySelesai() {
-    return DetailKasus(
-      judulKasus: 'Sengketa Tanah Warisan',
-      idKasus: '#PBH-2024-001234',
-      tanggalDibuat: '12 Januari 2024',
-      status: 'selesai',
-      kronologi:
-      'Saya memiliki masalah terkait pembagian tanah warisan dari orang tua. '
-          'Tanah tersebut seluas 500m2 yang seharusnya dibagi rata dengan 3 saudara kandung...',
-      timeline: [
-        TimelineItem(
-          title: 'Pengaduan diterima',
-          tanggal: '12 Jan 2024, 10:30',
-          isActive: true,
-        ),
-        TimelineItem(
-          title: 'Ditinjau oleh paralegal',
-          tanggal: '12 Jan 2024, 14:20',
-          isActive: true,
-        ),
-        TimelineItem(
-          title: 'Sedang dijadwalkan mediasi',
-          tanggal: '13 Jan 2024, 09:15',
-          isActive: true,
-        ),
-        TimelineItem(
-          title: 'Mediasi Selesai',
-          tanggal: '16 Jan 2024, 10:15',
-          isActive: true,
-        ),
-        TimelineItem(
-          title: 'Hasil Mediasi',
-          tanggal: '17 Jan 2024, 18:15',
-          isActive: true,
-        ),
-      ],
-      catatanParalegal:
-      'Telah menghubungi pihak terkait untuk proses mediasi. '
-          'Jadwal akan diinfokan segera.',
-      catatanTanggal: '13 Jan 2024',
-      catatanPenulis: 'Paralegal Ahmad',
-    );
-  }
+    try {
+      Get.dialog(
+        const Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
 
-  // ── Aksi Ambil Kasus ──
-  void ambilKasus() {
-    Get.snackbar(
-      'Berhasil',
-      'Kasus berhasil diambil!',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
+
+      // ✅ SESUAI TABEL: Update status & paralegal_id
+      await supabase.from('pengaduan').update({
+        'status': 'Diproses',
+        'paralegal_id': user.id,
+      }).eq('id', kasus.value!.id);
+
+      Get.back(); // Tutup Loading
+
+      // Refresh Data UI
+      await fetchDetailKasus();
+
+      Get.snackbar(
+        'Berhasil',
+        'Kasus berhasil diambil. Silakan mulai penanganan.',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+
+    } catch (e) {
+      Get.back(); // Tutup Loading
+      Get.snackbar(
+        'Gagal',
+        'Terjadi kesalahan: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 }

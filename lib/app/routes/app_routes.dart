@@ -48,4 +48,6 @@ class AppRoutes {
   static const String ABOUT = '/about';
   static const String TERMS = '/terms';
   static const String PRIVACY = '/privacy';
+
+  static const MAIN_DASHBOARD = '/main-dashboard';
 }
