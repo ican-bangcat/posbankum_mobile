@@ -15,7 +15,8 @@ class AppRoutes {
   static const String VERIFY_OTP = '/verify-otp';
   static const String RESET_PASSWORD = '/reset-password';
   static const UPDATE_PASSWORD = '/update-password';
-  
+  static const MAIN_DASHBOARD_ADMIN = '/main-dashboard-admin';
+
   // Main
   static const String HOME = '/home';
   static const String PROFILE = '/profile';

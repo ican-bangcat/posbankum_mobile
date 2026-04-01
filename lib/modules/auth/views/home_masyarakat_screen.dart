@@ -189,7 +189,7 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
       width: double.infinity,
       height: 160, // <-- UBAH NILAI INI JIKA INGIN LEBIH PENDEK/TINGGI (Sebelumnya 210)
       decoration: const BoxDecoration(
-        color: Color(0xFF1E3A5F), // Biru gelap
+        color: Color(0xFF2A2E5E), // Biru gelap
         borderRadius: BorderRadius.only(
           bottomRight: Radius.circular(20), // Ujung kanan bawah biru melengkung 20
         ),
@@ -203,7 +203,7 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
             right: 0,
             bottom: 0,
             child: Opacity(
-              opacity: 0.25,
+              opacity: 0.6,
               child: Image.asset(
                 'assets/images/icons/building_illustration3.png',
                 fit: BoxFit.cover,
@@ -296,46 +296,90 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF2B6CB0), Color(0xFF4299E1)],
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
-          ),
+          // ✅ GANTI DI SINI: Warna solid tanpa gradasi
+          color: const Color(0xFF3B82F6),
           borderRadius: BorderRadius.circular(22),
-          boxShadow: [BoxShadow(color: const Color(0xFF2B6CB0).withOpacity(0.35), blurRadius: 20, offset: const Offset(0, 8))],
+          // Tetap gunakan shadow agar terlihat timbul
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF3B82F6).withOpacity(0.35),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            )
+          ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(22),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Icon Container
               Container(
-                width: 42, height: 42,
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(12)),
-                child: const Center(child: Text('⚖️', style: TextStyle(fontSize: 22))),
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.18),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    '⚖️',
+                    style: TextStyle(fontSize: 22),
+                  ),
+                ),
               ),
               const SizedBox(height: 14),
+              // ✅ GANTI DI SINI: Teks Judul sesuai gambar
               const Text(
-                'Buat Pengaduan Baru',
-                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700, height: 1.2),
+                'Konsultasi Hukum Gratis',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                ),
               ),
               const SizedBox(height: 6),
+              // ✅ GANTI DI SINI: Teks Subtitle sesuai gambar
               Text(
-                'Dapatkan bantuan hukum gratis dari\nparalegal profesional kami',
-                style: TextStyle(color: Colors.white.withOpacity(0.82), fontSize: 13, height: 1.5),
+                'Dapatkan bantuan hukum dari paralegal terdekat',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.82),
+                  fontSize: 13,
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 18),
+
+              // TOMBOL CTA
               InkWell(
+                // Logika tap tetap mengarah ke Form Pengaduan
                 onTap: () => Get.toNamed(AppRoutes.FORM_PENGADUAN),
                 borderRadius: BorderRadius.circular(50),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(50)),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(50),
+                  ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Mulai Sekarang', style: TextStyle(color: Color(0xFF2B6CB0), fontWeight: FontWeight.w600, fontSize: 14)),
-                      SizedBox(width: 6),
-                      Icon(Icons.arrow_forward, color: Color(0xFF2B6CB0), size: 16),
+                      // ✅ GANTI DI SINI: Teks Tombol sesuai gambar
+                      Text(
+                        'Mulai Konsultasi',
+                        style: TextStyle(
+                          color: const Color(0xFF3B82F6), // ✅ Ganti di sini
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Icon(
+                        Icons.arrow_forward,
+                        color: const Color(0xFF3B82F6), // ✅ Dan di sini
+                        size: 16,
+                      ),
                     ],
                   ),
                 ),

@@ -21,6 +21,8 @@ import '../../modules/detail_kasus/bindings/detail_kasus_binding.dart';
 import 'app_routes.dart';
 import '../../modules/main_dashboard/views/main_dashboard_view.dart';
 import '../../modules/main_dashboard/bindings/main_dashboard_binding.dart';
+import '../../modules/main_dashboard_admin/views/main_dashboard_admin_view.dart';
+import '../../modules/main_dashboard_admin/bindings/main_dashboard_admin_binding.dart';
 /// App Pages Configuration
 class AppPages {
   AppPages._();
@@ -134,6 +136,11 @@ class AppPages {
       name: AppRoutes.MAIN_DASHBOARD,
       page: () => const MainDashboardView(),
       binding: MainDashboardBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.MAIN_DASHBOARD_ADMIN,
+      page: () => const MainDashboardAdminView(),
+      binding: MainDashboardAdminBinding(),
     ),
   ];
 }

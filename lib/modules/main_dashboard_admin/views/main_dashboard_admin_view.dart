@@ -1,33 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/main_dashboard_controller.dart';
-// Import halaman riwayat yang sudah kamu buat
-import '../../riwayatPengaduan/views/riwayat_pengaduan_view.dart';
-import '../../auth/views/home_masyarakat_screen.dart';
+import '../controllers/main_dashboard_admin_controller.dart';
 
-class MainDashboardView extends GetView<MainDashboardController> {
-  const MainDashboardView({super.key});
+// ✅ IMPORT HALAMAN ADMIN / PARALEGAL KAMU DI SINI
+import '../../auth/views/home_paralegal_screen.dart';
+
+// import '../../kegiatan/views/kegiatan_view.dart'; // (Contoh kalau halamannya udah ada)
+
+class MainDashboardAdminView extends GetView<MainDashboardAdminController> {
+  const MainDashboardAdminView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Ini daftar halaman yang akan diganti-ganti di tengah layar
+    // ── HALAMAN KHUSUS ADMIN / PARALEGAL ──
     final List<Widget> pages = [
-      const Center(child: Text('Halaman Notification')), // Index 0
-      const RiwayatPengaduanView(),                      // Index 1
-      const HomeMasyarakatScreen(),                      // Index 2 (Home)
-      const Center(child: Text('Halaman Chat')),         // Index 3
-      const Center(child: Text('Halaman Profile')),      // Index 4
+      const Center(child: Text('Halaman Kegiatan')),     // Index 0 (Kegiatan)
+      const Center(child: Text('Kelola Pengaduan')),     // Index 1 (Pengaduan Admin)
+      const HomeParalegalScreen(),                       // Index 2 (Home Admin Asli!)
+      const Center(child: Text('Halaman Chat Admin')),   // Index 3 (Chat)
+      const Center(child: Text('Profile Admin')),        // Index 4 (Profile)
     ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F4FB),
 
-      // ✅ PERBAIKAN DI SINI: Menggunakan IndexedStack agar tidak error
+      // ✅ Menggunakan IndexedStack agar tidak error saat pindah tab
       body: Obx(() => IndexedStack(
         index: controller.selectedIndex.value,
         children: pages,
       )),
 
+      // ✅ DESAIN NAVBAR DISAMAKAN DENGAN NAVBAR MASYARAKAT
       bottomNavigationBar: Obx(
             () => Container(
           decoration: BoxDecoration(
@@ -48,12 +51,11 @@ class MainDashboardView extends GetView<MainDashboardController> {
             top: false,
             child: SizedBox(
               height: 80,
-              // Hapus spaceAround karena sudah diurus oleh Expanded di bawah
               child: Row(
                 children: [
                   _buildNavItem(
-                    icon: Icons.notifications_none_outlined,
-                    label: 'Notification',
+                    icon: Icons.event_note_outlined,
+                    label: 'Kegiatan',
                     index: 0,
                   ),
                   _buildNavItem(
@@ -63,7 +65,7 @@ class MainDashboardView extends GetView<MainDashboardController> {
                   ),
                   _buildNavItem(
                     icon: Icons.home_outlined,
-                    label: 'Home', // Typo diperbaiki
+                    label: 'Home',
                     index: 2,
                   ),
                   _buildNavItem(
@@ -85,7 +87,7 @@ class MainDashboardView extends GetView<MainDashboardController> {
     );
   }
 
-  // ── WIDGET TOMBOL NAVIGASI ──
+  // ── WIDGET TOMBOL NAVIGASI (SAMA PERSIS DENGAN MASYARAKAT) ──
   Widget _buildNavItem({
     required IconData icon,
     required String label,

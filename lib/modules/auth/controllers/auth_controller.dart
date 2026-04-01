@@ -231,8 +231,7 @@ class AuthController extends GetxController {
         .maybeSingle();
 
     if (paralegalData != null) {
-      // Asumsi route home paralegal belum didaftarkan di AppRoutes, pakai class langsung dulu
-      Get.offAll(() => const HomeParalegalScreen());
+      Get.offAllNamed(AppRoutes.MAIN_DASHBOARD_ADMIN); // ✅ KODE BARU
       return;
     }
 

@@ -17,7 +17,7 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
       body: Column(
         children: [
           // ============================================================
-          // 1. HEADER AREA (DIKEMBALIKAN KE KODE ASLI - TIDAK DIUBAH)
+          // 1. HEADER AREA (KODE ASLI - TIDAK DIUBAH)
           // ============================================================
           Stack(
             children: [
@@ -161,7 +161,7 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
                           itemCount: controller.filteredItems.length,
                           separatorBuilder: (_, __) => const SizedBox(height: 16),
                           itemBuilder: (context, index) {
-                            // MENGGUNAKAN DESAIN KARTU YANG BARU DAN LEBIH MENARIK
+                            // MENGGUNAKAN DESAIN KARTU PREMIUM
                             return _buildCardItemMenarik(controller.filteredItems[index]);
                           },
                         ),
@@ -380,7 +380,8 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
                   children: [
                     _buildIconText(Icons.calendar_month_rounded, item.tanggal),
                     const SizedBox(width: 16),
-                    _buildIconText(Icons.folder_open_rounded, 'Hukum Perdata'), // Kategori statis, bisa diganti dinamis
+                    // Kategori sementara statis. Nanti bisa diganti: item.kategori ?? 'Hukum Perdata'
+                    _buildIconText(Icons.folder_open_rounded, 'Hukum Perdata'),
                   ],
                 ),
 

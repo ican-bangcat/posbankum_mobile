@@ -6,7 +6,6 @@ import '../controllers/pengaduan_controller.dart';
 class FormPengaduanScreen extends GetView<PengaduanController> {
   const FormPengaduanScreen({super.key});
 
-  // Daftar Kategori (UI Only)
   final List<String> _kategoriMasalah = const [
     'Kekerasan & Pelanggaran Fisik',
     'Kejahatan Seksual',
@@ -25,54 +24,141 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Warna sama persis dengan RiwayatPengaduanView
+    const Color darkBlueColor = Color(0xFF2A2E5E);
+    const Color whiteBgColor = Color(0xFFF2F4FB);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        title: const Text('Buat Pengaduan'),
-        backgroundColor: AppColors.primary,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Icon
-            _buildHeaderIcon(),
+      backgroundColor: darkBlueColor, // ✅ Background luar = biru gelap
+      body: Column(
+        children: [
+          // ============================================================
+          // 1. HEADER AREA (Sama persis dengan RiwayatPengaduanView)
+          // ============================================================
+          Stack(
+            children: [
+              // A. Penambal Putih (Patch) di sudut kiri bawah
+              Positioned(
+                bottom: 0,
+                left: 0,
+                child: Container(width: 50, height: 50, color: whiteBgColor),
+              ),
 
-            const SizedBox(height: 24),
+              // B. Container Header Biru
+              Container(
+                width: double.infinity,
+                clipBehavior: Clip.hardEdge,
+                decoration: const BoxDecoration(
+                  color: darkBlueColor,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(28),
+                    bottomRight: Radius.zero,
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // --- Gambar Aset (Ilustrasi di kanan) ---
+                    Positioned(
+                      top: -10,
+                      right: -5,
+                      child: Opacity(
+                        opacity: 0.8,
+                        child: Image.asset(
+                          'assets/images/icons/building_illustration3.png',
+                          width: 300,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.location_city, size: 200, color: Colors.white10),
+                        ),
+                      ),
+                    ),
 
-            // Jenis Masalah (Dropdown)
-            _buildJenisMasalahField(),
+                    // --- Konten Header (Back Button + Judul) ---
+                    SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+                        child: Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => Get.back(),
+                              child: Container(
+                                width: 40,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            const Text(
+                              'Buat Pengaduan',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
 
-            const SizedBox(height: 20),
-          // ✅ POSISI BARU: Tanggal Kejadian
-            _buildTanggalKejadianField(context),
-            const SizedBox(height: 20),
-            // Kronologi Singkat
-            _buildKronologiField(),
+          // ============================================================
+          // 2. BODY AREA (Form Content)
+          // ============================================================
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: whiteBgColor,
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(28),
+                  topLeft: Radius.zero,
+                ),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ✅ Header Icon Card (tetap ada di dalam body)
+                    _buildHeaderIcon(),
 
-            const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
-            // Lokasi Kejadian
-            _buildLokasiField(),
-
-            const SizedBox(height: 20),
-
-            // Lampiran
-            _buildLampiranField(),
-
-            const SizedBox(height: 32),
-
-            // Submit Button
-            _buildSubmitButton(),
-
-            const SizedBox(height: 20),
-          ],
-        ),
+                    _buildJenisMasalahField(),
+                    const SizedBox(height: 20),
+                    _buildTanggalKejadianField(context),
+                    const SizedBox(height: 20),
+                    _buildKronologiField(),
+                    const SizedBox(height: 20),
+                    _buildLokasiField(),
+                    const SizedBox(height: 20),
+                    _buildLampiranField(),
+                    const SizedBox(height: 32),
+                    _buildSubmitButton(),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  // ... (semua widget _build... di bawah ini TIDAK BERUBAH sama sekali)
+  // _buildHeaderIcon(), _buildJenisMasalahField(), dst tetap sama
 
   Widget _buildHeaderIcon() {
     return Container(
