@@ -33,7 +33,7 @@ class AppRoutes {
   static const String PENGADUAN_SUCCESS = '/pengaduan-success';
   static const RIWAYAT_PENGADUAN = '/riwayat-pengaduan';
   static const DETAIL_KASUS = '/detail-kasus';
-
+  static const UPDATE_PROGRES = '/update-progres';
   // Legal Info
   static const String LEGAL_INFO = '/legal-info';
   static const String LEGAL_DETAIL = '/legal-detail';
@@ -41,7 +41,7 @@ class AppRoutes {
   // Paralegal
   static const String PARALEGAL_LIST = '/paralegal-list';
   static const String PARALEGAL_CHAT = '/paralegal-chat';
-
+  static const DETAIL_KASUS_PARALEGAL = '/detail-kasus-paralegal';
 
   // Other
   static const String NOTIFICATION = '/notification';

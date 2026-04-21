@@ -4,7 +4,7 @@ import '../controllers/main_dashboard_admin_controller.dart';
 
 // ✅ IMPORT HALAMAN ADMIN / PARALEGAL KAMU DI SINI
 import '../../auth/views/home_paralegal_screen.dart';
-
+import '../../kelola_pengaduan/views/kelola_pengaduan_view.dart';
 // import '../../kegiatan/views/kegiatan_view.dart'; // (Contoh kalau halamannya udah ada)
 
 class MainDashboardAdminView extends GetView<MainDashboardAdminController> {
@@ -15,7 +15,7 @@ class MainDashboardAdminView extends GetView<MainDashboardAdminController> {
     // ── HALAMAN KHUSUS ADMIN / PARALEGAL ──
     final List<Widget> pages = [
       const Center(child: Text('Halaman Kegiatan')),     // Index 0 (Kegiatan)
-      const Center(child: Text('Kelola Pengaduan')),     // Index 1 (Pengaduan Admin)
+      const KelolaPengaduanView(),    // Index 1 (Pengaduan Admin)
       const HomeParalegalScreen(),                       // Index 2 (Home Admin Asli!)
       const Center(child: Text('Halaman Chat Admin')),   // Index 3 (Chat)
       const Center(child: Text('Profile Admin')),        // Index 4 (Profile)

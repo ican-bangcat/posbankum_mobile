@@ -23,6 +23,10 @@ import '../../modules/main_dashboard/views/main_dashboard_view.dart';
 import '../../modules/main_dashboard/bindings/main_dashboard_binding.dart';
 import '../../modules/main_dashboard_admin/views/main_dashboard_admin_view.dart';
 import '../../modules/main_dashboard_admin/bindings/main_dashboard_admin_binding.dart';
+import '../../modules/kelola_pengaduan/views/detail_kasus_paralegal_view.dart';
+import '../../modules/kelola_pengaduan/controllers/detail_kasus_paralegal_controller.dart';
+import '../../modules/kelola_pengaduan/views/update_progres_view.dart';
+import '../../modules/kelola_pengaduan/controllers/update_progres_controller.dart';
 /// App Pages Configuration
 class AppPages {
   AppPages._();
@@ -141,6 +145,24 @@ class AppPages {
       name: AppRoutes.MAIN_DASHBOARD_ADMIN,
       page: () => const MainDashboardAdminView(),
       binding: MainDashboardAdminBinding(),
+    ),
+
+    // ✅ DETAIL KASUS KHUSUS PARALEGAL
+    GetPage(
+      name: AppRoutes.DETAIL_KASUS_PARALEGAL,
+      page: () => const DetailKasusParalegalView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<DetailKasusParalegalController>(() => DetailKasusParalegalController());
+      }),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.UPDATE_PROGRES,
+      page: () => const UpdateProgresView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<UpdateProgresController>(() => UpdateProgresController());
+      }),
+      transition: Transition.rightToLeft,
     ),
   ];
 }

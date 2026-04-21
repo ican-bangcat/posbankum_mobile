@@ -5,7 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/routes/app_routes.dart';
 import 'login_screen.dart';
 
-// Import Controller Dashboard
+// ✅ Import Controller Dashboard Masyarakat
+import '../controllers/home_masyarakat_controller.dart';
 import '../../main_dashboard/controllers/main_dashboard_controller.dart';
 
 class HomeMasyarakatScreen extends StatefulWidget {
@@ -20,18 +21,25 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
   final storage = GetStorage();
   final supabase = Supabase.instance.client;
 
+  // ✅ Daftarkan Controller
+  late final HomeMasyarakatController _dashboardCtrl;
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  String userName = 'Nama Masyarakat';
+
+
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
 
-    // Setup animasi masuk (Fade & Slide)
+    // ✅ Inisialisasi Controller
+    _dashboardCtrl = Get.put(HomeMasyarakatController());
+
+
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -48,14 +56,6 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
     _animationController.forward();
   }
 
-  Future<void> _loadUserData() async {
-    String? storedName = storage.read('user_name');
-    if (storedName != null && storedName.isNotEmpty) {
-      setState(() {
-        userName = storedName;
-      });
-    }
-  }
 
   Future<void> _handleLogout() async {
     try {
@@ -75,17 +75,11 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
     Get.bottomSheet(
       Container(
         padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
-            ),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 20),
             const Text('Menu Profil', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
@@ -144,34 +138,34 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
       body: Column(
         children: [
           _buildHeader(),
-
           Expanded(
             child: Container(
-              // Background biru penopang S-Curve
               color: const Color(0xFF1E3A5F),
               child: Container(
                 decoration: const BoxDecoration(
-                  color: Color(0xFFF2F4F7), // Warna asli bagian putih
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20), // Ujung kiri atas putih melengkung 20
-                  ),
+                  color: Color(0xFFF2F4F7),
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(20)),
                 ),
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: ListView(
-                      padding: EdgeInsets.zero,
-                      physics: const BouncingScrollPhysics(),
-                      children: [
-                        const SizedBox(height: 20),
-                        _buildConsultationCard(),
-                        const SizedBox(height: 24),
-                        _buildCaseSummarySection(),
-                        const SizedBox(height: 24),
-                        _buildRecentHistorySection(),
-                        const SizedBox(height: 40),
-                      ],
+                child: RefreshIndicator(
+                  // ✅ Tarik ke bawah untuk Refresh Data
+                  onRefresh: _dashboardCtrl.fetchDashboardData,
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: ListView(
+                        padding: EdgeInsets.zero,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          const SizedBox(height: 20),
+                          _buildConsultationCard(),
+                          const SizedBox(height: 24),
+                          _buildCaseSummarySection(),
+                          const SizedBox(height: 24),
+                          _buildRecentHistorySection(),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -183,101 +177,59 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
     );
   }
 
-  // ─── HEADER ──────────────────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Container(
-      width: double.infinity,
-      height: 160, // <-- UBAH NILAI INI JIKA INGIN LEBIH PENDEK/TINGGI (Sebelumnya 210)
-      decoration: const BoxDecoration(
-        color: Color(0xFF2A2E5E), // Biru gelap
-        borderRadius: BorderRadius.only(
-          bottomRight: Radius.circular(20), // Ujung kanan bawah biru melengkung 20
-        ),
-      ),
+      width: double.infinity, height: 160,
+      decoration: const BoxDecoration(color: Color(0xFF2A2E5E), borderRadius: BorderRadius.only(bottomRight: Radius.circular(20))),
       clipBehavior: Clip.hardEdge,
       child: Stack(
         children: [
-          // 1. ILUSTRASI GEDUNG
           Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
+            left: 0, right: 0, bottom: 0,
             child: Opacity(
               opacity: 0.6,
-              child: Image.asset(
-                'assets/images/icons/building_illustration3.png',
-                fit: BoxFit.cover,
-                height: 110, // Menyesuaikan tinggi gambar agar tidak terlalu besar
-                alignment: Alignment.bottomCenter,
-                errorBuilder: (context, error, stackTrace) => const SizedBox(),
-              ),
+              child: Image.asset('assets/images/icons/building_illustration3.png', fit: BoxFit.cover, height: 110, alignment: Alignment.bottomCenter, errorBuilder: (context, error, stackTrace) => const SizedBox()),
             ),
           ),
-
-          // 2. KONTEN UTAMA (Di tengah vertikal)
           SafeArea(
             bottom: false,
             child: Align(
-              alignment: Alignment.center, // <-- MENGATUR POSISI KE TENGAH VERTIKAL
+              alignment: Alignment.center,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Profil (Kiri)
                     GestureDetector(
                       onTap: _showProfileOptions,
                       child: Container(
                         width: 52, height: 52,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
-                          color: Colors.white.withOpacity(0.1),
-                        ),
+                        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white.withOpacity(0.3), width: 2), color: Colors.white.withOpacity(0.1)),
                         child: const Icon(Icons.person, color: Colors.white, size: 30),
                       ),
                     ),
                     const SizedBox(width: 14),
-
-                    // Nama (Tengah, Expanded agar Notif kedorong ke kanan)
                     Expanded(
                       child: Column(
-                        mainAxisSize: MainAxisSize.min, // Agar column tidak makan tempat lebih dari isinya
-                        crossAxisAlignment: CrossAxisAlignment.start, // Teks rata kiri
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Halo,',
-                            style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 13),
-                          ),
-                          Text(
-                            userName,
+                          Text('Halo,', style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 13)),
+                          // ✅ DIBUNGKUS OBX AGAR NAMA REAKTIF DARI DATABASE
+                          Obx(() => Text(
+                            _dashboardCtrl.userName.value,
                             style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                          ),
+                          )),
                         ],
                       ),
                     ),
-
-                    // Notifikasi (Kanan)
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        Container(
-                          width: 42, height: 42,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 22),
-                        ),
-                        Positioned(
-                          right: 8, top: 8,
-                          child: Container(
-                            width: 9, height: 9,
-                            decoration: const BoxDecoration(color: Color(0xFFFF4444), shape: BoxShape.circle),
-                          ),
-                        ),
+                        Container(width: 42, height: 42, decoration: BoxDecoration(color: Colors.white.withOpacity(0.12), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 22)),
+                        Positioned(right: 8, top: 8, child: Container(width: 9, height: 9, decoration: const BoxDecoration(color: Color(0xFFFF4444), shape: BoxShape.circle))),
                       ],
                     ),
                   ],
@@ -289,97 +241,38 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
       ),
     );
   }
-
-  // ─── CONSULTATION CARD (TOMBOL BUAT PENGADUAN) ───────────────────────────────
   Widget _buildConsultationCard() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          // ✅ GANTI DI SINI: Warna solid tanpa gradasi
           color: const Color(0xFF3B82F6),
           borderRadius: BorderRadius.circular(22),
-          // Tetap gunakan shadow agar terlihat timbul
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF3B82F6).withOpacity(0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            )
-          ],
+          boxShadow: [BoxShadow(color: const Color(0xFF3B82F6).withOpacity(0.35), blurRadius: 20, offset: const Offset(0, 8))],
         ),
         child: Padding(
           padding: const EdgeInsets.all(22),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Icon Container
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.18),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(
-                  child: Text(
-                    '⚖️',
-                    style: TextStyle(fontSize: 22),
-                  ),
-                ),
-              ),
+              Container(width: 42, height: 42, decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(12)), child: const Center(child: Text('⚖️', style: TextStyle(fontSize: 22)))),
               const SizedBox(height: 14),
-              // ✅ GANTI DI SINI: Teks Judul sesuai gambar
-              const Text(
-                'Konsultasi Hukum Gratis',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
-                ),
-              ),
+              const Text('Konsultasi Hukum Gratis', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700, height: 1.2)),
               const SizedBox(height: 6),
-              // ✅ GANTI DI SINI: Teks Subtitle sesuai gambar
-              Text(
-                'Dapatkan bantuan hukum dari paralegal terdekat',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.82),
-                  fontSize: 13,
-                  height: 1.5,
-                ),
-              ),
+              Text('Dapatkan bantuan hukum dari paralegal terdekat', style: TextStyle(color: Colors.white.withOpacity(0.82), fontSize: 13, height: 1.5)),
               const SizedBox(height: 18),
-
-              // TOMBOL CTA
               InkWell(
-                // Logika tap tetap mengarah ke Form Pengaduan
                 onTap: () => Get.toNamed(AppRoutes.FORM_PENGADUAN),
                 borderRadius: BorderRadius.circular(50),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(50),
-                  ),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(50)),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // ✅ GANTI DI SINI: Teks Tombol sesuai gambar
-                      Text(
-                        'Mulai Konsultasi',
-                        style: TextStyle(
-                          color: const Color(0xFF3B82F6), // ✅ Ganti di sini
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Icon(
-                        Icons.arrow_forward,
-                        color: const Color(0xFF3B82F6), // ✅ Dan di sini
-                        size: 16,
-                      ),
+                      Text('Mulai Konsultasi', style: TextStyle(color: Color(0xFF3B82F6), fontWeight: FontWeight.w600, fontSize: 14)),
+                      SizedBox(width: 6),
+                      Icon(Icons.arrow_forward, color: Color(0xFF3B82F6), size: 16),
                     ],
                   ),
                 ),
@@ -391,9 +284,9 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
     );
   }
 
-  // ─── CASE SUMMARY ────────────────────────────────────────────────────────────
+  // ✅ DIBUNGKUS OBX AGAR DINAMIS
   Widget _buildCaseSummarySection() {
-    return Padding(
+    return Obx(() => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -405,40 +298,35 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
               Expanded(
                 child: _buildCaseCard(
                   icon: Icons.gavel_rounded, iconColor: const Color(0xFFED8936), iconBg: const Color(0xFFFFF3E0),
-                  label: 'Kasus Aktif', count: '1',
+                  label: 'Kasus Aktif',
+                  count: _dashboardCtrl.countAktif.value.toString(), // ✅ Dari Database
                 ),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: _buildCaseCard(
                   icon: Icons.check_circle_rounded, iconColor: const Color(0xFF38A169), iconBg: const Color(0xFFE6FFFA),
-                  label: 'Selesai', count: '0',
+                  label: 'Selesai',
+                  count: _dashboardCtrl.countSelesai.value.toString(), // ✅ Dari Database
                 ),
               ),
             ],
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildCaseCard({required IconData icon, required Color iconColor, required Color iconBg, required String label, required String count}) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))]),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 38, height: 38,
-                decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10)),
-                child: Icon(icon, color: iconColor, size: 20),
-              ),
+              Container(width: 38, height: 38, decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: iconColor, size: 20)),
               const SizedBox(width: 8),
               Flexible(child: Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF718096), fontWeight: FontWeight.w500))),
             ],
@@ -457,9 +345,9 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
     );
   }
 
-  // ─── RECENT HISTORY ──────────────────────────────────────────────────────────
+  // ✅ DIBUNGKUS OBX AGAR DINAMIS
   Widget _buildRecentHistorySection() {
-    return Padding(
+    return Obx(() => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
@@ -481,30 +369,58 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
             ],
           ),
           const SizedBox(height: 12),
-          _buildHistoryCard(
-            iconEmoji: '📝', title: 'Pembuatan Draft', subtitle: 'Hukum Perdata',
-            badgeText: 'Pending', badgeColor: const Color(0xFFEF6C00), badgeBg: const Color(0xFFFFF3E0),
-            timeAgo: 'Baru saja',
-          ),
+
+          if (_dashboardCtrl.isLoadingData.value)
+            const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+          else if (_dashboardCtrl.recentHistory.isEmpty)
+            const Center(child: Padding(padding: EdgeInsets.all(20), child: Text("Belum ada riwayat pengaduan.", style: TextStyle(color: Colors.grey))))
+          else
+            ..._dashboardCtrl.recentHistory.map((kasus) {
+              // Logika status UI
+              String statusRaw = (kasus['status']?.toString() ?? 'pending').toLowerCase();
+              String badgeText = 'Pending';
+              Color badgeColor = const Color(0xFFEF6C00); // Orange
+              Color badgeBg = const Color(0xFFFFF3E0);
+
+              if (statusRaw.contains('proses')) {
+                badgeText = 'Diproses';
+                badgeColor = const Color(0xFF3182CE); // Biru
+                badgeBg = const Color(0xFFEBF8FF);
+              } else if (statusRaw == 'selesai') {
+                badgeText = 'Selesai';
+                badgeColor = const Color(0xFF38A169); // Hijau
+                badgeBg = const Color(0xFFE6FFFA);
+              }
+
+              // ✅ GANTI: Parse menggunakan tgl_lapor
+              DateTime dt = DateTime.parse(kasus['tgl_lapor']).toLocal();
+              String timeStr = "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}";
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildHistoryCard(
+                  iconEmoji: '📝',
+                  title: kasus['kategori_masalah'] ?? 'Pengaduan Hukum',
+                  subtitle: 'ID: #${kasus['id'].toString().substring(0, 5).toUpperCase()}',
+                  badgeText: badgeText,
+                  badgeColor: badgeColor,
+                  badgeBg: badgeBg,
+                  timeAgo: timeStr,
+                ),
+              );
+            }).toList(),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildHistoryCard({required String iconEmoji, required String title, required String subtitle, required String badgeText, required Color badgeColor, required Color badgeBg, required String timeAgo}) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 3))],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 3))]),
       child: Row(
         children: [
-          Container(
-            width: 46, height: 46,
-            decoration: BoxDecoration(color: const Color(0xFFF7FAFC), borderRadius: BorderRadius.circular(12)),
-            child: Center(child: Text(iconEmoji, style: const TextStyle(fontSize: 22))),
-          ),
+          Container(width: 46, height: 46, decoration: BoxDecoration(color: const Color(0xFFF7FAFC), borderRadius: BorderRadius.circular(12)), child: Center(child: Text(iconEmoji, style: const TextStyle(fontSize: 22)))),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -519,11 +435,7 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(20)),
-                child: Text(badgeText, style: TextStyle(color: badgeColor, fontSize: 11, fontWeight: FontWeight.w600)),
-              ),
+              Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(20)), child: Text(badgeText, style: TextStyle(color: badgeColor, fontSize: 11, fontWeight: FontWeight.w600))),
               const SizedBox(height: 6),
               Text(timeAgo, style: const TextStyle(fontSize: 11, color: Color(0xFFA0AEC0))),
             ],
