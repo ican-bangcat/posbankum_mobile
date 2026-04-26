@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/riwayat_pengaduan_controller.dart';
+import '../../detail_kasus/controllers/detail_kasus_controller.dart'; // ✅ Import Controller Detail
 
 class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
   const RiwayatPengaduanView({super.key});
@@ -299,7 +300,12 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
     final Color statusColor = _getStatusColor(item.status);
 
     return GestureDetector(
-      onTap: () => Get.toNamed('/detail-kasus'),
+      onTap: () {
+        // ✅ 1. Bersihkan controller detail kasus agar data tidak nyangkut
+        Get.delete<DetailKasusController>();
+        // ✅ 2. Bawa ID asli dari database ke halaman detail
+        Get.toNamed('/detail-kasus', arguments: item.idTiket);
+      },
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,

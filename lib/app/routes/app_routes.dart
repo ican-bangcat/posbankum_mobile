@@ -51,4 +51,7 @@ class AppRoutes {
   static const String PRIVACY = '/privacy';
 
   static const MAIN_DASHBOARD = '/main-dashboard';
+
+  static const TAMBAH_KEGIATAN = '/tambah-kegiatan';
+  static const KONFIRMASI_KEGIATAN = '/konfirmasi-kegiatan';
 }

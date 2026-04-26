@@ -66,9 +66,9 @@ class DetailKasus {
       ),
     ];
 
-    if (status.toLowerCase() == 'diproses') {
+    if (status.toLowerCase().contains('proses')) {
       generatedTimeline.add(TimelineItem(title: 'Ditinjau oleh paralegal', isActive: true));
-    } else if (status.toLowerCase() == 'selesai') {
+    } else if (status.toLowerCase().contains('selesai')) {
       generatedTimeline.add(TimelineItem(title: 'Ditinjau oleh paralegal', isActive: true));
       generatedTimeline.add(TimelineItem(title: 'Kasus Selesai', isActive: true));
     } else {
@@ -76,15 +76,15 @@ class DetailKasus {
     }
 
     return DetailKasus(
-      id: json['id'] ?? '',
+      id: json['id'].toString(),
       judulKasus: json['kategori_masalah'] ?? 'Tanpa Judul',
       idKasus: json['id'].toString().substring(0, 13).toUpperCase(),
       tanggalDibuat: formattedDate,
       status: status,
-      // ✅ SESUAI TABEL: Kolomnya bernama 'kronologi'
       kronologi: json['kronologi'] ?? 'Tidak ada kronologi',
       timeline: generatedTimeline,
-      catatanParalegal: null,
+      // Ambil catatan paralegal dari database jika ada
+      catatanParalegal: json['catatan_paralegal'],
     );
   }
 }
@@ -104,28 +104,25 @@ class DetailKasusController extends GetxController {
     fetchDetailKasus();
   }
 
-  // ── 1. CEK ROLE USER (Sesuai 2 Tabel Database) ──
+  // ── 1. CEK ROLE USER ──
   Future<void> _checkUserRole() async {
     final user = supabase.auth.currentUser;
     if (user != null) {
-      // Cek apakah ID user yang login ada di tabel 'paralegal'
       final response = await supabase
           .from('paralegal')
           .select('id')
           .eq('id', user.id)
-          .maybeSingle(); // maybeSingle agar tidak error merah kalau tidak ketemu
+          .maybeSingle();
 
       if (response != null) {
-        // Jika ketemu di tabel paralegal, berarti dia paralegal
         isParalegal.value = true;
       } else {
-        // Jika tidak ketemu, berarti dia masyarakat
         isParalegal.value = false;
       }
     }
   }
 
-  // ── 2. TARIK DATA DETAIL KASUS ──
+  // ── 2. TARIK DATA DETAIL KASUS (Berdasarkan ID yang diklik) ──
   Future<void> fetchDetailKasus() async {
     try {
       isLoading.value = true;
@@ -133,21 +130,34 @@ class DetailKasusController extends GetxController {
       final user = supabase.auth.currentUser;
       if (user == null) return;
 
-      // SEMENTARA: Agar bisa ngetes UI langsung tanpa error lempar ID,
-      // kita set ambil 1 data terakhir milik user ini.
-      // (Nanti di-update kalau navigasi bawa ID sudah fix)
+      // ✅ TANGKAP ID DARI HALAMAN DEPAN
+      final dynamic rawId = Get.arguments;
+
+      if (rawId == null) {
+        // ✅ DIBUNGKUS FUTURE.DELAYED AGAR TIDAK CRASH (LAYAR MERAH)
+        Future.delayed(Duration.zero, () {
+          Get.snackbar("Error", "ID Kasus tidak ditemukan dari halaman sebelumnya!");
+        });
+        return;
+      }
+
+      // Pastikan ID berbentuk String
+      final String kasusId = rawId.toString();
+
+      // ✅ CARI KASUS BERDASARKAN ID
       final response = await supabase
           .from('pengaduan')
           .select()
-          .order('tgl_lapor', ascending: false)
-          .limit(1)
+          .eq('id', kasusId)
           .single();
 
       kasus.value = DetailKasus.fromJson(response);
 
     } catch (e) {
       print("Error Fetch Detail: $e");
-      Get.snackbar("Info", "Data pengaduan belum tersedia");
+      Future.delayed(Duration.zero, () {
+        Get.snackbar("Info", "Data pengaduan belum tersedia / Gagal memuat data");
+      });
     } finally {
       isLoading.value = false;
     }
@@ -166,7 +176,6 @@ class DetailKasusController extends GetxController {
       final user = supabase.auth.currentUser;
       if (user == null) return;
 
-      // ✅ SESUAI TABEL: Update status & paralegal_id
       await supabase.from('pengaduan').update({
         'status': 'Diproses',
         'paralegal_id': user.id,
@@ -174,7 +183,6 @@ class DetailKasusController extends GetxController {
 
       Get.back(); // Tutup Loading
 
-      // Refresh Data UI
       await fetchDetailKasus();
 
       Get.snackbar(

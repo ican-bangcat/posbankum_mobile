@@ -27,6 +27,10 @@ import '../../modules/kelola_pengaduan/views/detail_kasus_paralegal_view.dart';
 import '../../modules/kelola_pengaduan/controllers/detail_kasus_paralegal_controller.dart';
 import '../../modules/kelola_pengaduan/views/update_progres_view.dart';
 import '../../modules/kelola_pengaduan/controllers/update_progres_controller.dart';
+import '../../modules/kelola_kegiatan/controllers/tambah_kegiatan_controller.dart';
+import '../../modules/kelola_kegiatan/views/tambah_kegiatan_view.dart';
+import '../../modules/kelola_kegiatan/bindings/tambah_kegiatan_binding.dart';
+import '../../modules/kelola_kegiatan/views/konfirmasi_kegiatan_view.dart';
 /// App Pages Configuration
 class AppPages {
   AppPages._();
@@ -163,6 +167,17 @@ class AppPages {
         Get.lazyPut<UpdateProgresController>(() => UpdateProgresController());
       }),
       transition: Transition.rightToLeft,
+    ),
+
+    GetPage(
+      name: AppRoutes.TAMBAH_KEGIATAN,
+      page: () => const TambahKegiatanView(),
+      binding: TambahKegiatanBinding(), // Kita buatkan bindingnya sekalian
+    ),
+    GetPage(
+      name: AppRoutes.KONFIRMASI_KEGIATAN,
+      page: () => const KonfirmasiKegiatanView(),
+      // Nggak perlu binding/controller khusus karena cuma tampilan statis
     ),
   ];
 }
