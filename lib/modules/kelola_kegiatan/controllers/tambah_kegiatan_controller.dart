@@ -28,7 +28,8 @@ class TambahKegiatanController extends GetxController {
     }
   }
 
-  // Pilih Tanggal & Waktu
+  
+// Pilih Tanggal & Waktu (Format 24 Jam)
   Future<void> pickDateTime(BuildContext context) async {
     DateTime? date = await showDatePicker(
       context: context,
@@ -41,6 +42,13 @@ class TambahKegiatanController extends GetxController {
       TimeOfDay? time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
+        builder: (context, child) {
+          // ✅ BIKIN FORMAT WAKTU JADI 24 JAM
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child!,
+          );
+        },
       );
       if (time != null) {
         selectedDate.value = DateTime(date.year, date.month, date.day, time.hour, time.minute);

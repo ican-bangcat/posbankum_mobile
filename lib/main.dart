@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // ✅ 1. Tambahan Wajib
-
+import 'package:intl/date_symbol_data_local.dart';
 import 'app/routes/app_pages.dart';
 import 'app/themes/app_colors.dart';
 
@@ -12,7 +12,8 @@ void main() async {
 
   // Initialize GetStorage
   await GetStorage.init();
-
+  // Biar DateFormat bisa bahasa Indonesia
+  await initializeDateFormatting('id_ID', null);
   // ✅ 2. INISIALISASI SUPABASE (JANTUNG APLIKASI)
   // Ganti dengan URL dan Key dari Dashboard Supabase kamu
   await Supabase.initialize(
@@ -20,7 +21,6 @@ void main() async {
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGx3Z3BuY3V1bmxwa2l3a3RuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNjg0MjcsImV4cCI6MjA4NTk0NDQyN30.7zpAzC7a7YwSk9Xx40W3i8E_i7qCRctXGEgFGR3i3HQ',                   // 👈 GANTI INI DENGAN KEY PANJANG
   );
 
-  // Set preferred orientations (portrait only)
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,

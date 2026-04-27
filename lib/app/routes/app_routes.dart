@@ -54,4 +54,6 @@ class AppRoutes {
 
   static const TAMBAH_KEGIATAN = '/tambah-kegiatan';
   static const KONFIRMASI_KEGIATAN = '/konfirmasi-kegiatan';
+  static const DETAIL_KEGIATAN = '/detail-kegiatan';
+  static const EDIT_KEGIATAN = '/edit-kegiatan';
 }

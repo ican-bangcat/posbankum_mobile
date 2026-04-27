@@ -31,6 +31,10 @@ import '../../modules/kelola_kegiatan/controllers/tambah_kegiatan_controller.dar
 import '../../modules/kelola_kegiatan/views/tambah_kegiatan_view.dart';
 import '../../modules/kelola_kegiatan/bindings/tambah_kegiatan_binding.dart';
 import '../../modules/kelola_kegiatan/views/konfirmasi_kegiatan_view.dart';
+import '../../modules/kelola_kegiatan/views/detail_kegiatan_view.dart';
+import '../../modules/kelola_kegiatan/bindings/detail_kegiatan_binding.dart';
+import '../../modules/kelola_kegiatan/views/edit_kegiatan_view.dart';
+import '../../modules/kelola_kegiatan/bindings/edit_kegiatan_binding.dart';
 /// App Pages Configuration
 class AppPages {
   AppPages._();
@@ -178,6 +182,17 @@ class AppPages {
       name: AppRoutes.KONFIRMASI_KEGIATAN,
       page: () => const KonfirmasiKegiatanView(),
       // Nggak perlu binding/controller khusus karena cuma tampilan statis
+    ),
+    GetPage(
+      name: AppRoutes.DETAIL_KEGIATAN,
+      page: () => const DetailKegiatanView(),
+      binding: DetailKegiatanBinding(),
+    ),
+    // Edit Kegiatan
+    GetPage(
+      name: AppRoutes.EDIT_KEGIATAN,
+      page: () => const EditKegiatanView(),
+      binding: EditKegiatanBinding(),
     ),
   ];
 }

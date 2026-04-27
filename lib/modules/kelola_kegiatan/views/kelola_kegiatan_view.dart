@@ -337,7 +337,8 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        Get.snackbar("Detail", "Membuka detail kegiatan ${item.judul}");
+                        // Pindah ke detail sambil bawa ID kegiatan
+                        Get.toNamed(AppRoutes.DETAIL_KEGIATAN, arguments: item.id);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: darkBlueColor,
