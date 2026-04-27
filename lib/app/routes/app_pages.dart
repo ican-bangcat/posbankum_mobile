@@ -185,7 +185,7 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.DETAIL_KEGIATAN,
-      page: () => const DetailKegiatanView(),
+      page: () =>  DetailKegiatanView(),
       binding: DetailKegiatanBinding(),
     ),
     // Edit Kegiatan

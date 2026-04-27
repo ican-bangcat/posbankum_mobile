@@ -57,14 +57,13 @@
         </array>
       </dict>
       <dict>
-              <key>CFBundleTypeRole</key>
-              <string>Editor</string>
-              <key>CFBundleURLSchemes</key>
-              <array>
-                <string>544639004251-li0n7nksf4i3tlps7edfl5bblmdnrsil.apps.googleusercontent.com</string>
-              </array>
-            </dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>544639004251-li0n7nksf4i3tlps7edfl5bblmdnrsil.apps.googleusercontent.com</string>
+        </array>
+      </dict>
     </array>
-
 </dict>
 </plist>
