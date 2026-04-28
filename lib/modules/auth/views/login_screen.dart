@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../app/themes/app_colors.dart';
 import '../../../app/routes/app_routes.dart';
-import 'register_modal.dart'; // ✅ 1. IMPORT MODAL REGISTER
+import 'register_modal.dart';
 
-/// Main Login Screen - 2 Button (Masuk & Daftar)
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
-  // ✅ 2. FUNGSI UNTUK MEMUNCULKAN MODAL
+  // Warna-warna sesuai request
+  static const Color bgColor = Color(0xFFFFFFFF); // Background putih
+  static const Color primaryBlue = Color(0xFF3B4287); // Tombol masuk
+  static const Color textDarkBlue = Color(0xFF2A2E5E); // Teks Posbankum
+  static const Color textDarkGray = Color(0xFF2C2C2C); // Teks tombol daftar
+
   void _showRegisterModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -21,7 +24,7 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: bgColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -31,10 +34,10 @@ class LoginScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 32.0),
                   child: Column(
                     children: [
+                      const SizedBox(height: 120), // Disesuaikan biar lebih ke tengah
+                      _buildLogoRow(),
                       const SizedBox(height: 60),
-                      _buildLogo(),
-                      const SizedBox(height: 80),
-                      _buildButtons(context), // ✅ Kirim Context ke sini
+                      _buildButtons(context),
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -48,23 +51,53 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLogo() {
-    return Image.asset(
-      'assets/images/logo/logo_posbankum.png',
-      width: 180,
-      height: 180,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) {
-        return Container(
-          width: 180,
-          height: 180,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(24),
+  // Desain Logo Kiri + Teks Posbankum Kanan
+  Widget _buildLogoRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Gambar Logo Kemenkum
+        Image.asset(
+          'assets/images/logo/logo_kemenkum.png',
+          width: 50, // Sesuaikan ukuran logo jika kurang besar
+          height: 50,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => Container(
+            width: 50, height: 50, color: Colors.grey[200], child: const Icon(Icons.broken_image),
           ),
-          child: const Icon(Icons.shield, size: 100, color: Colors.white),
-        );
-      },
+        ),
+        const SizedBox(width: 12),
+        // Garis Pembatas (Opsional, kalau di desain ada garis tipis)
+        Container(
+          width: 1.5,
+          height: 40,
+          color: textDarkBlue.withOpacity(0.5),
+        ),
+        const SizedBox(width: 12),
+        // Teks Posbankum
+        const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Posbankum',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600, // SemiBold
+                color: textDarkBlue,
+                height: 1.1,
+              ),
+            ),
+            Text(
+              'Kanwil kemenkum Riau',
+              style: TextStyle(
+                fontSize: 12,
+                color: textDarkBlue,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -73,20 +106,18 @@ class LoginScreen extends StatelessWidget {
       children: [
         _AnimatedButton(
           onPressed: () {
-            // Tombol MASUK -> Pindah ke Halaman Form Login
             Get.toNamed(AppRoutes.LOGIN_FORM);
           },
           isPrimary: true,
-          child: const Text('MASUK', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          child: const Text('Masuk', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 16),
         _AnimatedButton(
           onPressed: () {
-            // Tombol DAFTAR -> Buka Modal Register (JANGAN PINDAH HALAMAN)
             _showRegisterModal(context);
           },
           isPrimary: false,
-          child: const Text('DAFTAR', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          child: const Text('Daftar sebagai masyarakat', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
         ),
       ],
     );
@@ -94,15 +125,17 @@ class LoginScreen extends StatelessWidget {
 
   Widget _buildBottomIllustration() {
     return Image.asset(
-      'assets/images/icons/building_illustration2.png',
+      'assets/images/icons/logo_halaman_welcome.png', // Nama file baru
       width: double.infinity,
       height: 160,
-      fit: BoxFit.cover,
-      errorBuilder: (c, e, s) => Container(height: 160, color: Colors.grey[100]),
+      fit: BoxFit.contain,
+      alignment: Alignment.bottomCenter, // Biar gambarnya nempel di bawah
+      errorBuilder: (c, e, s) => const SizedBox(height: 160),
     );
   }
 }
 
+// Custom Animated Button
 class _AnimatedButton extends StatefulWidget {
   final VoidCallback onPressed;
   final Widget child;
@@ -152,15 +185,20 @@ class _AnimatedButtonState extends State<_AnimatedButton> with SingleTickerProvi
         },
         child: Container(
           width: double.infinity,
-          height: 50,
+          height: 52,
           decoration: BoxDecoration(
-            color: widget.isPrimary ? AppColors.buttonPrimary : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: widget.isPrimary ? null : Border.all(color: AppColors.primary, width: 2),
+            color: widget.isPrimary ? LoginScreen.primaryBlue : Colors.white,
+            borderRadius: BorderRadius.circular(10), // Sedikit kotak seperti desain
+            border: widget.isPrimary ? null : Border.all(color: LoginScreen.primaryBlue, width: 1.5),
+            boxShadow: widget.isPrimary ? [
+              BoxShadow(color: LoginScreen.primaryBlue.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))
+            ] : null,
           ),
           child: Center(
             child: DefaultTextStyle(
-              style: TextStyle(color: widget.isPrimary ? Colors.white : AppColors.primary),
+              style: TextStyle(
+                color: widget.isPrimary ? Colors.white : LoginScreen.textDarkGray, // Teks Daftar: 2C2C2C
+              ),
               child: widget.child,
             ),
           ),
