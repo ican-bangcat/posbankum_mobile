@@ -3,6 +3,7 @@ import '../../modules/splash/views/splash_screen.dart';
 import '../../modules/splash/controllers/splash_controller.dart';
 import '../../modules/onboarding/views/onboarding_screen.dart';
 import '../../modules/onboarding/controllers/onboarding_controller.dart';
+import '../../modules/auth/views/register_view.dart';
 import '../../modules/auth/views/login_screen.dart';
 import '../../modules/auth/views/login_form_screen.dart';
 import '../../modules/auth/views/home_masyarakat_screen.dart';
@@ -35,6 +36,8 @@ import '../../modules/kelola_kegiatan/views/detail_kegiatan_view.dart';
 import '../../modules/kelola_kegiatan/bindings/detail_kegiatan_binding.dart';
 import '../../modules/kelola_kegiatan/views/edit_kegiatan_view.dart';
 import '../../modules/kelola_kegiatan/bindings/edit_kegiatan_binding.dart';
+import '../../modules/profile/views/profile_view.dart';
+import '../../modules/profile/bindings/profile_binding.dart';
 /// App Pages Configuration
 class AppPages {
   AppPages._();
@@ -193,6 +196,22 @@ class AppPages {
       name: AppRoutes.EDIT_KEGIATAN,
       page: () => const EditKegiatanView(),
       binding: EditKegiatanBinding(),
+    ),
+    //Register
+    GetPage(
+      name: AppRoutes.REGISTER,
+      page: () => const RegisterView(), // Pastikan nama class-nya udah diganti
+    ),
+
+    GetPage(
+      name: AppRoutes.PROFILE,
+      page: () => const ProfileView(),
+      // Kalau kamu bikin binding, masukin binding-nya di sini
+    ),
+    GetPage(
+      name: AppRoutes.PROFILE,
+      page: () => const ProfileView(),
+      binding: ProfileBinding(), // ✅ Tambahkan baris ini
     ),
   ];
 }

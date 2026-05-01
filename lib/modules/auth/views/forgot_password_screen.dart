@@ -5,216 +5,286 @@ import '../controllers/forgot_password_controller.dart';
 class ForgotPasswordScreen extends StatelessWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
 
+  static const Color darkBlueColor = Color(0xFF2A2E5E);
+  static const Color textDark = Color(0xFF1E1E1E);
+  static const Color textLight = Color(0xFF64748B);
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(ForgotPasswordController());
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Get.back(),
-        ),
-        title: const Text(
-          'Reset Password',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+      body: SafeArea(
+        child: Obx(() {
+          if (controller.isSuccess.value) {
+            return _buildSuccessState(context, controller);
+          }
+          return _buildFormState(context, controller);
+        }),
       ),
-      body: Obx(() {
-        // Show success state
-        if (controller.isSuccess.value) {
-          return _buildSuccessState(controller);
-        }
-
-        // Show initial form state
-        return _buildFormState(controller);
-      }),
     );
   }
 
-  Widget _buildFormState(ForgotPasswordController controller) {
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                const Text(
-                  'Silahkan Reset Password dengan email anda agar link reset di kirim ke email anda',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF666666),
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                const Text(
-                  'Email',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF333333),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: controller.emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    hintText: 'contoh@email.com',
-                    hintStyle: const TextStyle(
-                      color: Color(0xFFAAAAAA),
-                      fontSize: 14,
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F5F5),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF22297A),
-                        width: 1.5,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
+  Widget _buildFormState(
+      BuildContext context, ForgotPasswordController controller) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ════════════════════════════════════════════════════
+                  // 1. CUSTOM HEADER
+                  // ════════════════════════════════════════════════════
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 16, 16, 0),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Colors.black, size: 22),
+                          onPressed: () => Get.back(),
+                        ),
+                        const Expanded(
+                          child: Center(
+                            child: Text(
+                              'Reset password',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 48),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 32),
-                Obx(() => SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: controller.isLoading.value
-                        ? null
-                        : () => controller.sendResetLink(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF22297A),
-                      disabledBackgroundColor: const Color(0xFF22297A).withOpacity(0.6),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: controller.isLoading.value
-                        ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                        : const Text(
-                      'Kirim',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
+
+                  // ════════════════════════════════════════════════════
+                  // 2. KONTEN FORM
+                  // ════════════════════════════════════════════════════
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Center(
+                          child: Text(
+                            'Silakan masukkan alamat email Anda.\nKami akan mengirimkan tautan untuk mereset kata sandi.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 13, color: textLight, height: 1.6),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        const Text(
+                          'Email',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textDark),
+                        ),
+                        const SizedBox(height: 8),
+
+                        TextField(
+                          controller: controller.emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          style: const TextStyle(fontSize: 14, color: textDark),
+                          decoration: InputDecoration(
+                            hintText: 'contoh@email.com',
+                            hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: darkBlueColor, width: 1.5),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        Obx(() => SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: controller.isLoading.value
+                                ? null
+                                : () => controller.sendResetLink(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: darkBlueColor,
+                              disabledBackgroundColor: darkBlueColor.withOpacity(0.6),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              elevation: 0,
+                            ),
+                            child: controller.isLoading.value
+                                ? const SizedBox(
+                              height: 22, width: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                                : const Text(
+                              'Kirim',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                            ),
+                          ),
+                        )),
+                      ],
                     ),
                   ),
-                )),
-              ],
+
+                  // ════════════════════════════════════════════════════
+                  // 3. SPACER + ILUSTRASI BAWAH
+                  // ════════════════════════════════════════════════════
+                  const Spacer(),
+                  SizedBox(
+                    height: (MediaQuery.of(context).size.height * 0.26).clamp(160.0, 260.0),
+                    child: Image.asset(
+                      'assets/images/icons/ilustrasi_halaman_reset_password.png',
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                      alignment: Alignment.bottomCenter,
+                      errorBuilder: (c, e, s) => const SizedBox(),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        // Footer illustration
-        Image.asset(
-          'assets/images/icons/building_illustration2.png',
-          width: double.infinity,
-          fit: BoxFit.contain,
-          height: 150,
-        ),
-      ],
+        );
+      },
     );
   }
 
-  Widget _buildSuccessState(ForgotPasswordController controller) {
+  // ════════════════════════════════════════════════════════════════════
+  // STATE SUKSES - SESUAI DESAIN BARU
+  // ════════════════════════════════════════════════════════════════════
+  Widget _buildSuccessState(
+      BuildContext context, ForgotPasswordController controller) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Custom header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 16, 16, 0),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black, size: 22),
+                onPressed: () => Get.back(),
+              ),
+              const Expanded(
+                child: Center(
+                  child: Text(
+                    'Reset password',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 48),
+            ],
+          ),
+        ),
+
         Expanded(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Envelope icon
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF22297A).withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.mail_outline,
-                      size: 60,
-                      color: Color(0xFF22297A),
+                  // --- GAMBAR IKON BARU ---
+                  Image.asset(
+                    'assets/images/icons/icon_reset_password.png',
+                    height: 100, // Disesuaikan proporsinya
+                    fit: BoxFit.contain,
+                    errorBuilder: (c, e, s) => const Icon(
+                      Icons.mark_email_unread_rounded,
+                      size: 80,
+                      color: darkBlueColor,
                     ),
                   ),
                   const SizedBox(height: 32),
-                  const Text(
-                    'Link Reset Telah Dikirim',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF333333),
-                    ),
+
+                  // --- TEKS FORMAL & RAPI ---
+                  RichText(
                     textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: textDark,
+                        height: 1.6,
+                      ),
+                      children: [
+                        const TextSpan(text: 'Tautan untuk mereset kata sandi telah dikirim ke\n'),
+                        TextSpan(
+                          text: controller.emailController.text,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const TextSpan(text: '.\nSilakan periksa kotak masuk Anda dan ikuti instruksi di dalamnya.'),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Sudah di kirim link reset ke ${controller.emailController.text}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF666666),
-                      height: 1.5,
+                  const SizedBox(height: 40),
+
+                  // --- TOMBOL KEMBALI (BIRU SOLID) ---
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: () => Get.back(), // Fungsi kembali ke form login
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: darkBlueColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Kembali ke Halaman Masuk',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Silahkan ikuti intruksi untuk mereset password',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF666666),
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
           ),
         ),
-        // Footer illustration
-        Image.asset(
-          'assets/images/icons/building_illustration2.png',
-          width: double.infinity,
-          fit: BoxFit.contain,
-          height: 150,
+
+        // --- ILUSTRASI BAWAH ---
+        SizedBox(
+          height: (MediaQuery.of(context).size.height * 0.26).clamp(160.0, 260.0),
+          child: Image.asset(
+            'assets/images/icons/ilustrasi_halaman_reset_password.png',
+            width: double.infinity,
+            fit: BoxFit.contain,
+            alignment: Alignment.bottomCenter,
+            errorBuilder: (c, e, s) => const SizedBox(),
+          ),
         ),
       ],
     );

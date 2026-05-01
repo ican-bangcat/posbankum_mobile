@@ -1,25 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
-import 'register_modal.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   // Warna-warna sesuai request
-  static const Color bgColor = Color(0xFFFFFFFF); // Background putih
-  static const Color primaryBlue = Color(0xFF3B4287); // Tombol masuk
-  static const Color textDarkBlue = Color(0xFF2A2E5E); // Teks Posbankum
-  static const Color textDarkGray = Color(0xFF2C2C2C); // Teks tombol daftar
+  static const Color bgColor = Color(0xFFFFFFFF);
+  static const Color primaryBlue = Color(0xFF3B4287);
+  static const Color textDarkBlue = Color(0xFF2A2E5E);
+  static const Color textDarkGray = Color(0xFF2C2C2C);
 
-  void _showRegisterModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const RegisterModal(),
-    );
-  }
+  // FUNGSI MODAL DIHAPUS DARI SINI
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +26,7 @@ class LoginScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 32.0),
                   child: Column(
                     children: [
-                      const SizedBox(height: 120), // Disesuaikan biar lebih ke tengah
+                      const SizedBox(height: 120),
                       _buildLogoRow(),
                       const SizedBox(height: 60),
                       _buildButtons(context),
@@ -51,16 +43,14 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  // Desain Logo Kiri + Teks Posbankum Kanan
   Widget _buildLogoRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Gambar Logo Kemenkum
         Image.asset(
           'assets/images/logo/logo_kemenkum.png',
-          width: 50, // Sesuaikan ukuran logo jika kurang besar
+          width: 50,
           height: 50,
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) => Container(
@@ -68,14 +58,12 @@ class LoginScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        // Garis Pembatas (Opsional, kalau di desain ada garis tipis)
         Container(
           width: 1.5,
           height: 40,
           color: textDarkBlue.withOpacity(0.5),
         ),
         const SizedBox(width: 12),
-        // Teks Posbankum
         const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -83,7 +71,7 @@ class LoginScreen extends StatelessWidget {
               'Posbankum',
               style: TextStyle(
                 fontSize: 24,
-                fontWeight: FontWeight.w600, // SemiBold
+                fontWeight: FontWeight.w600,
                 color: textDarkBlue,
                 height: 1.1,
               ),
@@ -114,7 +102,8 @@ class LoginScreen extends StatelessWidget {
         const SizedBox(height: 16),
         _AnimatedButton(
           onPressed: () {
-            _showRegisterModal(context);
+            // ✅ BERUBAH: Langsung navigasi ke rute Register
+            Get.toNamed(AppRoutes.REGISTER);
           },
           isPrimary: false,
           child: const Text('Daftar sebagai masyarakat', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
@@ -125,17 +114,16 @@ class LoginScreen extends StatelessWidget {
 
   Widget _buildBottomIllustration() {
     return Image.asset(
-      'assets/images/icons/logo_halaman_welcome.png', // Nama file baru
+      'assets/images/icons/logo_halaman_welcome.png',
       width: double.infinity,
       height: 160,
       fit: BoxFit.contain,
-      alignment: Alignment.bottomCenter, // Biar gambarnya nempel di bawah
+      alignment: Alignment.bottomCenter,
       errorBuilder: (c, e, s) => const SizedBox(height: 160),
     );
   }
 }
 
-// Custom Animated Button
 class _AnimatedButton extends StatefulWidget {
   final VoidCallback onPressed;
   final Widget child;
@@ -188,7 +176,7 @@ class _AnimatedButtonState extends State<_AnimatedButton> with SingleTickerProvi
           height: 52,
           decoration: BoxDecoration(
             color: widget.isPrimary ? LoginScreen.primaryBlue : Colors.white,
-            borderRadius: BorderRadius.circular(10), // Sedikit kotak seperti desain
+            borderRadius: BorderRadius.circular(10),
             border: widget.isPrimary ? null : Border.all(color: LoginScreen.primaryBlue, width: 1.5),
             boxShadow: widget.isPrimary ? [
               BoxShadow(color: LoginScreen.primaryBlue.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))
@@ -197,7 +185,7 @@ class _AnimatedButtonState extends State<_AnimatedButton> with SingleTickerProvi
           child: Center(
             child: DefaultTextStyle(
               style: TextStyle(
-                color: widget.isPrimary ? Colors.white : LoginScreen.textDarkGray, // Teks Daftar: 2C2C2C
+                color: widget.isPrimary ? Colors.white : LoginScreen.textDarkGray,
               ),
               child: widget.child,
             ),

@@ -10,7 +10,7 @@ class AppRoutes {
   // Auth
   static const String LOGIN = '/login'; // Main login (2 button)
   static const String LOGIN_FORM = '/login-form'; // Form login
-  static const String REGISTER = '/register'; // Form register
+  static const  REGISTER = '/register'; // Form register
   static const String FORGOT_PASSWORD = '/forgot-password';
   static const String VERIFY_OTP = '/verify-otp';
   static const String RESET_PASSWORD = '/reset-password';
@@ -19,7 +19,7 @@ class AppRoutes {
 
   // Main
   static const String HOME = '/home';
-  static const String PROFILE = '/profile';
+
   static const String SETTINGS = '/settings';
   
   // Complaint
@@ -56,4 +56,6 @@ class AppRoutes {
   static const KONFIRMASI_KEGIATAN = '/konfirmasi-kegiatan';
   static const DETAIL_KEGIATAN = '/detail-kegiatan';
   static const EDIT_KEGIATAN = '/edit-kegiatan';
+
+  static const  PROFILE = '/profile';
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
-import 'register_modal.dart';
 
 class LoginFormScreen extends StatefulWidget {
   const LoginFormScreen({super.key});
@@ -33,14 +32,7 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
     super.dispose();
   }
 
-  void _showRegisterModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const RegisterModal(),
-    );
-  }
+  // FUNGSI MODAL DIHAPUS DARI SINI
 
   @override
   Widget build(BuildContext context) {
@@ -58,9 +50,6 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // ════════════════════════════════════════════════════
-                      // 1. BAGIAN HEADER (Logo + Teks Sapaan)
-                      // ════════════════════════════════════════════════════
                       Padding(
                         padding: const EdgeInsets.fromLTRB(32, 52, 32, 0),
                         child: Column(
@@ -70,12 +59,7 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                             const SizedBox(height: 28),
                             const Text(
                               'Selamat Datang',
-                              style: TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w600,
-                                color: textDark,
-                                letterSpacing: -0.5,
-                              ),
+                              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w600, color: textDark, letterSpacing: -0.5),
                             ),
                             const SizedBox(height: 6),
                             const Text(
@@ -86,11 +70,8 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                         ),
                       ),
 
-                      // ════════════════════════════════════════════════════
-                      // 2. ILUSTRASI — RESPONSIVE DENGAN MEDIAQUERY + CLAMP
-                      // ════════════════════════════════════════════════════
                       SizedBox(
-                        height: (MediaQuery.of(context).size.height * 0.18).clamp(120.0, 200.0), // 🔥 FIX RESPONSIVE DI SINI
+                        height: (MediaQuery.of(context).size.height * 0.18).clamp(120.0, 200.0),
                         child: Image.asset(
                           'assets/images/icons/logo_halaman_login.png',
                           fit: BoxFit.contain,
@@ -99,9 +80,6 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                         ),
                       ),
 
-                      // ════════════════════════════════════════════════════
-                      // 3. BAGIAN FORM BIRU TUA
-                      // ════════════════════════════════════════════════════
                       Expanded(
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(28, 36, 28, 0),
@@ -117,86 +95,48 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // --- INPUT EMAIL ---
-                                const Text(
-                                  'Email',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                                const Text('Email', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
                                 const SizedBox(height: 8),
                                 TextFormField(
                                   controller: _emailController,
                                   keyboardType: TextInputType.emailAddress,
-                                  decoration:
-                                  _inputDecoration('Email', Icons.email_outlined),
-                                  validator: (v) =>
-                                  v!.isEmpty ? 'Email wajib diisi' : null,
+                                  decoration: _inputDecoration('Email', Icons.email_outlined),
+                                  validator: (v) => v!.isEmpty ? 'Email wajib diisi' : null,
                                 ),
 
                                 const SizedBox(height: 20),
 
-                                // --- INPUT KATA SANDI ---
-                                const Text(
-                                  'Kata Sandi',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                                const Text('Kata Sandi', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
                                 const SizedBox(height: 8),
                                 TextFormField(
                                   controller: _passwordController,
                                   obscureText: _obscurePassword,
-                                  decoration:
-                                  _inputDecoration('Kata Sandi', Icons.lock_outline)
-                                      .copyWith(
+                                  decoration: _inputDecoration('Kata Sandi', Icons.lock_outline).copyWith(
                                     suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _obscurePassword
-                                            ? Icons.visibility_off
-                                            : Icons.visibility,
-                                        color: Colors.grey,
-                                        size: 20,
-                                      ),
-                                      onPressed: () => setState(
-                                              () => _obscurePassword = !_obscurePassword),
+                                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey, size: 20),
+                                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                                     ),
                                   ),
-                                  validator: (v) =>
-                                  v!.isEmpty ? 'Kata sandi wajib diisi' : null,
+                                  validator: (v) => v!.isEmpty ? 'Kata sandi wajib diisi' : null,
                                 ),
 
                                 const SizedBox(height: 10),
 
-                                // --- LUPA KATA SANDI ---
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: TextButton(
-                                    onPressed: () =>
-                                        Get.toNamed(AppRoutes.FORGOT_PASSWORD),
+                                    onPressed: () => Get.toNamed(AppRoutes.FORGOT_PASSWORD),
                                     style: TextButton.styleFrom(
                                       padding: EdgeInsets.zero,
                                       minimumSize: const Size(50, 30),
                                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                     ),
-                                    child: const Text(
-                                      'Lupa kata sandi?',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: yellowAccent,
-                                      ),
-                                    ),
+                                    child: const Text('Lupa kata sandi?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: yellowAccent)),
                                   ),
                                 ),
 
                                 const SizedBox(height: 24),
 
-                                // --- TOMBOL MASUK ---
                                 SizedBox(
                                   width: double.infinity,
                                   height: 52,
@@ -204,69 +144,33 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                                     onPressed: authC.isLoading.value
                                         ? null
                                         : () {
-                                      if (_formKey.currentState!
-                                          .validate()) {
-                                        authC.login(
-                                          _emailController.text,
-                                          _passwordController.text,
-                                        );
+                                      if (_formKey.currentState!.validate()) {
+                                        authC.login(_emailController.text, _passwordController.text);
                                       }
                                     },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                       elevation: 0,
                                     ),
                                     child: authC.isLoading.value
-                                        ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                          color: darkBlueColor),
-                                    )
-                                        : const Text(
-                                      'Masuk',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                        color: darkBlueColor,
-                                      ),
-                                    ),
+                                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: darkBlueColor))
+                                        : const Text('Masuk', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: darkBlueColor)),
                                   )),
                                 ),
 
                                 const SizedBox(height: 12),
 
-                                // --- TOMBOL GOOGLE ---
                                 SizedBox(
                                   width: double.infinity,
                                   height: 52,
                                   child: ElevatedButton.icon(
                                     onPressed: () => authC.loginWithGoogle(),
-                                    icon: Image.asset(
-                                      'assets/images/icons/google.png',
-                                      height: 22,
-                                      errorBuilder: (c, e, s) => const Icon(
-                                        Icons.g_mobiledata,
-                                        color: darkBlueColor,
-                                        size: 28,
-                                      ),
-                                    ),
-                                    label: const Text(
-                                      'Masuk dengan Google',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: textLight,
-                                      ),
-                                    ),
+                                    icon: Image.asset('assets/images/icons/google.png', height: 22, errorBuilder: (c, e, s) => const Icon(Icons.g_mobiledata, color: darkBlueColor, size: 28)),
+                                    label: const Text('Masuk dengan Google', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textLight)),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                       elevation: 0,
                                     ),
                                   ),
@@ -275,29 +179,16 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                                 const Spacer(),
                                 const SizedBox(height: 20),
 
-                                // --- LINK DAFTAR ---
                                 Center(
                                   child: Wrap(
                                     alignment: WrapAlignment.center,
                                     crossAxisAlignment: WrapCrossAlignment.center,
                                     children: [
-                                      const Text(
-                                        'Belum punya akun? ',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.white,
-                                        ),
-                                      ),
+                                      const Text('Belum punya akun? ', style: TextStyle(fontSize: 14, color: Colors.white)),
                                       GestureDetector(
-                                        onTap: _showRegisterModal,
-                                        child: const Text(
-                                          'Daftar',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w700,
-                                            color: yellowAccent,
-                                          ),
-                                        ),
+                                        // ✅ BERUBAH: Langsung navigasi ke rute Register
+                                        onTap: () => Get.toNamed(AppRoutes.REGISTER),
+                                        child: const Text('Daftar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: yellowAccent)),
                                       ),
                                     ],
                                   ),
@@ -319,22 +210,14 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
     );
   }
 
-  // --- WIDGET HEADER LOGO ---
   Widget _buildLogoRow() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Image.asset(
           'assets/images/logo/logo_kemenkum.png',
-          width: 52,
-          height: 52,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) => Container(
-            width: 52,
-            height: 52,
-            color: Colors.grey[200],
-            child: const Icon(Icons.broken_image),
-          ),
+          width: 52, height: 52, fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => Container(width: 52, height: 52, color: Colors.grey[200], child: const Icon(Icons.broken_image)),
         ),
         const SizedBox(width: 14),
         Container(width: 2, height: 40, color: darkBlueColor),
@@ -342,26 +225,14 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
         const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Posbankum',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: darkBlueColor,
-                height: 1.1,
-              ),
-            ),
-            Text(
-              'Kanwil kemenkum Riau',
-              style: TextStyle(fontSize: 13, color: textLight),
-            ),
+            Text('Posbankum', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: darkBlueColor, height: 1.1)),
+            Text('Kanwil kemenkum Riau', style: TextStyle(fontSize: 13, color: textLight)),
           ],
         ),
       ],
     );
   }
 
-  // --- STYLING KOTAK INPUT ---
   InputDecoration _inputDecoration(String hint, IconData icon) {
     return InputDecoration(
       hintText: hint,
@@ -370,18 +241,9 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: yellowAccent, width: 2),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: yellowAccent, width: 2)),
     );
   }
 }
