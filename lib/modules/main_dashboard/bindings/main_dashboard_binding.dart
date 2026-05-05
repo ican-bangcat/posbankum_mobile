@@ -1,14 +1,18 @@
 import 'package:get/get.dart';
 import '../controllers/main_dashboard_controller.dart';
-// WAJIB: Masukkan binding halaman anak-anaknya ke sini supaya controllernya ikut hidup
 import '../../riwayatPengaduan/controllers/riwayat_pengaduan_controller.dart';
-import '../../auth/views/home_masyarakat_screen.dart';
+import '../../profile/controllers/profile_controller.dart'; // ✅ Tambah Import Profile Controller
 
 class MainDashboardBinding extends Bindings {
   @override
   void dependencies() {
+    // 1. Controller untuk Navbar Utama
     Get.lazyPut<MainDashboardController>(() => MainDashboardController());
-    // Masukkan controller riwayat pengaduan di sini
+
+    // 2. Controller untuk Riwayat Pengaduan
     Get.lazyPut<RiwayatPengaduanController>(() => RiwayatPengaduanController());
+
+    // 3. Controller untuk Profile (✅ Tambahkan ini)
+    Get.lazyPut<ProfileController>(() => ProfileController());
   }
 }

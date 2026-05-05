@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/main_dashboard_controller.dart';
+
 // Import halaman riwayat yang sudah kamu buat
 import '../../riwayatPengaduan/views/riwayat_pengaduan_view.dart';
 import '../../auth/views/home_masyarakat_screen.dart';
+import '../../profile/views/profile_view.dart'; // ✅ Tambah Import Profile View
 
 class MainDashboardView extends GetView<MainDashboardController> {
   const MainDashboardView({super.key});
@@ -16,13 +18,13 @@ class MainDashboardView extends GetView<MainDashboardController> {
       const RiwayatPengaduanView(),                      // Index 1
       const HomeMasyarakatScreen(),                      // Index 2 (Home)
       const Center(child: Text('Halaman Chat')),         // Index 3
-      const Center(child: Text('Halaman Profile')),      // Index 4
+      const ProfileView(),                               // ✅ Index 4 (Ubah jadi ProfileView asli!)
     ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F4FB),
 
-      // ✅ PERBAIKAN DI SINI: Menggunakan IndexedStack agar tidak error
+      // Menggunakan IndexedStack agar state halaman tidak reset saat pindah tab
       body: Obx(() => IndexedStack(
         index: controller.selectedIndex.value,
         children: pages,
@@ -48,7 +50,6 @@ class MainDashboardView extends GetView<MainDashboardController> {
             top: false,
             child: SizedBox(
               height: 80,
-              // Hapus spaceAround karena sudah diurus oleh Expanded di bawah
               child: Row(
                 children: [
                   _buildNavItem(
@@ -63,7 +64,7 @@ class MainDashboardView extends GetView<MainDashboardController> {
                   ),
                   _buildNavItem(
                     icon: Icons.home_outlined,
-                    label: 'Home', // Typo diperbaiki
+                    label: 'Home',
                     index: 2,
                   ),
                   _buildNavItem(
@@ -118,8 +119,8 @@ class MainDashboardView extends GetView<MainDashboardController> {
             // Teks Navigasi
             Text(
               label,
-              maxLines: 1, // Mencegah teks turun ke baris bawah kalau layarnya kecil
-              overflow: TextOverflow.ellipsis, // Kalau kepanjangan, ujungnya jadi "..."
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: color,
                 fontSize: 10,
