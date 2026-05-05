@@ -38,6 +38,8 @@ import '../../modules/kelola_kegiatan/views/edit_kegiatan_view.dart';
 import '../../modules/kelola_kegiatan/bindings/edit_kegiatan_binding.dart';
 import '../../modules/profile/views/profile_view.dart';
 import '../../modules/profile/bindings/profile_binding.dart';
+import '../../modules/profile/views/edit_profile_view.dart';
+import '../../modules/profile/bindings/edit_profile_binding.dart';
 /// App Pages Configuration
 class AppPages {
   AppPages._();
@@ -212,6 +214,11 @@ class AppPages {
       name: AppRoutes.PROFILE,
       page: () => const ProfileView(),
       binding: ProfileBinding(), // ✅ Tambahkan baris ini
+    ),
+    GetPage(
+      name: AppRoutes.EDIT_PROFILE, // Atau Routes.EDIT_PROFILE (sesuaikan dengan nama class kamu)
+      page: () => const EditProfileView(),
+      binding: EditProfileBinding(),
     ),
   ];
 }

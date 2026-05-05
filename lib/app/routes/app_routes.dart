@@ -58,4 +58,6 @@ class AppRoutes {
   static const EDIT_KEGIATAN = '/edit-kegiatan';
 
   static const  PROFILE = '/profile';
+  static const EDIT_PROFILE = '/edit-profile';
+
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/profile_controller.dart';
-
+import '../../../app/routes/app_routes.dart';
 class ProfileView extends GetView<ProfileController> {
   const ProfileView({super.key});
 
@@ -104,7 +104,7 @@ class ProfileView extends GetView<ProfileController> {
                               icon: Icons.person_outline,
                               title: 'Edit Profil',
                               onTap: () {
-                                Get.snackbar('Info', 'Fitur Edit Profil segera hadir!');
+                                Get.toNamed(AppRoutes.EDIT_PROFILE);
                               },
                             ),
                             _buildDivider(),
@@ -167,14 +167,13 @@ class ProfileView extends GetView<ProfileController> {
 
                   // Cek apakah ada avatarUrl dari database
                   bool hasAvatar = controller.avatarUrl.value.isNotEmpty;
-
                   return CircleAvatar(
                     backgroundColor: const Color(0xFFF1F5F9),
+                    // ✅ Ganti AssetImage jadi null
                     backgroundImage: hasAvatar
-                        ? NetworkImage(controller.avatarUrl.value) // Tarik dari Supabase
-                        : const AssetImage('assets/images/profile_placeholder.png') as ImageProvider, // Default lokal
+                        ? NetworkImage(controller.avatarUrl.value)
+                        : null,
 
-                    // Kalau gak ada foto di database & gak ada file placeholder lokal, pakai icon bawaan
                     child: hasAvatar
                         ? null
                         : Icon(Icons.person, size: avatarSize * 0.45, color: textLight),
