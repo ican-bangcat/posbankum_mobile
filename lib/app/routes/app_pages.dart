@@ -40,6 +40,8 @@ import '../../modules/profile/views/profile_view.dart';
 import '../../modules/profile/bindings/profile_binding.dart';
 import '../../modules/profile/views/edit_profile_view.dart';
 import '../../modules/profile/bindings/edit_profile_binding.dart';
+import '../../modules/profil_posbankum/bindings/profil_posbankum_binding.dart';
+import '../../modules/profil_posbankum/views/profil_posbankum_view.dart';
 /// App Pages Configuration
 class AppPages {
   AppPages._();
@@ -219,6 +221,11 @@ class AppPages {
       name: AppRoutes.EDIT_PROFILE, // Atau Routes.EDIT_PROFILE (sesuaikan dengan nama class kamu)
       page: () => const EditProfileView(),
       binding: EditProfileBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.PROFIL_POSBANKUM,
+      page: () => const ProfilPosbankumView(),
+      binding: ProfilPosbankumBinding(),
     ),
   ];
 }

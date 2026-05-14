@@ -60,4 +60,6 @@ class AppRoutes {
   static const  PROFILE = '/profile';
   static const EDIT_PROFILE = '/edit-profile';
 
+  static const PROFIL_POSBANKUM = '/profil-posbankum';
+
 }

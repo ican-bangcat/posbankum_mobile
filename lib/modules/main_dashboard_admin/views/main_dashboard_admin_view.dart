@@ -6,6 +6,7 @@ import '../controllers/main_dashboard_admin_controller.dart';
 import '../../auth/views/home_paralegal_screen.dart';
 import '../../kelola_pengaduan/views/kelola_pengaduan_view.dart';
 import '../../kelola_kegiatan/views/kelola_kegiatan_view.dart';
+import '../../profil_posbankum/views/profil_posbankum_view.dart';
 // import '../../kegiatan/views/kegiatan_view.dart'; // (Contoh kalau halamannya udah ada)
 
 class MainDashboardAdminView extends GetView<MainDashboardAdminController> {
@@ -19,7 +20,7 @@ class MainDashboardAdminView extends GetView<MainDashboardAdminController> {
       const KelolaPengaduanView(),    // Index 1 (Pengaduan Admin)
       const HomeParalegalScreen(),                       // Index 2 (Home Admin Asli!)
       const Center(child: Text('Halaman Chat Admin')),   // Index 3 (Chat)
-      const Center(child: Text('Profile Admin')),        // Index 4 (Profile)
+      const ProfilPosbankumView(),    // Index 4 (Profile)
     ];
 
     return Scaffold(

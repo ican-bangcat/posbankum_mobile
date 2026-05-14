@@ -2,23 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // ✅ 1. Tambahan Wajib
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'app/routes/app_pages.dart';
 import 'app/themes/app_colors.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize GetStorage
   await GetStorage.init();
+
   // Biar DateFormat bisa bahasa Indonesia
   await initializeDateFormatting('id_ID', null);
-  // ✅ 2. INISIALISASI SUPABASE (JANTUNG APLIKASI)
-  // Ganti dengan URL dan Key dari Dashboard Supabase kamu
+
+  // 1. LOAD DATA DARI FILE .env
+  await dotenv.load(fileName: ".env");
+
+  // 2. INISIALISASI SUPABASE
+  // Memanggil URL dan Key PUNYAMU SENDIRI dari file .env
   await Supabase.initialize(
-    url: 'https://knllwgpncuunlpkiwktn.supabase.co', // 👈 GANTI INI
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGx3Z3BuY3V1bmxwa2l3a3RuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNjg0MjcsImV4cCI6MjA4NTk0NDQyN30.7zpAzC7a7YwSk9Xx40W3i8E_i7qCRctXGEgFGR3i3HQ',                   // 👈 GANTI INI DENGAN KEY PANJANG
+    url: dotenv.env['MY_SUPABASE_URL']!,
+    anonKey: dotenv.env['MY_SUPABASE_KEY']!,
   );
 
   await SystemChrome.setPreferredOrientations([
