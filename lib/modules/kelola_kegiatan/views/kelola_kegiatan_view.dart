@@ -256,6 +256,20 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
     );
   }
 
+  // ✅ Helper untuk Warna Badge Status
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'disetujui':
+        return Colors.green;
+      case 'ditolak':
+        return Colors.red;
+      case 'menunggu':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
   Widget _buildKegiatanCard(KegiatanItem item) {
     return Container(
       clipBehavior: Clip.hardEdge,
@@ -272,7 +286,7 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
           // Gambar Header & Badge
           Stack(
             children: [
-              // ✅ AMAN DARI ERROR: Cek kalau item.imageUrl null, kasih gambar abu-abu
+              // Cek kalau item.imageUrl null, kasih gambar abu-abu
               Image.network(
                 item.imageUrl ?? '',
                 height: 140,
@@ -285,6 +299,24 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
                   child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 40),
                 ),
               ),
+
+              // ✅ BADGE STATUS (Kiri Atas)
+              Positioned(
+                top: 16, left: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                      color: _getStatusColor(item.status),
+                      borderRadius: BorderRadius.circular(8)
+                  ),
+                  child: Text(
+                      item.status.toUpperCase(),
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5)
+                  ),
+                ),
+              ),
+
+              // BADGE KATEGORI (Kanan Atas)
               Positioned(
                 top: 16, right: 16,
                 child: Container(

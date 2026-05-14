@@ -11,7 +11,6 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
 
   @override
   Widget build(BuildContext context) {
-    // Inisialisasi controller
     Get.put(TambahKegiatanController());
 
     return Scaffold(
@@ -31,7 +30,6 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // --- UPLOAD FOTO ---
                     const Text("Foto Sampul (Opsional)", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
                     const SizedBox(height: 12),
                     Obx(() => GestureDetector(
@@ -61,13 +59,9 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
                     )),
 
                     const SizedBox(height: 24),
-
-                    // --- FORM INPUTS ---
                     _buildInputCard(),
-
                     const SizedBox(height: 32),
 
-                    // --- TOMBOL SIMPAN ---
                     Obx(() => ElevatedButton(
                       onPressed: controller.isLoading.value ? null : controller.simpanKegiatan,
                       style: ElevatedButton.styleFrom(
@@ -106,12 +100,12 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
           _buildTextField(controller.judulCtrl, "Contoh: Penyuluhan Hukum Desa"),
 
           const SizedBox(height: 20),
-          _buildFieldLabel("Tanggal & Waktu"),
+          _buildFieldLabel("Tanggal Kegiatan"),
           Obx(() => _buildClickableField(
-            onTap: () => controller.pickDateTime(Get.context!),
+            onTap: () => controller.pickDate(Get.context!),
             text: controller.selectedDate.value == null
-                ? "Pilih Jadwal"
-                : DateFormat('dd MMMM yyyy, HH:mm').format(controller.selectedDate.value!),
+                ? "Pilih Tanggal"
+                : DateFormat('dd MMMM yyyy').format(controller.selectedDate.value!),
             icon: Icons.calendar_today_outlined,
           )),
 
@@ -120,10 +114,128 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
           _buildTextField(controller.lokasiCtrl, "Cari lokasi atau masukkan alamat", icon: Icons.location_on_outlined),
 
           const SizedBox(height: 20),
+          _buildFieldLabel("Jumlah Peserta (Opsional)"),
+          _buildTextField(controller.jmlPesertaCtrl, "Contoh: 50", icon: Icons.people_outline, keyboardType: TextInputType.number),
+
+          // ✅ TAMBAHAN FIELD: ANGGOTA TERLIBAT (MULTI-SELECT)
+          const SizedBox(height: 20),
+          _buildFieldLabel("Anggota Terlibat (Opsional)"),
+          _buildMultiSelectParalegal(),
+
+          const SizedBox(height: 20),
           _buildFieldLabel("Deskripsi Kegiatan"),
           _buildTextField(controller.deskripsiCtrl, "Jelaskan detail agenda kegiatan...", isMultiLine: true),
         ],
       ),
+    );
+  }
+
+  // ✅ FUNGSI UI BARU: FIELD MULTI-SELECT
+  Widget _buildMultiSelectParalegal() {
+    return Obx(() {
+      return GestureDetector(
+        onTap: () => _showParalegalBottomSheet(),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: controller.selectedParalegals.isEmpty
+              ? const Text("Pilih anggota yang terlibat...", style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14))
+              : Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: controller.selectedParalegals.map((nama) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: darkBlueColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: darkBlueColor.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(nama, style: const TextStyle(fontSize: 12, color: darkBlueColor, fontWeight: FontWeight.w600)),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () => controller.toggleParalegal(nama), // Bisa hapus dari luar juga
+                      child: const Icon(Icons.close, size: 14, color: darkBlueColor),
+                    )
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      );
+    });
+  }
+
+  // ✅ FUNGSI UI BARU: BOTTOM SHEET UNTUK PILIH PARALEGAL
+  void _showParalegalBottomSheet() {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(child: Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)))),
+            const SizedBox(height: 24),
+            const Text("Pilih Anggota Terlibat", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
+            const SizedBox(height: 16),
+
+            // List Checkbox Paralegal
+            Flexible(
+              child: Obx(() {
+                if (controller.paralegalList.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: Text("Belum ada data paralegal di posbankum ini.", style: TextStyle(fontStyle: FontStyle.italic)),
+                  );
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: controller.paralegalList.length,
+                  itemBuilder: (context, index) {
+                    final nama = controller.paralegalList[index];
+                    return Obx(() {
+                      final isSelected = controller.selectedParalegals.contains(nama);
+                      return CheckboxListTile(
+                        title: Text(nama, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        value: isSelected,
+                        activeColor: darkBlueColor,
+                        checkboxShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                        onChanged: (bool? value) {
+                          controller.toggleParalegal(nama);
+                        },
+                      );
+                    });
+                  },
+                );
+              }),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Get.back(),
+                style: ElevatedButton.styleFrom(backgroundColor: darkBlueColor, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: const Text("Selesai", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
     );
   }
 
@@ -135,10 +247,11 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
     );
   }
 
-  Widget _buildTextField(TextEditingController ctrl, String hint, {IconData? icon, bool isMultiLine = false}) {
+  Widget _buildTextField(TextEditingController ctrl, String hint, {IconData? icon, bool isMultiLine = false, TextInputType keyboardType = TextInputType.text}) {
     return TextField(
       controller: ctrl,
       maxLines: isMultiLine ? 5 : 1,
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),

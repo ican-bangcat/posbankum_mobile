@@ -17,7 +17,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF64748B);
 
-  // ✅ Kunci ajaib untuk "memfoto" layar
+  // Kunci ajaib untuk "memfoto" layar
   final GlobalKey _printKey = GlobalKey();
 
   @override
@@ -59,21 +59,74 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // 1. GAMBAR COVER
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Image.network(
-                                  data['foto_url'] ?? '',
-                                  height: 250,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) => Container(
-                                    height: 250,
-                                    width: double.infinity,
-                                    color: Colors.grey[200],
-                                    child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 50),
+
+                              // ✅ KOTAK MERAH PENOLAKAN (MUNCUL KALAU STATUS DITOLAK)
+                              if (data['status'] == 'ditolak' && data['catatan'] != null && data['catatan'].toString().trim().isNotEmpty) ...[
+                                Container(
+                                  margin: const EdgeInsets.only(bottom: 24),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.red.shade200),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.info_outline, color: Colors.red.shade700, size: 20),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Kegiatan Ditolak Admin',
+                                            style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold, fontSize: 14),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Catatan: ${data['catatan']}',
+                                        style: TextStyle(color: Colors.red.shade900, fontSize: 14, height: 1.4),
+                                      ),
+                                    ],
                                   ),
                                 ),
+                              ],
+
+                              // 1. GAMBAR COVER & BADGE STATUS
+                              Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Image.network(
+                                      data['thumbnail_path'] ?? '', // ✅ Ganti kunci
+                                      height: 250,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) => Container(
+                                        height: 250,
+                                        width: double.infinity,
+                                        color: Colors.grey[200],
+                                        child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 50),
+                                      ),
+                                    ),
+                                  ),
+                                  // ✅ BADGE STATUS (Kiri Atas Foto)
+                                  Positioned(
+                                    top: 16, left: 16,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                          color: controller.getStatusColor(data['status']),
+                                          borderRadius: BorderRadius.circular(8)
+                                      ),
+                                      child: Text(
+                                          (data['status'] ?? 'draft').toString().toUpperCase(),
+                                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5)
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 24),
 
@@ -84,11 +137,11 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                               ),
                               const SizedBox(height: 24),
 
-                              // 3. Info Tanggal & Waktu
+                              // 3. Info Tanggal
                               _buildInfoRow(
                                 icon: Icons.calendar_today_outlined,
-                                label: "TANGGAL & WAKTU",
-                                value: controller.getFormattedDate(data['tanggal_mulai']),
+                                label: "TANGGAL KEGIATAN", // ✅ Sesuaikan label
+                                value: controller.getFormattedDate(data['tgl_mulai']), // ✅ Ganti kunci
                               ),
                               const SizedBox(height: 20),
 
@@ -161,7 +214,8 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
       children: [
         ElevatedButton(
           onPressed: () {
-            Get.toNamed(AppRoutes.EDIT_KEGIATAN, arguments: controller.kegiatanData['id']);
+            // ✅ Pastikan pakai kunci id_kegiatan
+            Get.toNamed(AppRoutes.EDIT_KEGIATAN, arguments: controller.kegiatanData['id_kegiatan']);
           },
           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), minimumSize: const Size(double.infinity, 56), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
           child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.edit_outlined, color: Colors.white, size: 20), SizedBox(width: 10), Text('Edit Kegiatan', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700))]),
@@ -206,7 +260,8 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
               subtitle: const Text("Kirim rangkuman singkat kegiatan", style: TextStyle(fontSize: 12, color: textSecondary)),
               onTap: () {
                 Get.back();
-                final textToShare = '*${data['judul']}*\n📍 ${data['lokasi']}\n🗓️ ${controller.getFormattedDate(data['tanggal_mulai'])}\n\n${data['deskripsi']}\n\n🔗 Link: https://posbankum.app/kegiatan/${data['id']}';
+                // ✅ Sesuaikan kunci tgl_mulai dan id_kegiatan
+                final textToShare = '*${data['judul']}*\n📍 ${data['lokasi']}\n🗓️ ${controller.getFormattedDate(data['tgl_mulai'])}\n\n${data['deskripsi']}\n\n🔗 Link: https://posbankum.app/kegiatan/${data['id_kegiatan']}';
                 Share.share(textToShare);
               },
             ),
@@ -241,7 +296,8 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
               subtitle: const Text("Salin link untuk dibuka di aplikasi", style: TextStyle(fontSize: 12, color: textSecondary)),
               onTap: () {
                 Get.back();
-                final dummyLink = "https://posbankum.app/kegiatan/${data['id']}";
+                // ✅ Sesuaikan kunci id_kegiatan
+                final dummyLink = "https://posbankum.app/kegiatan/${data['id_kegiatan']}";
                 Clipboard.setData(ClipboardData(text: dummyLink));
                 Get.snackbar("Berhasil", "Tautan disalin: $dummyLink", backgroundColor: const Color(0xFF10B981), colorText: Colors.white, snackPosition: SnackPosition.BOTTOM, margin: const EdgeInsets.all(16));
               },
@@ -253,35 +309,33 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
     );
   }
 
-  // ✅ LOGIKA BARU: MEMFOTO LAYAR JADI PDF
+  // LOGIKA BARU: MEMFOTO LAYAR JADI PDF
   Future<void> _generateAndSharePDF(Map data) async {
     Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
 
     try {
-      // 1. Ambil foto dari widget yang dibungkus RepaintBoundary
       RenderRepaintBoundary boundary = _printKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0); // Resolusi tinggi (3x)
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
       ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
-      // 2. Tempel foto tersebut ke dalam 1 halaman PDF penuh
       final pdf = pw.Document();
       final imagePdf = pw.MemoryImage(pngBytes);
 
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(20), // Kasih pinggiran dikit biar rapi
+          margin: const pw.EdgeInsets.all(20),
           build: (pw.Context context) {
             return pw.Center(
-              child: pw.Image(imagePdf, fit: pw.BoxFit.contain), // Gambar akan menyesuaikan proporsi A4
+              child: pw.Image(imagePdf, fit: pw.BoxFit.contain),
             );
           },
         ),
       );
 
       final pdfBytes = await pdf.save();
-      Get.back(); // Tutup loading
+      Get.back();
 
       await Printing.sharePdf(bytes: pdfBytes, filename: 'Kegiatan_${data['judul'] ?? 'Posbankum'}.pdf');
     } catch (e) {

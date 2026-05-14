@@ -2,32 +2,34 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import '../../../app/data/services/supabase_service.dart';
 import 'kelola_kegiatan_controller.dart';
 import 'detail_kegiatan_controller.dart';
 
 class EditKegiatanController extends GetxController {
-  final supabase = Supabase.instance.client;
-
   var kegiatanId = '';
   var existingImageUrl = ''.obs;
 
   final judulCtrl = TextEditingController();
   final lokasiCtrl = TextEditingController();
   final deskripsiCtrl = TextEditingController();
+  final jmlPesertaCtrl = TextEditingController(); // ✅ Tambahan
 
   var selectedDate = Rxn<DateTime>();
-  var selectedTime = Rxn<TimeOfDay>();
   var selectedImage = Rxn<File>();
   var isLoading = false.obs;
+
+  // ✅ VARIABEL BARU UNTUK MULTI-SELECT PARALEGAL
+  var idPosbankumAsli = ''.obs;
+  var paralegalList = <String>[].obs;
+  var selectedParalegals = <String>[].obs;
 
   final ImagePicker _picker = ImagePicker();
 
   @override
   void onInit() {
     super.onInit();
-    // Tangkap ID yang dikirim dari halaman detail
     kegiatanId = Get.arguments as String;
     fetchDataAwal();
   }
@@ -35,22 +37,65 @@ class EditKegiatanController extends GetxController {
   Future<void> fetchDataAwal() async {
     try {
       isLoading.value = true;
-      final data = await supabase.from('kegiatan').select().eq('id', kegiatanId).single();
+
+      // 1. Ambil ID Posbankum (untuk narik list semua paralegal)
+      final user = WebSupabaseService.client.auth.currentUser;
+      if (user != null) {
+        final dataPosbankum = await WebSupabaseService.client
+            .from('posbankum')
+            .select('id_posbankum')
+            .eq('email_akun', user.email ?? '')
+            .maybeSingle();
+
+        if (dataPosbankum != null) {
+          idPosbankumAsli.value = dataPosbankum['id_posbankum'];
+          final dataParalegal = await WebSupabaseService.client
+              .from('paralegal_members')
+              .select('nama_paralegal')
+              .eq('id_posbankum', idPosbankumAsli.value)
+              .order('is_primary', ascending: false);
+          if (dataParalegal != null) {
+            paralegalList.value = List<String>.from(dataParalegal.map((e) => e['nama_paralegal']));
+          }
+        }
+      }
+
+      // 2. Ambil data Edit Kegiatan
+      final data = await WebSupabaseService.client
+          .from('kegiatan')
+          .select()
+          .eq('id_kegiatan', kegiatanId)
+          .single();
 
       judulCtrl.text = data['judul'] ?? '';
       lokasiCtrl.text = data['lokasi'] ?? '';
       deskripsiCtrl.text = data['deskripsi'] ?? '';
-      existingImageUrl.value = data['foto_url'] ?? '';
+      jmlPesertaCtrl.text = (data['jumlah_peserta'] ?? '').toString();
+      existingImageUrl.value = data['thumbnail_path'] ?? '';
 
-      if (data['tanggal_mulai'] != null) {
-        final dt = DateTime.parse(data['tanggal_mulai']).toLocal();
-        selectedDate.value = dt;
-        selectedTime.value = TimeOfDay(hour: dt.hour, minute: dt.minute);
+      if (data['tgl_mulai'] != null) {
+        selectedDate.value = DateTime.parse(data['tgl_mulai']).toLocal();
       }
+
+      // ✅ 3. Terjemahkan JSONB (anggota_terlibat) kembali menjadi List Flutter
+      if (data['anggota_terlibat'] != null) {
+        List<dynamic> rawAnggota = data['anggota_terlibat'];
+        selectedParalegals.value = rawAnggota.map((e) => e.toString()).toList();
+      }
+
     } catch (e) {
-      Get.snackbar('Error', 'Gagal memuat data awal');
+      Get.snackbar('Error', 'Gagal memuat data awal: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  // ✅ Fungsi Toggle Paralegal
+  void toggleParalegal(String nama) {
+    if (selectedParalegals.contains(nama)) {
+      selectedParalegals.remove(nama);
+    } else {
+      selectedParalegals.add(nama);
     }
   }
 
@@ -71,22 +116,8 @@ class EditKegiatanController extends GetxController {
     if (date != null) selectedDate.value = date;
   }
 
-  Future<void> pickTime(BuildContext context) async {
-    TimeOfDay? time = await showTimePicker(
-      context: context,
-      initialTime: selectedTime.value ?? TimeOfDay.now(),
-      builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true), // ✅ 24 Jam
-          child: child!,
-        );
-      },
-    );
-    if (time != null) selectedTime.value = time;
-  }
-
   Future<void> updateKegiatan() async {
-    if (judulCtrl.text.isEmpty || selectedDate.value == null || selectedTime.value == null || lokasiCtrl.text.isEmpty) {
+    if (judulCtrl.text.isEmpty || selectedDate.value == null || lokasiCtrl.text.isEmpty) {
       Get.snackbar("Error", "Mohon lengkapi form yang wajib!");
       return;
     }
@@ -95,38 +126,30 @@ class EditKegiatanController extends GetxController {
       isLoading.value = true;
       String? finalImageUrl = existingImageUrl.value;
 
-      // Kalau user pilih gambar baru, upload ke Storage
       if (selectedImage.value != null) {
         final fileName = 'kegiatan_${DateTime.now().millisecondsSinceEpoch}.png';
-        final path = 'kegiatan_images/$fileName';
-        await supabase.storage.from('kegiatan_assets').upload(path, selectedImage.value!);
-        finalImageUrl = supabase.storage.from('kegiatan_assets').getPublicUrl(path);
+        await WebSupabaseService.client.storage.from('kegiatan-thumbnails').upload(fileName, selectedImage.value!);
+        finalImageUrl = WebSupabaseService.client.storage.from('kegiatan-thumbnails').getPublicUrl(fileName);
       }
 
-      // Gabungkan Tanggal & Jam
-      final finalDateTime = DateTime(
-        selectedDate.value!.year,
-        selectedDate.value!.month,
-        selectedDate.value!.day,
-        selectedTime.value!.hour,
-        selectedTime.value!.minute,
-      );
+      final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate.value!);
 
-      // Update ke database
-      await supabase.from('kegiatan').update({
+      await WebSupabaseService.client.from('kegiatan').update({
         'judul': judulCtrl.text,
-        'tanggal_mulai': finalDateTime.toIso8601String(),
+        'tgl_mulai': formattedDate,
         'lokasi': lokasiCtrl.text,
         'deskripsi': deskripsiCtrl.text,
-        'foto_url': finalImageUrl,
-      }).eq('id', kegiatanId);
+        'jumlah_peserta': jmlPesertaCtrl.text.isNotEmpty ? int.tryParse(jmlPesertaCtrl.text) : null,
+        'anggota_terlibat': selectedParalegals, // ✅ Lempar List JSONB-nya lagi
+        'thumbnail_path': finalImageUrl,
+        'status': 'menunggu',
+      }).eq('id_kegiatan', kegiatanId);
 
-      // Refresh data di layar list dan detail
       if (Get.isRegistered<KelolaKegiatanController>()) Get.find<KelolaKegiatanController>().fetchKegiatan();
       if (Get.isRegistered<DetailKegiatanController>()) Get.find<DetailKegiatanController>().fetchDetailKegiatan();
 
-      Get.back(); // Kembali ke halaman Detail
-      Get.snackbar("Berhasil", "Kegiatan berhasil diperbarui", backgroundColor: Colors.green, colorText: Colors.white);
+      Get.back();
+      Get.snackbar("Berhasil", "Kegiatan diperbarui & masuk antrean persetujuan!", backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       Get.snackbar("Error", "Gagal memperbarui kegiatan: $e");
     } finally {

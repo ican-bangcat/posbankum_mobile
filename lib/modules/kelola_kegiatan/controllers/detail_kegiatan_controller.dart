@@ -1,10 +1,10 @@
+import 'package:flutter/material.dart'; // ✅ Wajib ditambah buat manggil Colors
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+// ✅ Import WebSupabaseService
+import '../../../app/data/services/supabase_service.dart';
 
 class DetailKegiatanController extends GetxController {
-  final supabase = Supabase.instance.client;
-
   var isLoading = true.obs;
   var kegiatanData = {}.obs;
 
@@ -25,10 +25,11 @@ class DetailKegiatanController extends GetxController {
         return;
       }
 
-      final response = await supabase
+      // ✅ Pakai WebSupabaseService dan pakai id_kegiatan
+      final response = await WebSupabaseService.client
           .from('kegiatan')
           .select()
-          .eq('id', id)
+          .eq('id_kegiatan', id)
           .single();
 
       kegiatanData.value = response;
@@ -45,6 +46,21 @@ class DetailKegiatanController extends GetxController {
   String getFormattedDate(String? rawDate) {
     if (rawDate == null) return '-';
     final dt = DateTime.parse(rawDate).toLocal();
-    return DateFormat('EEEE, dd MMMM yyyy • HH:mm', 'id_ID').format(dt) + " WIB";
+    // ✅ Format jam dibuang karena kita pakai pure tanggal
+    return DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(dt);
+  }
+
+  // ✅ Helper untuk warna status dinamis
+  Color getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'disetujui':
+        return Colors.green;
+      case 'ditolak':
+        return Colors.red;
+      case 'menunggu':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
   }
 }
