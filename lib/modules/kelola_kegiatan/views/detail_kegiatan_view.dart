@@ -99,7 +99,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(16),
                                     child: Image.network(
-                                      data['thumbnail_path'] ?? '', // ✅ Ganti kunci
+                                      data['thumbnail_path'] ?? '',
                                       height: 250,
                                       width: double.infinity,
                                       fit: BoxFit.cover,
@@ -111,7 +111,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                                       ),
                                     ),
                                   ),
-                                  // ✅ BADGE STATUS (Kiri Atas Foto)
+                                  // BADGE STATUS (Kiri Atas Foto)
                                   Positioned(
                                     top: 16, left: 16,
                                     child: Container(
@@ -140,8 +140,8 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                               // 3. Info Tanggal
                               _buildInfoRow(
                                 icon: Icons.calendar_today_outlined,
-                                label: "TANGGAL KEGIATAN", // ✅ Sesuaikan label
-                                value: controller.getFormattedDate(data['tgl_mulai']), // ✅ Ganti kunci
+                                label: "TANGGAL KEGIATAN",
+                                value: controller.getFormattedDate(data['tgl_mulai']),
                               ),
                               const SizedBox(height: 20),
 
@@ -153,6 +153,12 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                               ),
                               const SizedBox(height: 24),
                               const Divider(color: Color(0xFFF1F5F9), thickness: 1.5),
+                              const SizedBox(height: 24),
+
+                              // ✅ 4.5 Info Anggota Terlibat
+                              const Text('Anggota Terlibat', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: textPrimary)),
+                              const SizedBox(height: 12),
+                              _buildAnggotaList(data['anggota_terlibat']),
                               const SizedBox(height: 24),
 
                               // 5. Deskripsi
@@ -214,7 +220,6 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
       children: [
         ElevatedButton(
           onPressed: () {
-            // ✅ Pastikan pakai kunci id_kegiatan
             Get.toNamed(AppRoutes.EDIT_KEGIATAN, arguments: controller.kegiatanData['id_kegiatan']);
           },
           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), minimumSize: const Size(double.infinity, 56), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
@@ -260,7 +265,6 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
               subtitle: const Text("Kirim rangkuman singkat kegiatan", style: TextStyle(fontSize: 12, color: textSecondary)),
               onTap: () {
                 Get.back();
-                // ✅ Sesuaikan kunci tgl_mulai dan id_kegiatan
                 final textToShare = '*${data['judul']}*\n📍 ${data['lokasi']}\n🗓️ ${controller.getFormattedDate(data['tgl_mulai'])}\n\n${data['deskripsi']}\n\n🔗 Link: https://posbankum.app/kegiatan/${data['id_kegiatan']}';
                 Share.share(textToShare);
               },
@@ -296,7 +300,6 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
               subtitle: const Text("Salin link untuk dibuka di aplikasi", style: TextStyle(fontSize: 12, color: textSecondary)),
               onTap: () {
                 Get.back();
-                // ✅ Sesuaikan kunci id_kegiatan
                 final dummyLink = "https://posbankum.app/kegiatan/${data['id_kegiatan']}";
                 Clipboard.setData(ClipboardData(text: dummyLink));
                 Get.snackbar("Berhasil", "Tautan disalin: $dummyLink", backgroundColor: const Color(0xFF10B981), colorText: Colors.white, snackPosition: SnackPosition.BOTTOM, margin: const EdgeInsets.all(16));
@@ -342,6 +345,43 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
       Get.back();
       Get.snackbar("Error", "Gagal memproses PDF: $e", backgroundColor: Colors.red, colorText: Colors.white);
     }
+  }
+
+  // ✅ HELPER UNTUK MENAMPILKAN ANGGOTA TERLIBAT
+  Widget _buildAnggotaList(dynamic anggotaData) {
+    if (anggotaData == null) {
+      return const Text('Tidak ada anggota yang dicantumkan.', style: TextStyle(fontSize: 14, color: textSecondary));
+    }
+
+    List<String> anggotaList = [];
+    if (anggotaData is List) {
+      anggotaList = anggotaData.map((e) => e.toString()).toList();
+    }
+
+    if (anggotaList.isEmpty) {
+      return const Text('Tidak ada anggota yang dicantumkan.', style: TextStyle(fontSize: 14, color: textSecondary));
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: anggotaList.map((nama) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.person_outline, size: 14, color: Color(0xFF64748B)),
+            const SizedBox(width: 6),
+            Text(nama, style: const TextStyle(fontSize: 13, color: textPrimary, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      )).toList(),
+    );
   }
 
   Widget _buildHeader() {

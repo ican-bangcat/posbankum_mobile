@@ -104,10 +104,20 @@ class TambahKegiatanController extends GetxController {
       isLoading.value = true;
       String? imageUrl;
 
+      // 3. Upload Foto ke Supabase Web (Jika ada foto)
       if (selectedImage.value != null) {
         final fileName = 'kegiatan_${DateTime.now().millisecondsSinceEpoch}.png';
-        await WebSupabaseService.client.storage.from('kegiatan-thumbnails').upload(fileName, selectedImage.value!);
-        imageUrl = WebSupabaseService.client.storage.from('kegiatan-thumbnails').getPublicUrl(fileName);
+
+        // ✅ UBAH PATH DISINI: Sesuaikan dengan struktur folder Web
+        final path = 'posbankum/${idPosbankumAsli.value}/$fileName';
+
+        await WebSupabaseService.client.storage
+            .from('kegiatan-thumbnails')
+            .upload(path, selectedImage.value!);
+
+        imageUrl = WebSupabaseService.client.storage
+            .from('kegiatan-thumbnails')
+            .getPublicUrl(path);
       }
 
       final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate.value!);

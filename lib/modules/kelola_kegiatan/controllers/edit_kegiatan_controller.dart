@@ -128,8 +128,17 @@ class EditKegiatanController extends GetxController {
 
       if (selectedImage.value != null) {
         final fileName = 'kegiatan_${DateTime.now().millisecondsSinceEpoch}.png';
-        await WebSupabaseService.client.storage.from('kegiatan-thumbnails').upload(fileName, selectedImage.value!);
-        finalImageUrl = WebSupabaseService.client.storage.from('kegiatan-thumbnails').getPublicUrl(fileName);
+
+        // ✅ UBAH PATH DISINI JUGA
+        final path = 'posbankum/${idPosbankumAsli.value}/$fileName';
+
+        await WebSupabaseService.client.storage
+            .from('kegiatan-thumbnails')
+            .upload(path, selectedImage.value!);
+
+        finalImageUrl = WebSupabaseService.client.storage
+            .from('kegiatan-thumbnails')
+            .getPublicUrl(path);
       }
 
       final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate.value!);
