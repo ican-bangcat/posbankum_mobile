@@ -17,21 +17,19 @@ class TambahKegiatanController extends GetxController {
   var selectedImage = Rxn<File>();
   var isLoading = false.obs;
 
-  // ✅ VARIABEL BARU UNTUK MULTI-SELECT PARALEGAL
+  // VARIABEL UNTUK MULTI-SELECT PARALEGAL
   var idPosbankumAsli = ''.obs;
-  var paralegalList = <String>[].obs; // Nyimpan daftar semua paralegal
-  var selectedParalegals = <String>[].obs; // Nyimpan paralegal yang dicentang
+  var paralegalList = <String>[].obs;
+  var selectedParalegals = <String>[].obs;
 
   final ImagePicker _picker = ImagePicker();
 
   @override
   void onInit() {
     super.onInit();
-    // Tarik data posbankum & paralegal pas halaman dibuka
     fetchDataAwal();
   }
 
-  // ✅ FUNGSI BARU: Tarik data paralegal biar bisa dipilih
   Future<void> fetchDataAwal() async {
     try {
       final user = WebSupabaseService.client.auth.currentUser;
@@ -46,7 +44,6 @@ class TambahKegiatanController extends GetxController {
       if (dataPosbankum != null) {
         idPosbankumAsli.value = dataPosbankum['id_posbankum'];
 
-        // Tarik nama paralegal dari posbankum ini
         final dataParalegal = await WebSupabaseService.client
             .from('paralegal_members')
             .select('nama_paralegal')
@@ -62,7 +59,6 @@ class TambahKegiatanController extends GetxController {
     }
   }
 
-  // ✅ FUNGSI BARU: Centang / Hapus centang paralegal
   void toggleParalegal(String nama) {
     if (selectedParalegals.contains(nama)) {
       selectedParalegals.remove(nama);
@@ -71,8 +67,14 @@ class TambahKegiatanController extends GetxController {
     }
   }
 
+  // ✅ KOMPRESI GAMBAR ALA WHATSAPP
   Future<void> pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50, // Kualitas foto dikompres jadi 50%
+      maxWidth: 1080,   // Lebar maksimal 1080px
+    );
+
     if (image != null) {
       selectedImage.value = File(image.path);
     }
@@ -94,7 +96,6 @@ class TambahKegiatanController extends GetxController {
       return;
     }
 
-    // Pastikan ID posbankum sudah didapat saat onInit
     if (idPosbankumAsli.value.isEmpty) {
       Get.snackbar("Error", "Gagal memverifikasi identitas Posbankum.");
       return;
@@ -104,20 +105,16 @@ class TambahKegiatanController extends GetxController {
       isLoading.value = true;
       String? imageUrl;
 
-      // 3. Upload Foto ke Supabase Web (Jika ada foto)
       if (selectedImage.value != null) {
         final fileName = 'kegiatan_${DateTime.now().millisecondsSinceEpoch}.png';
-
-        // ✅ UBAH PATH DISINI: Sesuaikan dengan struktur folder Web
         final path = 'posbankum/${idPosbankumAsli.value}/$fileName';
 
         await WebSupabaseService.client.storage
             .from('kegiatan-thumbnails')
             .upload(path, selectedImage.value!);
 
-        imageUrl = WebSupabaseService.client.storage
-            .from('kegiatan-thumbnails')
-            .getPublicUrl(path);
+        // ✅ SIMPAN PATH NYA SAJA (Sesuai Standar Web)
+        imageUrl = path;
       }
 
       final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate.value!);
@@ -131,7 +128,6 @@ class TambahKegiatanController extends GetxController {
         'tgl_mulai': formattedDate,
         'thumbnail_path': imageUrl,
         'jumlah_peserta': jmlPesertaCtrl.text.isNotEmpty ? int.tryParse(jmlPesertaCtrl.text) : null,
-        // ✅ LEMPAR LIST PARALEGAL. Supabase otomatis ubah List<String> ini jadi JSONB array
         'anggota_terlibat': selectedParalegals,
       });
 

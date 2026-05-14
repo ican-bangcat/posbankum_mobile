@@ -14,13 +14,13 @@ class EditKegiatanController extends GetxController {
   final judulCtrl = TextEditingController();
   final lokasiCtrl = TextEditingController();
   final deskripsiCtrl = TextEditingController();
-  final jmlPesertaCtrl = TextEditingController(); // ✅ Tambahan
+  final jmlPesertaCtrl = TextEditingController();
 
   var selectedDate = Rxn<DateTime>();
   var selectedImage = Rxn<File>();
   var isLoading = false.obs;
 
-  // ✅ VARIABEL BARU UNTUK MULTI-SELECT PARALEGAL
+  // VARIABEL UNTUK MULTI-SELECT PARALEGAL
   var idPosbankumAsli = ''.obs;
   var paralegalList = <String>[].obs;
   var selectedParalegals = <String>[].obs;
@@ -38,7 +38,6 @@ class EditKegiatanController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 1. Ambil ID Posbankum (untuk narik list semua paralegal)
       final user = WebSupabaseService.client.auth.currentUser;
       if (user != null) {
         final dataPosbankum = await WebSupabaseService.client
@@ -60,7 +59,6 @@ class EditKegiatanController extends GetxController {
         }
       }
 
-      // 2. Ambil data Edit Kegiatan
       final data = await WebSupabaseService.client
           .from('kegiatan')
           .select()
@@ -77,7 +75,6 @@ class EditKegiatanController extends GetxController {
         selectedDate.value = DateTime.parse(data['tgl_mulai']).toLocal();
       }
 
-      // ✅ 3. Terjemahkan JSONB (anggota_terlibat) kembali menjadi List Flutter
       if (data['anggota_terlibat'] != null) {
         List<dynamic> rawAnggota = data['anggota_terlibat'];
         selectedParalegals.value = rawAnggota.map((e) => e.toString()).toList();
@@ -90,7 +87,6 @@ class EditKegiatanController extends GetxController {
     }
   }
 
-  // ✅ Fungsi Toggle Paralegal
   void toggleParalegal(String nama) {
     if (selectedParalegals.contains(nama)) {
       selectedParalegals.remove(nama);
@@ -99,8 +95,14 @@ class EditKegiatanController extends GetxController {
     }
   }
 
+  // ✅ KOMPRESI GAMBAR ALA WHATSAPP
   Future<void> pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50,
+      maxWidth: 1080,
+    );
+
     if (image != null) {
       selectedImage.value = File(image.path);
     }
@@ -128,17 +130,14 @@ class EditKegiatanController extends GetxController {
 
       if (selectedImage.value != null) {
         final fileName = 'kegiatan_${DateTime.now().millisecondsSinceEpoch}.png';
-
-        // ✅ UBAH PATH DISINI JUGA
         final path = 'posbankum/${idPosbankumAsli.value}/$fileName';
 
         await WebSupabaseService.client.storage
             .from('kegiatan-thumbnails')
             .upload(path, selectedImage.value!);
 
-        finalImageUrl = WebSupabaseService.client.storage
-            .from('kegiatan-thumbnails')
-            .getPublicUrl(path);
+        // ✅ SIMPAN PATH NYA SAJA
+        finalImageUrl = path;
       }
 
       final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate.value!);
@@ -149,7 +148,7 @@ class EditKegiatanController extends GetxController {
         'lokasi': lokasiCtrl.text,
         'deskripsi': deskripsiCtrl.text,
         'jumlah_peserta': jmlPesertaCtrl.text.isNotEmpty ? int.tryParse(jmlPesertaCtrl.text) : null,
-        'anggota_terlibat': selectedParalegals, // ✅ Lempar List JSONB-nya lagi
+        'anggota_terlibat': selectedParalegals,
         'thumbnail_path': finalImageUrl,
         'status': 'menunggu',
       }).eq('id_kegiatan', kegiatanId);

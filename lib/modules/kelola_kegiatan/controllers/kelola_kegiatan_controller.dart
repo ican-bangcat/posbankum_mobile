@@ -10,7 +10,7 @@ class KegiatanItem {
   final String tanggal;
   final String lokasi;
   final String? imageUrl;
-  final String status; // ✅ Tambahan status untuk UI
+  final String status;
 
   KegiatanItem({
     required this.id,
@@ -22,28 +22,34 @@ class KegiatanItem {
     required this.status,
   });
 
-  // Fungsi untuk convert dari JSON Supabase ke Model Flutter
   factory KegiatanItem.fromJson(Map<String, dynamic> json) {
     String formattedDate = '-';
 
-    // ✅ Ganti ke tgl_mulai dan format pure tanggal tanpa jam
     if (json['tgl_mulai'] != null) {
       final dt = DateTime.parse(json['tgl_mulai']).toLocal();
       formattedDate = DateFormat('dd MMM yyyy').format(dt);
     }
 
+    // ✅ LOGIKA URL GAMBAR BARU
+    String? finalImageUrl = json['thumbnail_path'];
+    // Cek kalau fotonya ada, tapi bukan format HTTP (berarti cuma path dari Web)
+    if (finalImageUrl != null && finalImageUrl.isNotEmpty && !finalImageUrl.startsWith('http')) {
+      finalImageUrl = WebSupabaseService.client.storage
+          .from('kegiatan-thumbnails')
+          .getPublicUrl(finalImageUrl);
+    }
+
     return KegiatanItem(
-      id: json['id_kegiatan'].toString(), // ✅ Ganti ke id_kegiatan
+      id: json['id_kegiatan'].toString(),
       judul: json['judul'] ?? '',
       kategori: json['kategori'] ?? 'Lainnya',
       tanggal: formattedDate,
       lokasi: json['lokasi'] ?? '',
-      imageUrl: json['thumbnail_path'], // ✅ Ganti ke thumbnail_path
-      status: json['status'] ?? 'draft', // ✅ Ambil status kegiatan
+      imageUrl: finalImageUrl, // ✅ Pakai URL yang udah difilter
+      status: json['status'] ?? 'draft',
     );
   }
 }
-
 class KelolaKegiatanController extends GetxController {
   var selectedTab = 'Semua'.obs;
   var searchQuery = ''.obs;

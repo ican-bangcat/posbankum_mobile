@@ -17,7 +17,6 @@ class DetailKegiatanController extends GetxController {
   Future<void> fetchDetailKegiatan() async {
     try {
       isLoading.value = true;
-      // Tangkap ID yang dikirim dari halaman sebelumnya
       final String? id = Get.arguments;
 
       if (id == null) {
@@ -25,12 +24,18 @@ class DetailKegiatanController extends GetxController {
         return;
       }
 
-      // ✅ Pakai WebSupabaseService dan pakai id_kegiatan
       final response = await WebSupabaseService.client
           .from('kegiatan')
           .select()
           .eq('id_kegiatan', id)
           .single();
+
+      // ✅ Pastikan URL gambar jadi full HTTP sebelum masuk ke View
+      if (response['thumbnail_path'] != null && !response['thumbnail_path'].toString().startsWith('http')) {
+        response['thumbnail_path'] = WebSupabaseService.client.storage
+            .from('kegiatan-thumbnails')
+            .getPublicUrl(response['thumbnail_path']);
+      }
 
       kegiatanData.value = response;
 
