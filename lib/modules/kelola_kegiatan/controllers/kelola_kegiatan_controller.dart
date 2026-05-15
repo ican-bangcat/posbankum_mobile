@@ -1,25 +1,25 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-// ✅ Import WebSupabaseService
 import '../../../app/data/services/supabase_service.dart';
 
 class KegiatanItem {
   final String id;
   final String judul;
-  final String kategori;
   final String tanggal;
   final String lokasi;
   final String? imageUrl;
   final String status;
+  final int jumlahAnggota; // ✅ Tambahan hitung anggota otomatis
 
   KegiatanItem({
     required this.id,
     required this.judul,
-    required this.kategori,
     required this.tanggal,
     required this.lokasi,
     this.imageUrl,
     required this.status,
+    required this.jumlahAnggota,
   });
 
   factory KegiatanItem.fromJson(Map<String, dynamic> json) {
@@ -30,32 +30,38 @@ class KegiatanItem {
       formattedDate = DateFormat('dd MMM yyyy').format(dt);
     }
 
-    // ✅ LOGIKA URL GAMBAR BARU
     String? finalImageUrl = json['thumbnail_path'];
-    // Cek kalau fotonya ada, tapi bukan format HTTP (berarti cuma path dari Web)
     if (finalImageUrl != null && finalImageUrl.isNotEmpty && !finalImageUrl.startsWith('http')) {
       finalImageUrl = WebSupabaseService.client.storage
           .from('kegiatan-thumbnails')
           .getPublicUrl(finalImageUrl);
     }
 
+    // ✅ Hitung jumlah orang yang ada di dalam array JSONB
+    int hitungAnggota = 0;
+    if (json['anggota_terlibat'] != null && json['anggota_terlibat'] is List) {
+      hitungAnggota = (json['anggota_terlibat'] as List).length;
+    }
+
     return KegiatanItem(
       id: json['id_kegiatan'].toString(),
       judul: json['judul'] ?? '',
-      kategori: json['kategori'] ?? 'Lainnya',
       tanggal: formattedDate,
       lokasi: json['lokasi'] ?? '',
-      imageUrl: finalImageUrl, // ✅ Pakai URL yang udah difilter
+      imageUrl: finalImageUrl,
       status: json['status'] ?? 'draft',
+      jumlahAnggota: hitungAnggota,
     );
   }
 }
+
 class KelolaKegiatanController extends GetxController {
-  var selectedTab = 'Semua'.obs;
   var searchQuery = ''.obs;
   var isLoading = true.obs;
 
-  // List asli dari database
+  // ✅ Variabel Filter Tanggal
+  var selectedFilterDate = Rxn<DateTime>();
+
   var allKegiatan = <KegiatanItem>[].obs;
 
   @override
@@ -67,35 +73,27 @@ class KelolaKegiatanController extends GetxController {
   Future<void> fetchKegiatan() async {
     try {
       isLoading.value = true;
-
-      // ✅ 1. Dapatkan User Email dari Pintu Web
       final user = WebSupabaseService.client.auth.currentUser;
       if (user == null) {
         Get.snackbar('Sesi Berakhir', 'Silakan login kembali');
         return;
       }
-      final String userEmail = user.email ?? '';
 
-      // ✅ 2. Cari id_posbankum asli dari tabel Web berdasarkan email
       final dataPosbankum = await WebSupabaseService.client
           .from('posbankum')
           .select('id_posbankum')
-          .eq('email_akun', userEmail)
+          .eq('email_akun', user.email ?? '')
           .maybeSingle();
 
-      if (dataPosbankum == null) {
-        print("Data Posbankum tidak ditemukan");
-        return;
-      }
+      if (dataPosbankum == null) return;
 
       final String idPosbankumAsli = dataPosbankum['id_posbankum'];
 
-      // ✅ 3. Ambil data dari tabel 'kegiatan' KHUSUS milik Posbankum ini
       final response = await WebSupabaseService.client
           .from('kegiatan')
           .select()
-          .eq('id_posbankum', idPosbankumAsli) // Membatasi data
-          .order('tgl_upload', ascending: false); // ✅ Ganti created_at jadi tgl_upload
+          .eq('id_posbankum', idPosbankumAsli)
+          .order('tgl_upload', ascending: false);
 
       final List<dynamic> data = response as List<dynamic>;
       allKegiatan.value = data.map((e) => KegiatanItem.fromJson(e)).toList();
@@ -107,22 +105,40 @@ class KelolaKegiatanController extends GetxController {
     }
   }
 
+  // ✅ LOGIKA FILTER BARU YANG ANTI ERROR
   List<KegiatanItem> get filteredKegiatan {
-    List<KegiatanItem> items = allKegiatan;
+    List<KegiatanItem> items = allKegiatan.toList(); // Wajib toList()
 
-    if (selectedTab.value != 'Semua') {
-      items = items.where((e) => e.kategori == selectedTab.value).toList();
+    // 1. Filter Pencarian Judul
+    if (searchQuery.value.isNotEmpty) {
+      items = items.where((e) => e.judul.toLowerCase().contains(searchQuery.value.toLowerCase())).toList();
     }
 
-    if (searchQuery.value.isNotEmpty) {
-      items = items.where((e) =>
-          e.judul.toLowerCase().contains(searchQuery.value.toLowerCase())).toList();
+    // 2. Filter Berdasarkan Bulan & Tahun
+    if (selectedFilterDate.value != null) {
+      // Ubah target jadi misal "Mei 2026"
+      final targetMonthYear = DateFormat('MMM yyyy').format(selectedFilterDate.value!);
+      items = items.where((e) => e.tanggal.contains(targetMonthYear)).toList();
     }
 
     return items;
   }
 
-  void changeTab(String tab) {
-    selectedTab.value = tab;
+  // ✅ Fungsi memanggil kalender dari UI
+  Future<void> pickFilterDate(BuildContext context) async {
+    DateTime? date = await showDatePicker(
+      context: context,
+      initialDate: selectedFilterDate.value ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2101),
+      helpText: 'Pilih Bulan & Tahun',
+    );
+    if (date != null) {
+      selectedFilterDate.value = date;
+    }
+  }
+
+  void clearFilterDate() {
+    selectedFilterDate.value = null;
   }
 }

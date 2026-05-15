@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../controllers/kelola_kegiatan_controller.dart';
 import '../../../app/routes/app_routes.dart';
 
@@ -13,14 +14,13 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
 
   @override
   Widget build(BuildContext context) {
-    // Inisialisasi controller jika belum ada
     Get.put(KelolaKegiatanController());
 
     return Scaffold(
       backgroundColor: darkBlueColor,
       body: Column(
         children: [
-          // ── HEADER ──
+          // ── HEADER (Tanpa Tombol Back) ──
           _buildHeader(),
 
           // ── KONTEN BAWAH ──
@@ -36,17 +36,18 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
                 children: [
                   const SizedBox(height: 24),
 
-                  // ── SEARCH BAR ──
+                  // ── SEARCH BAR & DATE FILTER ──
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: _buildSearchBar(),
+                    child: Row(
+                      children: [
+                        Expanded(child: _buildSearchBar()),
+                        const SizedBox(width: 12),
+                        _buildDateFilterButton(context),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 20),
-
-                  // ── TAB BAR ──
-                  _buildTabBar(),
-                  const Divider(height: 1, color: Color(0xFFE2E8F0)),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
                   Expanded(
                     child: SingleChildScrollView(
@@ -55,20 +56,25 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // ── GRADIENT BUTTON (Mulai Buat Laporan) ──
+                          // ── GRADIENT BUTTON ──
                           _buildGradientButton(),
                           const SizedBox(height: 32),
 
-                          // ── KEGIATAN TERBARU ──
-                          const Text(
-                            'KEGIATAN TERBARU',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 1.0),
-                          ),
+                          // ── HEADER LIST ──
+                          Obx(() {
+                            String label = 'DAFTAR KEGIATAN';
+                            if (controller.selectedFilterDate.value != null) {
+                              label = 'KEGIATAN: ${DateFormat('MMMM yyyy', 'id_ID').format(controller.selectedFilterDate.value!).toUpperCase()}';
+                            }
+                            return Text(
+                              label,
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 1.0),
+                            );
+                          }),
                           const SizedBox(height: 16),
 
                           // ── LIST KARTU KEGIATAN ──
                           Obx(() {
-                            // Tampilkan loading saat data masih ditarik dari Supabase
                             if (controller.isLoading.value) {
                               return const Center(
                                 child: Padding(
@@ -80,17 +86,15 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
 
                             final items = controller.filteredKegiatan;
 
-                            // Tampilkan pesan jika data kosong
                             if (items.isEmpty) {
                               return const Center(
                                 child: Padding(
                                   padding: EdgeInsets.all(40),
-                                  child: Text("Belum ada laporan kegiatan", style: TextStyle(color: Colors.grey)),
+                                  child: Text("Tidak ada kegiatan yang ditemukan", style: TextStyle(color: Colors.grey)),
                                 ),
                               );
                             }
 
-                            // Render list kegiatan
                             return Column(
                               children: items.map((item) => Padding(
                                 padding: const EdgeInsets.only(bottom: 20),
@@ -98,7 +102,7 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
                               )).toList(),
                             );
                           }),
-                          const SizedBox(height: 100), // Spasi bawah untuk navbar
+                          const SizedBox(height: 100),
                         ],
                       ),
                     ),
@@ -130,28 +134,11 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
                 top: -10, right: -5,
                 child: Opacity(opacity: 0.8, child: Image.asset('assets/images/icons/building_illustration3.png', width: 300, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => const SizedBox())),
               ),
-              SafeArea(
+              const SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
-                  child: Row(
-                    children: [
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () => Get.back(),
-                          child: Container(
-                            width: 40, height: 40,
-                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.01), border: Border.all(color: Colors.white.withOpacity(0.3)), borderRadius: BorderRadius.circular(12)),
-                            child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      const Text('Kelola Kegiatan', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-                    ],
-                  ),
+                  padding: EdgeInsets.fromLTRB(24, 20, 20, 30),
+                  child: Text('Kelola Kegiatan', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
                 ),
               ),
             ],
@@ -170,45 +157,40 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
       ),
       child: TextField(
         onChanged: (val) => controller.searchQuery.value = val,
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           hintText: 'Cari kegiatan...',
-          hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-          prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
+          hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+          prefixIcon: Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         ),
       ),
     );
   }
 
-  Widget _buildTabBar() {
-    final tabs = ['Semua', 'Penyuluhan', 'Sosialisasi', 'Lainnya'];
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: tabs.map((tab) => _buildTabItem(tab)).toList(),
-      ),
-    );
-  }
-
-  Widget _buildTabItem(String title) {
+  // ✅ TOMBOL FILTER TANGGAL DI SAMPING SEARCH
+  Widget _buildDateFilterButton(BuildContext context) {
     return Obx(() {
-      bool isActive = controller.selectedTab.value == title;
+      final isFiltered = controller.selectedFilterDate.value != null;
       return GestureDetector(
-        onTap: () => controller.changeTab(title),
+        onTap: () {
+          if (isFiltered) {
+            controller.clearFilterDate(); // Klik lagi untuk reset
+          } else {
+            controller.pickFilterDate(context); // Buka kalender
+          }
+        },
         child: Container(
-          padding: const EdgeInsets.only(bottom: 12, left: 8, right: 8),
+          height: 48,
+          width: 48,
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: isActive ? darkBlueColor : Colors.transparent, width: 3)),
+            color: isFiltered ? darkBlueColor : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: isFiltered ? darkBlueColor : const Color(0xFFE2E8F0)),
           ),
-          child: Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-              color: isActive ? darkBlueColor : textSecondary,
-            ),
+          child: Icon(
+            isFiltered ? Icons.event_busy : Icons.calendar_month_outlined,
+            color: isFiltered ? Colors.white : textSecondary,
           ),
         ),
       );
@@ -226,7 +208,7 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           gradient: const LinearGradient(
-            colors: [Color(0xFF3B418E), darkBlueColor], // Gradasi Biru-Ungu ke Biru Gelap
+            colors: [Color(0xFF3B418E), darkBlueColor],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -238,11 +220,11 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(50), // Bentuk Pill
+            borderRadius: BorderRadius.circular(50),
           ),
-          child: Row(
+          child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               Text(
                 'Mulai buat Laporan kegiatan',
                 style: TextStyle(color: textPrimary, fontWeight: FontWeight.w800, fontSize: 14),
@@ -256,7 +238,6 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
     );
   }
 
-  // ✅ Helper untuk Warna Badge Status
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'disetujui':
@@ -283,10 +264,8 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Gambar Header & Badge
           Stack(
             children: [
-              // Cek kalau item.imageUrl null, kasih gambar abu-abu
               Image.network(
                 item.imageUrl ?? '',
                 height: 140,
@@ -300,7 +279,6 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
                 ),
               ),
 
-              // ✅ BADGE STATUS (Kiri Atas)
               Positioned(
                 top: 16, left: 16,
                 child: Container(
@@ -315,20 +293,9 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
                   ),
                 ),
               ),
-
-              // BADGE KATEGORI (Kanan Atas)
-              Positioned(
-                top: 16, right: 16,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: darkBlueColor, borderRadius: BorderRadius.circular(8)),
-                  child: Text(item.kategori.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
-                ),
-              ),
             ],
           ),
 
-          // Detail Teks Bawah
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -353,23 +320,31 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
                 ),
                 const SizedBox(height: 20),
 
-                // Footer Card (Avatar & Tombol Detail)
+                // Footer Card
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Mockup tumpukan Avatar
-                    SizedBox(
-                      width: 80, height: 32,
-                      child: Stack(
+                    // ✅ Chip Jumlah Anggota Dinamis (Menggantikan Avatar)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
                         children: [
-                          Positioned(left: 0, child: CircleAvatar(radius: 16, backgroundColor: const Color(0xFFE2E8F0), child: Text('JD', style: TextStyle(fontSize: 10, color: darkBlueColor, fontWeight: FontWeight.bold)))),
-                          Positioned(left: 20, child: CircleAvatar(radius: 16, backgroundColor: const Color(0xFFCBD5E1), child: Text('+12', style: TextStyle(fontSize: 10, color: darkBlueColor, fontWeight: FontWeight.bold)))),
+                          const Icon(Icons.people_alt_outlined, size: 14, color: textSecondary),
+                          const SizedBox(width: 6),
+                          Text(
+                              '${item.jumlahAnggota} Terlibat',
+                              style: const TextStyle(fontSize: 12, color: textSecondary, fontWeight: FontWeight.w600)
+                          ),
                         ],
                       ),
                     ),
+
                     ElevatedButton(
                       onPressed: () {
-                        // Pindah ke detail sambil bawa ID kegiatan
                         Get.toNamed(AppRoutes.DETAIL_KEGIATAN, arguments: item.id);
                       },
                       style: ElevatedButton.styleFrom(
