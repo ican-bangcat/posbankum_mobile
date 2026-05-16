@@ -4,207 +4,209 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../views/pengaduan_success_screen.dart'; // Pastikan import ini benar
+import '../views/pengaduan_success_screen.dart';
 
 class PengaduanController extends GetxController {
-  // 1. Inisialisasi Supabase & State
   final supabase = Supabase.instance.client;
-
   var isLoading = false.obs;
 
+  // ✅ VARIABLE PROGRESS BAR (Otomatis mantau 9 field wajib)
+  var progressCount = 0.obs;
+
   // Input Controllers (Text)
+  final judulLaporanC = TextEditingController();
+  final namaLurahC = TextEditingController();
   final kronologiC = TextEditingController();
   final lokasiC = TextEditingController();
-// ✅ TAMBAHAN: Variable Tanggal Kejadian
-  final tglKejadianC = TextEditingController(); // Buat nampilin teks di form
-  DateTime? selectedDate;                       // Buat simpan data tanggal aslinya
-  // Variable buat nyimpen Pilihan User
+  final nikC = TextEditingController();
+  final noHpC = TextEditingController();
+  final tglKejadianC = TextEditingController();
+  final waktuKejadianC = TextEditingController();
+
+  DateTime? selectedDate;
+  TimeOfDay? selectedTime;
   String? selectedKategori;
 
-  // Variable buat File Upload
-  var selectedFileName = ''.obs; // Buat nampilin nama file di UI
-  File? selectedFile;            // File aslinya buat diupload
+  // Variable Array File
+  var selectedFiles = <File>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Pasang "Telinga" di setiap text field, kalau diketik progress nambah!
+    nikC.addListener(calculateProgress);
+    namaLurahC.addListener(calculateProgress);
+    noHpC.addListener(calculateProgress);
+    tglKejadianC.addListener(calculateProgress);
+    waktuKejadianC.addListener(calculateProgress);
+    judulLaporanC.addListener(calculateProgress);
+    kronologiC.addListener(calculateProgress);
+    lokasiC.addListener(calculateProgress);
+  }
 
   @override
   void onClose() {
+    judulLaporanC.dispose();
+    namaLurahC.dispose();
     kronologiC.dispose();
     lokasiC.dispose();
+    nikC.dispose();
+    noHpC.dispose();
     tglKejadianC.dispose();
+    waktuKejadianC.dispose();
     super.onClose();
   }
 
-  // --- 2. FUNGSI PILIH FILE (PICK FILE) ---
-  Future<void> pickFile() async {
+  // ✅ FUNGSI PENGHITUNG PROGRESS
+  void calculateProgress() {
+    int count = 0;
+    if (nikC.text.trim().isNotEmpty) count++;
+    if (namaLurahC.text.trim().isNotEmpty) count++;
+    if (noHpC.text.trim().isNotEmpty) count++;
+    if (tglKejadianC.text.trim().isNotEmpty) count++;
+    if (waktuKejadianC.text.trim().isNotEmpty) count++;
+    if (judulLaporanC.text.trim().isNotEmpty) count++;
+    if (kronologiC.text.trim().isNotEmpty) count++;
+    if (lokasiC.text.trim().isNotEmpty) count++;
+    if (selectedKategori != null && selectedKategori!.isNotEmpty) count++;
+
+    progressCount.value = count;
+  }
+
+  // --- FUNGSI PICKER & UPLOAD FILE (TETAP SAMA) ---
+  Future<void> pickMultipleFiles() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'], // Hanya boleh gambar & PDF
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+        allowMultiple: true,
       );
 
       if (result != null) {
-        PlatformFile file = result.files.first;
-
-        // Cek Ukuran File (Maksimal 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          Get.snackbar("Gagal", "Ukuran file maksimal 5 MB",
-              backgroundColor: Colors.red, colorText: Colors.white);
-          return;
+        for (var file in result.files) {
+          if (file.size > 5 * 1024 * 1024) {
+            Get.snackbar("Gagal", "File ${file.name} melebihi 5 MB dan dilewati.", backgroundColor: Colors.orange, colorText: Colors.white);
+            continue;
+          }
+          if (file.path != null) selectedFiles.add(File(file.path!));
         }
-
-        // Simpan ke variable
-        selectedFile = File(file.path!);
-        selectedFileName.value = file.name;
-
-        update(); // Refresh UI kalau perlu
       }
     } catch (e) {
-      print("Error Pick File: $e");
       Get.snackbar("Error", "Gagal mengambil file", backgroundColor: Colors.red);
     }
   }
 
-  // Hapus File yang dipilih
-  void removeFile() {
-    selectedFile = null;
-    selectedFileName.value = '';
-    update();
+  void removeFileAt(int index) {
+    selectedFiles.removeAt(index);
   }
-// ✅ TAMBAHAN: Fungsi Pilih Tanggal
+
   Future<void> pickDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(), // Gaboleh pilih tanggal masa depan
+      context: context, initialDate: DateTime.now(), firstDate: DateTime(2000), lastDate: DateTime.now(),
     );
     if (picked != null && picked != selectedDate) {
       selectedDate = picked;
-      // Format tanggal biar enak dibaca (YYYY-MM-DD)
       tglKejadianC.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-      update(); // Refresh UI
+      calculateProgress(); // Update progress manual saat tanggal dipilih
     }
   }
-  // --- 3. LOGIKA UTAMA: SUBMIT PENGADUAN ---
+
+  Future<void> pickTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+    if (picked != null) {
+      selectedTime = picked;
+      waktuKejadianC.text = "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
+      calculateProgress(); // Update progress manual saat waktu dipilih
+    }
+  }
+
+  // --- LOGIKA SUBMIT SUPABASE (TETAP SAMA) ---
   Future<void> submitPengaduan() async {
-    // A. Validasi Input Dasar
-    if (selectedKategori == null || kronologiC.text.isEmpty || lokasiC.text.isEmpty) {
-      Get.snackbar("Error", "Mohon lengkapi semua data wajib",
-          backgroundColor: Colors.red, colorText: Colors.white);
+    if (progressCount.value < 9) { // Pastikan 9 field wajib terisi
+      Get.snackbar("Error", "Mohon lengkapi semua data wajib (${progressCount.value}/9 Lengkap)", backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
 
     try {
       isLoading.value = true;
-
-      // Ambil User ID yang sedang login
       final user = supabase.auth.currentUser;
       if (user == null) {
         Get.snackbar("Error", "Sesi habis, silakan login ulang");
         return;
       }
 
-      // B. Upload File ke Storage (Kalau ada file)
-      String? lampiranUrl;
-      if (selectedFile != null) {
-        lampiranUrl = await _uploadFileToStorage(user.id);
+      final dataPelapor = await supabase.from('masyarakat').select('nama_lengkap').eq('id', user.id).maybeSingle();
+      String namaOtomatis = dataPelapor?['nama_lengkap'] ?? 'Tanpa Nama';
+
+      List<String> listUrlLampiran = [];
+      if (selectedFiles.isNotEmpty) {
+        listUrlLampiran = await _uploadMultipleFiles(user.id);
       }
 
-      // C. Tentukan Prioritas Otomatis
       String prioritasOtomatis = _determinePriority(selectedKategori!);
-
-      // D. Generate ID Unik (Format: PGN-2026-12345)
       String customId = _generatePengaduanId();
 
-      // E. Insert ke Database Supabase
       await supabase.from('pengaduan').insert({
         'id': customId,
         'masyarakat_id': user.id,
+        'nama_pelapor': namaOtomatis,
+        'nik_pelapor': nikC.text,
+        'no_hp_pelapor': noHpC.text,
+        'judul_laporan': judulLaporanC.text,
+        'nama_lurah': namaLurahC.text,
         'kategori_masalah': selectedKategori,
         'kronologi': kronologiC.text,
         'lokasi_kejadian': lokasiC.text,
-        'prioritas': prioritasOtomatis, // <--- Logika Otomatis Masuk Sini
-        'lampiran_url': lampiranUrl,    // URL file (bisa null)
+        'waktu_kejadian': waktuKejadianC.text,
+        'prioritas': prioritasOtomatis,
+        'lampiran_urls': listUrlLampiran.isNotEmpty ? listUrlLampiran : null,
         'tgl_kejadian': tglKejadianC.text,
         'status': 'Pending',
         'tgl_lapor': DateTime.now().toIso8601String(),
       });
 
-      // F. Sukses! Pindah ke Halaman Success
       Get.off(() => PengaduanSuccessScreen(pengaduanId: customId));
 
     } catch (e) {
       print("Error Submit: $e");
-      Get.snackbar("Gagal", "Terjadi kesalahan saat mengirim pengaduan. Coba lagi.",
-          backgroundColor: Colors.red, colorText: Colors.white);
+
+      // ✅ JURUS CURANG: Nampilin error aslinya langsung di layar HP!
+      Get.snackbar(
+        "GAGAL - BACA ERROR INI!", // Judulnya
+        e.toString(),              // Nampilin pesan error asli dari Supabase
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 10), // Ditahan 10 detik biar sempat di-screenshot
+      );
     } finally {
       isLoading.value = false;
     }
   }
 
-  // --- HELPER 1: UPLOAD FILE ---
-  Future<String> _uploadFileToStorage(String userId) async {
-    try {
-      final fileExt = selectedFile!.path.split('.').last;
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}.$fileExt';
-      final filePath = '$userId/$fileName'; // Disimpan di folder user biar rapi
-
-      // Upload ke Bucket 'pengaduan-files'
-      await supabase.storage.from('pengaduan-files').upload(
-        filePath,
-        selectedFile!,
-        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
-      );
-
-      // Ambil Public URL
-      final String publicUrl = supabase
-          .storage
-          .from('pengaduan-files')
-          .getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (e) {
-      throw 'Gagal upload file: $e';
+  Future<List<String>> _uploadMultipleFiles(String userId) async {
+    List<String> uploadedUrls = [];
+    for (var file in selectedFiles) {
+      try {
+        final fileExt = file.path.split('.').last;
+        final fileName = 'bukti_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}.$fileExt';
+        final filePath = '$userId/$fileName';
+        await supabase.storage.from('pengaduan-files').upload(filePath, file, fileOptions: const FileOptions(cacheControl: '3600', upsert: false));
+        uploadedUrls.add(supabase.storage.from('pengaduan-files').getPublicUrl(filePath));
+      } catch (e) { print("Gagal upload file: $e"); }
     }
+    return uploadedUrls;
   }
 
-  // --- HELPER 2: GENERATE ID (PGN-YYYY-XXXXX) ---
-  String _generatePengaduanId() {
-    final year = DateTime.now().year;
-    final random = Random().nextInt(90000) + 10000; // Random 5 digit (10000-99999)
-    return 'PGN-$year-$random';
-  }
+  String _generatePengaduanId() { return 'PGN-${DateTime.now().year}-${Random().nextInt(90000) + 10000}'; }
 
-  // --- HELPER 3: LOGIKA PRIORITAS (OTAKNYA DISINI) 🧠 ---
   String _determinePriority(String kategori) {
     switch (kategori) {
-    // PRIORITAS 1 – SANGAT TINGGI
-      case 'Kekerasan & Pelanggaran Fisik':
-      case 'Kejahatan Seksual':
-      case 'Narkotika & Psikotropika':
-        return 'Sangat Tinggi';
-
-    // PRIORITAS 2 – TINGGI
-      case 'Kekerasan Berbasis Gender (KBG)':
-      case 'Perundungan (Bullying) & Kekerasan Non-fisik':
-      case 'Kekerasan Siber / Kejahatan Digital':
-        return 'Tinggi';
-
-    // PRIORITAS 3 - MENENGAH
-      case 'Konflik Keluarga & Perdata Rumah Tangga':
-      case 'Kasus Perburuhan / Ketenagakerjaan':
-      case 'Sengketa Tanah & Lingkungan':
-        return 'Menengah';
-
-    // PRIORITAS 4 – NORMAL
-      case 'Tindak Pidana Properti / Harta Benda':
-      case 'Sengketa Perdata Umum':
-        return 'Normal';
-
-    // PRIORITAS 5 – RENDAH
-      case 'Administrasi Pemerintahan / Layanan Publik':
-      case 'Lain-lain':
-      default:
-        return 'Rendah';
+      case 'Kekerasan & Pelanggaran Fisik': case 'Kejahatan Seksual': case 'Narkotika & Psikotropika': return 'Sangat Tinggi';
+      case 'Kekerasan Berbasis Gender (KBG)': case 'Perundungan (Bullying) & Kekerasan Non-fisik': case 'Kekerasan Siber / Kejahatan Digital': return 'Tinggi';
+      case 'Konflik Keluarga & Perdata Rumah Tangga': case 'Kasus Perburuhan / Ketenagakerjaan': case 'Sengketa Tanah & Lingkungan': return 'Menengah';
+      case 'Tindak Pidana Properti / Harta Benda': case 'Sengketa Perdata Umum': return 'Normal';
+      default: return 'Rendah';
     }
   }
 }

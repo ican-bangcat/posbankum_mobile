@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../controllers/main_dashboard_controller.dart';
-import '../../riwayatPengaduan/controllers/riwayat_pengaduan_controller.dart';
+import '../../pengaduan/controllers/riwayat_pengaduan_controller.dart';
 import '../../profile/controllers/profile_controller.dart'; // ✅ Tambah Import Profile Controller
 
 class MainDashboardBinding extends Bindings {

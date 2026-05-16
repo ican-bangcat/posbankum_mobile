@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/main_dashboard_controller.dart';
 
 // Import halaman riwayat yang sudah kamu buat
-import '../../riwayatPengaduan/views/riwayat_pengaduan_view.dart';
+import '../../pengaduan/views/riwayat_pengaduan_view.dart';
 import '../../auth/views/home_masyarakat_screen.dart';
 import '../../profile/views/profile_view.dart'; // ✅ Tambah Import Profile View
 

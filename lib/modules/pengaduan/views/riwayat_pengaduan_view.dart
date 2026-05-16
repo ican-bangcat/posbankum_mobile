@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/riwayat_pengaduan_controller.dart';
-import '../../detail_kasus/controllers/detail_kasus_controller.dart'; // ✅ Import Controller Detail
+import '../controllers/detail_kasus_controller.dart'; // ✅ Import Controller Detail
 
 class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
   const RiwayatPengaduanView({super.key});
