@@ -135,9 +135,14 @@ class PengaduanController extends GetxController {
         return;
       }
 
-      final dataPelapor = await supabase.from('masyarakat').select('nama_lengkap').eq('id', user.id).maybeSingle();
-      String namaOtomatis = dataPelapor?['nama_lengkap'] ?? 'Tanpa Nama';
 
+      final dataPelapor = await supabase
+          .from('masyarakat')
+          .select('nama')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      String namaOtomatis = dataPelapor?['nama'] ?? 'Tanpa Nama';
       List<String> listUrlLampiran = [];
       if (selectedFiles.isNotEmpty) {
         listUrlLampiran = await _uploadMultipleFiles(user.id);
