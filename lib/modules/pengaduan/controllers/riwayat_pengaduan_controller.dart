@@ -6,12 +6,14 @@ enum StatusPengaduan { semua, dalamProses, selesai }
 
 class PengaduanItem {
   final String judul;
+  final String kategoriMasalah;
   final String tanggal;
   final String idTiket;
   final String status;
 
   PengaduanItem({
     required this.judul,
+    required this.kategoriMasalah,
     required this.tanggal,
     required this.idTiket,
     required this.status,
@@ -25,7 +27,8 @@ class PengaduanItem {
     }
 
     return PengaduanItem(
-      judul: json['kategori_masalah'] ?? 'Tanpa Judul',
+      judul: json['judul_laporan'] ?? json['kategori_masalah'] ?? 'Tanpa Judul',
+      kategoriMasalah: json['kategori_masalah'] ?? 'Lain-lain',
       tanggal: formattedDate,
       idTiket: json['id'] ?? '-',
       status: json['status'] ?? 'Pending',

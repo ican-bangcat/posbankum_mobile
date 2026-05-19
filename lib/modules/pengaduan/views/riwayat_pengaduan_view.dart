@@ -130,21 +130,12 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
                     child: _buildTabFilter(),
                   ),
 
+                  const SizedBox(height: 20),
+
+                  // AJUKAN PENGADUAN CARD
+                  _buildAjukanPengaduanCard(),
+
                   const SizedBox(height: 16),
-
-                  // Label Jumlah Data (KODE ASLI)
-                  Obx(() => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Menampilkan ${controller.filteredItems.length} data',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ),
-                  )),
-
-                  const SizedBox(height: 8),
 
                   // List Data
                   Expanded(
@@ -290,6 +281,66 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
     });
   }
 
+  Widget _buildAjukanPengaduanCard() {
+    return GestureDetector(
+      onTap: () => Get.toNamed('/form-pengaduan'),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF383C74),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2A2E5E).withOpacity(0.15),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Ajukan Pengaduan',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Kami siap membantu masalah hukum\nAnda',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ========================================================================
   // DESAIN KARTU BARU YANG LEBIH MENARIK (PREMIUM FEEL)
   // ========================================================================
@@ -386,8 +437,7 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
                   children: [
                     _buildIconText(Icons.calendar_month_rounded, item.tanggal),
                     const SizedBox(width: 16),
-                    // Kategori sementara statis. Nanti bisa diganti: item.kategori ?? 'Hukum Perdata'
-                    _buildIconText(Icons.folder_open_rounded, 'Hukum Perdata'),
+                    _buildIconText(Icons.folder_open_rounded, item.kategoriMasalah),
                   ],
                 ),
 

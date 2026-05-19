@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/profile_controller.dart';
 import '../../../app/routes/app_routes.dart';
+
 class ProfileView extends GetView<ProfileController> {
   const ProfileView({super.key});
 
   // --- Palet Warna ---
   static const Color darkBlueColor = Color(0xFF2A2E5E);
-  static const Color textDark = Color(0xFF1E1E1E);
-  static const Color textLight = Color(0xFF64748B);
-  static const Color primaryBlue = Color(0xFF1152D4);
-  static const Color dangerColor = Color(0xFFE53E3E);
+  static const Color textDark = Color(0xFF0F172A);
+  static const Color textLight = Color(0xFF94A3B8);
+  static const Color primaryBlue = Color(0xFF2563EB);
+  static const Color dangerColor = Color(0xFFDC2626);
 
   @override
   Widget build(BuildContext context) {
@@ -77,21 +78,22 @@ class ProfileView extends GetView<ProfileController> {
                         controller.isLoading.value ? 'Memuat...' : controller.namaLengkap.value,
                         style: const TextStyle(
                           fontSize: 22,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w800,
                           color: textDark,
                         ),
                       )),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Obx(() => Text(
-                        controller.isLoading.value ? 'ID: ---' : controller.displayId.value,
+                        controller.isLoading.value ? 'ID: ---' : controller.displayId.value.contains('ID:') ? controller.displayId.value : 'ID: ${controller.displayId.value}',
                         style: const TextStyle(
                           fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                           color: textLight,
-                          letterSpacing: 1.0,
+                          letterSpacing: 1.5,
+                          fontFamily: 'Monospace',
                         ),
                       )),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 40),
 
                       // --- MENU PENGATURAN AKUN ---
                       Padding(
@@ -101,7 +103,7 @@ class ProfileView extends GetView<ProfileController> {
                           children: [
                             _buildSectionTitle('PENGATURAN AKUN'),
                             _buildMenuItem(
-                              icon: Icons.person_outline,
+                              icon: Icons.person_outline_rounded,
                               title: 'Edit Profil',
                               onTap: () {
                                 Get.toNamed(AppRoutes.EDIT_PROFILE);
@@ -109,7 +111,7 @@ class ProfileView extends GetView<ProfileController> {
                             ),
                             _buildDivider(),
                             _buildMenuItem(
-                              icon: Icons.lock_outline,
+                              icon: Icons.lock_outline_rounded,
                               title: 'Ganti Kata Sandi',
                               onTap: () {},
                             ),
@@ -119,18 +121,18 @@ class ProfileView extends GetView<ProfileController> {
                             // --- MENU INFORMASI & BANTUAN ---
                             _buildSectionTitle('INFORMASI & BANTUAN'),
                             _buildMenuItem(
-                              icon: Icons.help_outline,
+                              icon: Icons.help_outline_rounded,
                               title: 'Pusat Bantuan',
                               onTap: () {},
                             ),
                             _buildDivider(),
                             _buildMenuItem(
-                              icon: Icons.info_outline,
+                              icon: Icons.info_outline_rounded,
                               title: 'Tentang Aplikasi',
                               onTap: () {},
                             ),
 
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 40),
 
                             // --- TOMBOL KELUAR (LOGOUT) ---
                             _buildLogoutItem(onTap: () => controller.logout()),
@@ -168,15 +170,13 @@ class ProfileView extends GetView<ProfileController> {
                   // Cek apakah ada avatarUrl dari database
                   bool hasAvatar = controller.avatarUrl.value.isNotEmpty;
                   return CircleAvatar(
-                    backgroundColor: const Color(0xFFF1F5F9),
-                    // ✅ Ganti AssetImage jadi null
+                    backgroundColor: const Color(0xFFE2E8F0),
                     backgroundImage: hasAvatar
                         ? NetworkImage(controller.avatarUrl.value)
                         : null,
-
                     child: hasAvatar
                         ? null
-                        : Icon(Icons.person, size: avatarSize * 0.45, color: textLight),
+                        : Icon(Icons.person_rounded, size: avatarSize * 0.45, color: const Color(0xFF94A3B8)),
                   );
                 }),
               ),
@@ -215,10 +215,10 @@ class ProfileView extends GetView<ProfileController> {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: primaryBlue.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(8),
+                color: const Color(0xFFF4F6FB),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: primaryBlue, size: 22),
             ),
@@ -233,7 +233,7 @@ class ProfileView extends GetView<ProfileController> {
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.grey, size: 24),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFFCBD5E1), size: 24),
           ],
         ),
       ),
@@ -249,15 +249,15 @@ class ProfileView extends GetView<ProfileController> {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: dangerColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: const Color(0xFFFEF2F2),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.logout, color: dangerColor, size: 22),
+              child: Icon(Icons.exit_to_app_rounded, color: dangerColor, size: 22),
             ),
             const SizedBox(width: 16),
-            const Text(
+            Text(
               'Keluar',
               style: TextStyle(
                 fontSize: 15,
@@ -273,7 +273,7 @@ class ProfileView extends GetView<ProfileController> {
 
   Widget _buildDivider() {
     return const Padding(
-      padding: EdgeInsets.only(left: 58.0, top: 4.0, bottom: 4.0),
+      padding: EdgeInsets.only(left: 62.0, top: 4.0, bottom: 4.0),
       child: Divider(color: Color(0xFFF1F5F9), thickness: 1.5),
     );
   }
