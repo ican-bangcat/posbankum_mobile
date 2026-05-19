@@ -12,7 +12,7 @@ class CustomBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 80, // Tinggi Bottom Nav
+      // Tinggi 80 dipindah ke dalam SizedBox di SafeArea
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.only(
@@ -27,40 +27,45 @@ class CustomBottomNav extends StatelessWidget {
           )
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(
-            icon: Icons.notifications_none_outlined,
-            label: 'Notification',
-            index: 0,
-            route: '/notification', // Ganti dengan route aslimu
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 80, // Tinggi Bottom Nav
+          child: Row(
+            children: [
+              _buildNavItem(
+                icon: Icons.notifications_none_outlined,
+                label: 'Notification',
+                index: 0,
+                route: '/notification', // Ganti dengan route aslimu
+              ),
+              _buildNavItem(
+                icon: Icons.assignment_outlined,
+                label: 'Pengaduan',
+                index: 1,
+                route: '/riwayat-pengaduan',
+              ),
+              _buildNavItem(
+                icon: Icons.home_outlined,
+                label: 'Home',
+                index: 2,
+                route: '/home-masyarakat',
+              ),
+              _buildNavItem(
+                icon: Icons.chat_bubble_outline,
+                label: 'Chat',
+                index: 3,
+                route: '/chat', // Nanti untuk PB08
+              ),
+              _buildNavItem(
+                icon: Icons.account_circle_outlined,
+                label: 'Profile',
+                index: 4,
+                route: '/profile',
+              ),
+            ],
           ),
-          _buildNavItem(
-            icon: Icons.assignment_outlined,
-            label: 'Pengaduan',
-            index: 1,
-            route: '/riwayat-pengaduan',
-          ),
-          _buildNavItem(
-            icon: Icons.home_outlined,
-            label: 'Home',
-            index: 2,
-            route: '/home-masyarakat',
-          ),
-          _buildNavItem(
-            icon: Icons.chat_bubble_outline,
-            label: 'Chat',
-            index: 3,
-            route: '/chat', // Nanti untuk PB08
-          ),
-          _buildNavItem(
-            icon: Icons.person_outline,
-            label: 'Profile',
-            index: 4,
-            route: '/profile',
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -76,39 +81,56 @@ class CustomBottomNav extends StatelessWidget {
     // Warna sesuai palette kamu
     final color = isActive ? const Color(0xFF2A2E5E) : const Color(0xFFA8A8A8);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        // Logika Navigasi: Pindah halaman kalau yang diklik bukan halaman saat ini
-        if (!isActive) {
-          Get.offAllNamed(route); // offAllNamed agar tidak menumpuk history back
-        }
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Garis kuning indikator aktif di atas icon (seperti di desain)
-          Container(
-            width: 24,
-            height: 3,
-            margin: const EdgeInsets.only(bottom: 6),
-            decoration: BoxDecoration(
-              color: isActive ? const Color(0xFFE8CE66) : Colors.transparent, // Kuning kalau aktif
-              borderRadius: BorderRadius.circular(2),
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          // Logika Navigasi: Pindah halaman kalau yang diklik bukan halaman saat ini
+          if (!isActive) {
+            Get.offAllNamed(route); // offAllNamed agar tidak menumpuk history back
+          }
+        },
+        child: SizedBox(
+          height: 80,
+          child: Stack(
+            alignment: Alignment.center,
+          children: [
+            // Garis indikator kuning di ujung atas persis seperti desain
+            Positioned(
+              top: 0,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: isActive ? 30 : 0,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isActive ? const Color(0xFFE2C842) : Colors.transparent,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(4),
+                    bottomRight: Radius.circular(4),
+                  ),
+                ),
+              ),
             ),
-          ),
-          Icon(icon, color: color, size: 26),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 10,
-              fontFamily: 'Poppins',
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: color, size: 26),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10,
+                    fontFamily: 'Poppins',
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
       ),
     );
   }

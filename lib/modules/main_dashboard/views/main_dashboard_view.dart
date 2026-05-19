@@ -100,8 +100,10 @@ class MainDashboardView extends GetView<MainDashboardController> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => controller.changeTab(index),
-        child: Stack(
-          alignment: Alignment.center,
+        child: SizedBox(
+          height: 80,
+          child: Stack(
+            alignment: Alignment.center,
           children: [
             // Garis indikator kuning di ujung atas
             Positioned(
@@ -141,6 +143,7 @@ class MainDashboardView extends GetView<MainDashboardController> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

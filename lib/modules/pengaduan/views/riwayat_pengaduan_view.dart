@@ -389,28 +389,34 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(8),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.confirmation_num_rounded, size: 14, color: textSecondary),
                           ),
-                          child: const Icon(Icons.confirmation_num_rounded, size: 14, color: textSecondary),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          item.idTiket,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: textSecondary,
-                            fontFamily: 'Monospace',
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              item.idTiket,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: textSecondary,
+                                fontFamily: 'Monospace',
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 12),
                     _buildStatusBadgeMenarik(item.status),
                   ],
                 ),
@@ -437,7 +443,9 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
                   children: [
                     _buildIconText(Icons.calendar_month_rounded, item.tanggal),
                     const SizedBox(width: 16),
-                    _buildIconText(Icons.folder_open_rounded, item.kategoriMasalah),
+                    Expanded(
+                      child: _buildIconText(Icons.folder_open_rounded, item.kategoriMasalah),
+                    ),
                   ],
                 ),
 
@@ -449,10 +457,14 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Ketuk untuk melihat detail',
-                      style: TextStyle(fontSize: 12, color: Colors.black38, fontStyle: FontStyle.italic),
+                    const Expanded(
+                      child: Text(
+                        'Ketuk untuk melihat detail',
+                        style: TextStyle(fontSize: 12, color: Colors.black38, fontStyle: FontStyle.italic),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
+                    const SizedBox(width: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
@@ -483,12 +495,16 @@ class RiwayatPengaduanView extends GetView<RiwayatPengaduanController> {
   // Widget Pembantu untuk Ikon + Teks (Tanggal/Kategori)
   Widget _buildIconText(IconData icon, String text) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 14, color: const Color(0xFF94A3B8)),
         const SizedBox(width: 6),
-        Text(
-          text,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+        Flexible(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );
