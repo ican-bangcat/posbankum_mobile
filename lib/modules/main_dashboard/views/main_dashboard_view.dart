@@ -73,7 +73,7 @@ class MainDashboardView extends GetView<MainDashboardController> {
                     index: 3,
                   ),
                   _buildNavItem(
-                    icon: Icons.person_outline,
+                    icon: Icons.account_circle_outlined,
                     label: 'Profile',
                     index: 4,
                   ),
@@ -100,33 +100,44 @@ class MainDashboardView extends GetView<MainDashboardController> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => controller.changeTab(index),
-        child: Column(
-          mainAxisSize: MainAxisSize.min, // Agar vertikalnya tidak melar aneh
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
+          alignment: Alignment.center,
           children: [
-            // Garis indikator kuning di atas icon
-            Container(
-              width: 24,
-              height: 3,
-              margin: const EdgeInsets.only(bottom: 6),
-              decoration: BoxDecoration(
-                color: isActive ? const Color(0xFFE8CE66) : Colors.transparent,
-                borderRadius: BorderRadius.circular(2),
+            // Garis indikator kuning di ujung atas
+            Positioned(
+              top: 0,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: isActive ? 30 : 0,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isActive ? const Color(0xFFE2C842) : Colors.transparent,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(4),
+                    bottomRight: Radius.circular(4),
+                  ),
+                ),
               ),
             ),
-            Icon(icon, color: color, size: 26),
-            const SizedBox(height: 4),
-            // Teks Navigasi
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: color,
-                fontSize: 10,
-                fontFamily: 'Poppins',
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-              ),
+            Column(
+              mainAxisSize: MainAxisSize.min, // Agar vertikalnya tidak melar aneh
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: color, size: 26),
+                const SizedBox(height: 4),
+                // Teks Navigasi
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10,
+                    fontFamily: 'Poppins',
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

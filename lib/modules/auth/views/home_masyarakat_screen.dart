@@ -246,16 +246,24 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF3B82F6),
+          color: const Color(0xFF323669),
           borderRadius: BorderRadius.circular(22),
-          boxShadow: [BoxShadow(color: const Color(0xFF3B82F6).withOpacity(0.35), blurRadius: 20, offset: const Offset(0, 8))],
+          gradient: const RadialGradient(
+            center: Alignment(0.8, 0.5),
+            radius: 1.2,
+            colors: [
+              Color(0xFF4B53A6), // glow color
+              Color(0xFF323669), // base color
+            ],
+          ),
+          boxShadow: [BoxShadow(color: const Color(0xFF323669).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 8))],
         ),
         child: Padding(
           padding: const EdgeInsets.all(22),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(width: 42, height: 42, decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(12)), child: const Center(child: Text('⚖️', style: TextStyle(fontSize: 22)))),
+              Container(width: 42, height: 42, decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(12)), child: const Center(child: Icon(Icons.balance, color: Colors.white, size: 24))),
               const SizedBox(height: 14),
               const Text('Konsultasi Hukum Gratis', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700, height: 1.2)),
               const SizedBox(height: 6),
@@ -384,8 +392,8 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
 
               if (statusRaw.contains('proses')) {
                 badgeText = 'Diproses';
-                badgeColor = const Color(0xFF3182CE); // Biru
-                badgeBg = const Color(0xFFEBF8FF);
+                badgeColor = const Color(0xFFED8936); // Orange
+                badgeBg = const Color(0xFFFFF3E0);
               } else if (statusRaw == 'selesai') {
                 badgeText = 'Selesai';
                 badgeColor = const Color(0xFF38A169); // Hijau
@@ -399,7 +407,7 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _buildHistoryCard(
-                  iconEmoji: '📝',
+                  iconData: Icons.image,
                   title: kasus['kategori_masalah'] ?? 'Pengaduan Hukum',
                   subtitle: 'ID: #${kasus['id'].toString().substring(0, 5).toUpperCase()}',
                   badgeText: badgeText,
@@ -414,13 +422,13 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
     ));
   }
 
-  Widget _buildHistoryCard({required String iconEmoji, required String title, required String subtitle, required String badgeText, required Color badgeColor, required Color badgeBg, required String timeAgo}) {
+  Widget _buildHistoryCard({required IconData iconData, required String title, required String subtitle, required String badgeText, required Color badgeColor, required Color badgeBg, required String timeAgo}) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 3))]),
       child: Row(
         children: [
-          Container(width: 46, height: 46, decoration: BoxDecoration(color: const Color(0xFFF7FAFC), borderRadius: BorderRadius.circular(12)), child: Center(child: Text(iconEmoji, style: const TextStyle(fontSize: 22)))),
+          Container(width: 46, height: 46, decoration: BoxDecoration(color: const Color(0xFFF7FAFC), borderRadius: BorderRadius.circular(12)), child: Center(child: Icon(iconData, color: const Color(0xFFA0AEC0), size: 24))),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
