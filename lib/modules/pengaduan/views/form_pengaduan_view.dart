@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
 import '../../../app/themes/app_colors.dart';
 import '../controllers/pengaduan_controller.dart';
 
@@ -182,8 +183,8 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
       ),
       child: Obx(() {
         final count = controller.progressCount.value;
-        final displayCount = count > 8 ? 8 : count;
-        final progress = (displayCount / 8.0).clamp(0.0, 1.0);
+        final displayCount = count > 9 ? 9 : count;
+        final progress = (displayCount / 9.0).clamp(0.0, 1.0);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +199,7 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                     fontSize: 13, fontWeight: FontWeight.w700,
                     color: primaryBlue,
                   ),
-                  child: Text('$displayCount/8 Lengkap'),
+                  child: Text('$displayCount/9 Lengkap'),
                 ),
               ],
             ),
@@ -408,19 +409,176 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                 ),
               ),
               if (controller.selectedFiles.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 ...controller.selectedFiles.asMap().entries.map((entry) {
-                  int idx = entry.key; File file = entry.value; String fileName = file.path.split('/').last;
+                  int idx = entry.key; 
+                  File file = entry.value; 
+                  String fileName = file.path.split('/').last;
+                  bool isImage = fileName.toLowerCase().endsWith('.jpg') || fileName.toLowerCase().endsWith('.jpeg') || fileName.toLowerCase().endsWith('.png');
+                  
                   return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[200]!)),
-                    child: Row(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[200]!),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.insert_drive_file_outlined, color: primaryBlue, size: 24),
-                        const SizedBox(width: 12),
-                        Expanded(child: Text(fileName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF2A2E5E)), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                        GestureDetector(onTap: () => controller.removeFileAt(idx), child: const Icon(Icons.close, color: Colors.red, size: 20)),
+                        // Badge dan Tombol Silang
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: isImage ? const Color(0xFF0D9488) : const Color(0xFF1E293B),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  isImage ? 'IMAGE' : 'PDF',
+                                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => controller.removeFileAt(idx),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.close, color: Colors.white, size: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        // Konten Tengah
+                        if (isImage)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.file(
+                                file,
+                                height: 120,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          )
+                        else
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEF4444),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(Icons.description_outlined, color: Colors.white, size: 32),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text('Dokumen PDF', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                                ],
+                              ),
+                            ),
+                          ),
+                          
+                        const SizedBox(height: 12),
+                        
+                        // Info File di Bawah
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      fileName,
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      isImage ? 'Gambar' : 'Dokumen PDF',
+                                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Row(
+                                children: [
+                                  GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () {
+                                      Get.dialog(
+                                        Dialog(
+                                          insetPadding: const EdgeInsets.all(16),
+                                          backgroundColor: Colors.transparent,
+                                          child: Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              Container(
+                                                width: double.infinity,
+                                                height: Get.height * 0.7,
+                                                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                                                clipBehavior: Clip.hardEdge,
+                                                child: isImage
+                                                    ? Image.file(file, fit: BoxFit.contain)
+                                                    : PDFView(
+                                                        filePath: file.path,
+                                                        enableSwipe: true,
+                                                        swipeHorizontal: false,
+                                                        autoSpacing: false,
+                                                        pageFling: false,
+                                                      ),
+                                              ),
+                                              Positioned(
+                                                top: 12, right: 12,
+                                                child: GestureDetector(
+                                                  onTap: () => Get.back(),
+                                                  child: Container(
+                                                    padding: const EdgeInsets.all(8),
+                                                    decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                                                    child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                                      child: Row(
+                                        children: const [
+                                          Icon(Icons.visibility_outlined, color: primaryBlue, size: 14),
+                                          SizedBox(width: 4),
+                                          Text('Lihat', style: TextStyle(color: primaryBlue, fontSize: 12, fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -437,7 +595,7 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
     return SizedBox(
       width: double.infinity, height: 54,
       child: Obx(() {
-        final isComplete = controller.progressCount.value >= 8;
+        final isComplete = controller.progressCount.value >= 9;
         return ElevatedButton(
           onPressed: (isComplete && !controller.isLoading.value) 
               ? () => controller.submitPengaduan() 

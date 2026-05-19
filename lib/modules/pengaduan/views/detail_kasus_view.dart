@@ -1,5 +1,9 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 import '../controllers/detail_kasus_controller.dart';
 
 class DetailKasusView extends GetView<DetailKasusController> {
@@ -72,28 +76,38 @@ class DetailKasusView extends GetView<DetailKasusController> {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE0E7FF),
-                                borderRadius: BorderRadius.circular(6),
+                                color: const Color(0xFFEFF6FF), // Lighter blue
+                                borderRadius: BorderRadius.circular(20), // Pill shape
                               ),
                               child: Text(
                                 kasus.idKasus.toUpperCase(),
-                                style: const TextStyle(color: Color(0xFF1E40AF), fontSize: 12, fontWeight: FontWeight.w800),
+                                style: const TextStyle(color: Color(0xFF2563EB), fontSize: 11, fontWeight: FontWeight.w800),
                               ),
                             ),
                             const SizedBox(width: 12),
-                            Text(kasus.tanggalDibuat, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13, fontWeight: FontWeight.w500)),
+                            Text(kasus.tanggalDibuat, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w500)),
                           ],
                         ),
                         const SizedBox(height: 16),
-                        Text(kasus.judulKasus, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: textPrimary, height: 1.3)),
+                        Text(kasus.judulKasus, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: textPrimary, height: 1.3)),
                         const SizedBox(height: 12),
                         Text(kasus.kronologi, style: const TextStyle(fontSize: 14, color: textSecondary, height: 1.6)),
-                        const SizedBox(height: 40),
-                        const Text('Perjalanan Kasus', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: textPrimary)),
+                        const SizedBox(height: 32),
+                        const Text('Perjalanan Kasus', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: textPrimary)),
                         const SizedBox(height: 20),
                         _buildTimelineSection(kasus),
+                        const SizedBox(height: 32),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: const [
+                            Text('Berkas & Dokumen', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: textPrimary)),
+                            Text('4 File', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: textSecondary)),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDokumenGrid(),
                       ],
                     ),
                   ),
@@ -105,6 +119,174 @@ class DetailKasusView extends GetView<DetailKasusController> {
         ),
       ],
     );
+  }
+
+  Widget _buildDokumenGrid() {
+    return GridView.count(
+      crossAxisCount: 2,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      childAspectRatio: 0.75, // Matches the image aspect ratio
+      padding: EdgeInsets.zero,
+      children: [
+        _buildDokumenCard(isPdf: true, title: 'Surat Permohonan Bantuan Hukum.pdf', size: '2.4 MB', date: '12 Jan 2024'),
+        _buildDokumenCard(isPdf: false, title: 'Foto Lokasi Tanah Sengketa.jpg', size: '3.1 MB', date: '12 Jan 2024', imageUrl: 'https://picsum.photos/id/40/200/300'),
+        _buildDokumenCard(isPdf: true, title: 'Sertifikat Tanah.pdf', size: '1.8 MB', date: '13 Jan 2024'),
+        _buildDokumenCard(isPdf: false, title: 'KTP Pelapor.jpg', size: '856 KB', date: '13 Jan 2024', imageUrl: 'https://picsum.photos/id/20/200/300'),
+      ],
+    );
+  }
+
+  Widget _buildDokumenCard({required bool isPdf, required String title, required String size, required String date, String? imageUrl}) {
+    return GestureDetector(
+      onTap: () => _showPreviewDialog(isPdf, title, imageUrl),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top Half (Image or PDF Icon)
+            Expanded(
+              flex: 5,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(14), topRight: Radius.circular(14)),
+                    child: isPdf 
+                        ? Container(
+                            color: const Color(0xFFFFF6F5), // Light pink background
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.transparent, // Mengikuti desain gambar merah dengan transparansi
+                                ),
+                                child: const Icon(Icons.description_outlined, size: 48, color: Color(0xFFEF4444)),
+                              ),
+                            ),
+                          )
+                        : Image.network(
+                            imageUrl ?? 'https://picsum.photos/200/300',
+                            fit: BoxFit.cover,
+                          ),
+                  ),
+                  Positioned(
+                    top: 8, right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF475569).withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        isPdf ? 'PDF' : 'IMAGE',
+                        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Bottom Half (Details)
+            Expanded(
+              flex: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: textPrimary, height: 1.3),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(size, style: const TextStyle(fontSize: 10, color: textSecondary)),
+                        Text(date, style: const TextStyle(fontSize: 10, color: textSecondary)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPreviewDialog(bool isPdf, String title, String? imageUrl) {
+    Get.dialog(
+      Dialog(
+        insetPadding: const EdgeInsets.all(16),
+        backgroundColor: Colors.transparent,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: double.infinity,
+              height: Get.height * 0.7,
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              clipBehavior: Clip.hardEdge,
+              child: isPdf
+                  ? PdfPreview(
+                      build: (format) async => await _generateMockPdf(title),
+                      useActions: false,
+                      allowPrinting: false,
+                      allowSharing: false,
+                      canChangeOrientation: false,
+                      canChangePageFormat: false,
+                      padding: EdgeInsets.zero,
+                    )
+                  : Image.network(imageUrl ?? 'https://picsum.photos/400/600', fit: BoxFit.contain),
+            ),
+            Positioned(
+              top: 12, right: 12,
+              child: GestureDetector(
+                onTap: () => Get.back(),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                  child: const Icon(Icons.close, color: Colors.white, size: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<Uint8List> _generateMockPdf(String title) async {
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) => pw.Center(
+          child: pw.Column(
+            mainAxisAlignment: pw.MainAxisAlignment.center,
+            children: [
+              pw.Icon(const pw.IconData(0xe873), size: 100, color: const PdfColor.fromInt(0xFFEF4444)), // document icon equivalent if supported, else just text
+              pw.SizedBox(height: 20),
+              pw.Text('Pratinjau Dokumen Mockup:', style: pw.TextStyle(fontSize: 18, color: const PdfColor.fromInt(0xFF64748B))),
+              pw.SizedBox(height: 10),
+              pw.Text(title, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: const PdfColor.fromInt(0xFF0F172A))),
+            ]
+          )
+        ),
+      ),
+    );
+    return pdf.save();
   }
 
   // ✅ Header sekarang menerima boolean isSelesai untuk menyesuaikan warna lekukan S-Curve
@@ -173,12 +355,12 @@ class DetailKasusView extends GetView<DetailKasusController> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(
-                width: 24,
+                width: 20,
                 child: Column(
                   children: [
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     _buildTimelineDot(isCurrent, isDone),
-                    if (!isLast) Expanded(child: Container(width: 1.5, color: const Color(0xFFE2E8F0), margin: const EdgeInsets.symmetric(vertical: 4))),
+                    if (!isLast) Expanded(child: Container(width: 1.5, color: isDone ? const Color(0xFFCBD5E1) : const Color(0xFFE2E8F0), margin: const EdgeInsets.symmetric(vertical: 4))),
                   ],
                 ),
               ),
@@ -189,9 +371,25 @@ class DetailKasusView extends GetView<DetailKasusController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: isCurrent ? orangeAccent : (isDone ? textPrimary : const Color(0xFF94A3B8)))),
-                      const SizedBox(height: 4),
-                      Text(item.tanggal ?? 'Menunggu jadwal', style: const TextStyle(fontSize: 13, color: textSecondary, height: 1.5)),
+                      Text(item.title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: isCurrent ? darkBlueColor : (isDone ? textPrimary : const Color(0xFF94A3B8)))),
+                      const SizedBox(height: 6),
+                      Text(
+                        isCurrent 
+                          ? 'Tim paralegal sedang mengatur jadwal pertemuan mediasi dengan pihak tertuduh.' 
+                          : (item.tanggal ?? 'Menunggu proses selanjutnya'), 
+                        style: TextStyle(fontSize: 13, color: isDone ? textSecondary : const Color(0xFF94A3B8), height: 1.5)
+                      ),
+                      if (isCurrent) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text('Estimasi: 3 Hari', style: TextStyle(color: textSecondary, fontSize: 11, fontWeight: FontWeight.w600)),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -205,11 +403,18 @@ class DetailKasusView extends GetView<DetailKasusController> {
 
   Widget _buildTimelineDot(bool isCurrent, bool isDone) {
     if (isCurrent) {
-      return Container(width: 16, height: 16, decoration: BoxDecoration(shape: BoxShape.circle, color: whiteBgColor, border: Border.all(color: orangeAccent, width: 4)));
+      return Container(
+        width: 16, height: 16, 
+        decoration: BoxDecoration(
+          shape: BoxShape.circle, 
+          color: darkBlueColor, 
+          border: Border.all(color: const Color(0xFFFDE68A), width: 3)
+        )
+      );
     } else if (isDone) {
       return Container(width: 12, height: 12, decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFCBD5E1)));
     } else {
-      return Container(width: 12, height: 12, decoration: BoxDecoration(shape: BoxShape.circle, color: whiteBgColor, border: Border.all(color: const Color(0xFFE2E8F0), width: 2)));
+      return Container(width: 12, height: 12, decoration: BoxDecoration(shape: BoxShape.circle, color: whiteBgColor, border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5)));
     }
   }
 
@@ -217,24 +422,20 @@ class DetailKasusView extends GetView<DetailKasusController> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       decoration: BoxDecoration(color: whiteBgColor, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, -5))]),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () => Get.snackbar('Info', 'Fitur Chat segera hadir!'),
-              style: ElevatedButton.styleFrom(backgroundColor: darkBlueColor, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-              child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.phone_in_talk_outlined, color: Colors.white, size: 20), SizedBox(width: 8), Text('Chat Paralegal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14))]),
-            ),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () => Get.snackbar('Info', 'Fitur Chat segera hadir!'),
+          style: ElevatedButton.styleFrom(backgroundColor: darkBlueColor, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 18), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center, 
+            children: [
+              Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20), 
+              SizedBox(width: 8), 
+              Text('Chat Paralegal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15))
+            ]
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () => Get.snackbar('Info', 'Membuka Berkas & Dokumen'),
-              style: OutlinedButton.styleFrom(backgroundColor: Colors.white, side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5), padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-              child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.insert_drive_file_outlined, color: textPrimary, size: 20), SizedBox(width: 8), Text('Berkas & Dokumen', style: TextStyle(color: textPrimary, fontWeight: FontWeight.w700, fontSize: 13))]),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
