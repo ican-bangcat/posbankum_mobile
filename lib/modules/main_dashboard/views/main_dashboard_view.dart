@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/main_dashboard_controller.dart';
-
+import '../../pengaduan/controllers/daftar_pengaduan_controller.dart';
 // Import halaman riwayat yang sudah kamu buat
 import '../../pengaduan/views/daftar_pengaduan_view.dart';
 import '../../auth/views/home_masyarakat_screen.dart';
@@ -12,6 +12,7 @@ class MainDashboardView extends GetView<MainDashboardController> {
 
   @override
   Widget build(BuildContext context) {
+    Get.put(DaftarPengaduanController());
     // Ini daftar halaman yang akan diganti-ganti di tengah layar
     final List<Widget> pages = [
       const Center(child: Text('Halaman Notification')), // Index 0

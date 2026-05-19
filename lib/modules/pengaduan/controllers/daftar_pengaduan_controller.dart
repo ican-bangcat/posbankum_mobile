@@ -27,9 +27,9 @@ class PengaduanItem {
       final dt = DateTime.parse(json['tgl_lapor']).toLocal();
       formattedDate = DateFormat('dd MMM yyyy').format(dt);
     }
-
     return PengaduanItem(
-      idTiket: json['id'].toString().substring(0, 13).toUpperCase(),
+      // ✅ HAPUS SUBSTRING-NYA, BIAR ID-NYA UTUH 14 KARAKTER
+      idTiket: json['id'].toString().toUpperCase(),
       judul: json['judul_laporan'] ?? 'Tanpa Judul',
       tanggal: formattedDate,
       kategoriMasalah: json['kategori_masalah'] ?? 'Lain-lain',
