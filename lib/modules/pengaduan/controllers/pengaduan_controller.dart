@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:open_filex/open_filex.dart';
 import '../views/pengaduan_success_screen.dart';
 
 class PengaduanController extends GetxController {
@@ -72,7 +73,16 @@ class PengaduanController extends GetxController {
 
     progressCount.value = count;
   }
-
+  Future<void> bukaFileLokal(String path) async {
+    try {
+      final result = await OpenFilex.open(path);
+      if (result.type != ResultType.done) {
+        Get.snackbar("Info", "Tidak ada aplikasi di HP untuk membuka file ini.");
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Gagal membuka file.");
+    }
+  }
   // --- FUNGSI PICKER & UPLOAD FILE (TETAP SAMA) ---
   Future<void> pickMultipleFiles() async {
     try {

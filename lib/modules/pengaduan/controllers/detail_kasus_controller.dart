@@ -2,88 +2,77 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart'; // ✅ Import untuk buka PDF/Gambar
 
-// ── MODEL DATA (Disesuaikan dengan Schema Database) ──
+// ── MODEL DATA ──
 class TimelineItem {
   final String title;
   final String? tanggal;
   final bool isActive;
 
-  TimelineItem({
-    required this.title,
-    this.tanggal,
-    this.isActive = true,
-  });
+  TimelineItem({required this.title, this.tanggal, this.isActive = true});
 }
 
 class DetailKasus {
   final String id;
-  final String judulKasus;
+  final String judulLaporan; // ✅ Judul spesifik
+  final String kategoriMasalah; // ✅ Kategori (Perdata, dll)
   final String idKasus;
   final String tanggalDibuat;
   final String status;
   final String kronologi;
   final List<TimelineItem> timeline;
+  final List<String> lampiranUrls; // ✅ Array lampiran
   final String? catatanParalegal;
-  final String? catatanTanggal;
-  final String? catatanPenulis;
 
   DetailKasus({
     required this.id,
-    required this.judulKasus,
+    required this.judulLaporan,
+    required this.kategoriMasalah,
     required this.idKasus,
     required this.tanggalDibuat,
     required this.status,
     required this.kronologi,
     required this.timeline,
+    required this.lampiranUrls,
     this.catatanParalegal,
-    this.catatanTanggal,
-    this.catatanPenulis,
   });
 
   factory DetailKasus.fromJson(Map<String, dynamic> json) {
-    // Format Tanggal untuk Header
     String formattedDate = '-';
     if (json['tgl_lapor'] != null) {
       final dt = DateTime.parse(json['tgl_lapor']).toLocal();
       formattedDate = DateFormat('dd MMM yyyy').format(dt);
     }
 
-    // Format Tanggal untuk Timeline
-    String timelineDate = '-';
-    if (json['tgl_lapor'] != null) {
-      final dt = DateTime.parse(json['tgl_lapor']).toLocal();
-      timelineDate = DateFormat('dd MMM yyyy, HH:mm').format(dt);
-    }
+    String timelineDate = formattedDate;
 
-    // Logic Sederhana untuk Timeline berdasarkan Status
     String status = json['status'] ?? 'Pending';
     List<TimelineItem> generatedTimeline = [
-      TimelineItem(
-        title: 'Pengaduan diterima',
-        tanggal: timelineDate,
-        isActive: true,
-      ),
+      TimelineItem(title: 'Pengaduan diterima', tanggal: timelineDate, isActive: true),
     ];
 
-    if (status.toLowerCase().contains('proses')) {
+    if (status.toLowerCase() == 'diproses') {
       generatedTimeline.add(TimelineItem(title: 'Ditinjau oleh paralegal', isActive: true));
-    } else if (status.toLowerCase().contains('selesai')) {
+    } else if (status.toLowerCase() == 'selesai') {
       generatedTimeline.add(TimelineItem(title: 'Ditinjau oleh paralegal', isActive: true));
       generatedTimeline.add(TimelineItem(title: 'Kasus Selesai', isActive: true));
+    } else if (status.toLowerCase() == 'dibatalkan') {
+      generatedTimeline.add(TimelineItem(title: 'Pengaduan Dibatalkan', isActive: true, tanggal: '-'));
     } else {
       generatedTimeline.add(TimelineItem(title: 'Menunggu tindak lanjut', isActive: false));
     }
 
     return DetailKasus(
       id: json['id'].toString(),
-      judulKasus: json['kategori_masalah'] ?? 'Tanpa Judul',
+      judulLaporan: json['judul_laporan'] ?? 'Tanpa Judul', // ✅ Map ke Judul Laporan
+      kategoriMasalah: json['kategori_masalah'] ?? 'Tanpa Kategori', // ✅ Map ke Kategori
       idKasus: json['id'].toString().substring(0, 13).toUpperCase(),
       tanggalDibuat: formattedDate,
       status: status,
       kronologi: json['kronologi'] ?? 'Tidak ada kronologi',
       timeline: generatedTimeline,
-      // Ambil catatan paralegal dari database jika ada
+      lampiranUrls: json['lampiran_urls'] != null ? List<String>.from(json['lampiran_urls']) : [], // ✅ Map Array URL
       catatanParalegal: json['catatan_paralegal'],
     );
   }
@@ -91,115 +80,58 @@ class DetailKasus {
 
 class DetailKasusController extends GetxController {
   final supabase = Supabase.instance.client;
-
   final kasus = Rx<DetailKasus?>(null);
   final isLoading = true.obs;
-
-  final isParalegal = false.obs;
 
   @override
   void onInit() {
     super.onInit();
-    _checkUserRole();
     fetchDetailKasus();
   }
 
-  // ── 1. CEK ROLE USER ──
-  Future<void> _checkUserRole() async {
-    final user = supabase.auth.currentUser;
-    if (user != null) {
-      final response = await supabase
-          .from('paralegal')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
-
-      if (response != null) {
-        isParalegal.value = true;
-      } else {
-        isParalegal.value = false;
-      }
-    }
-  }
-
-  // ── 2. TARIK DATA DETAIL KASUS (Berdasarkan ID yang diklik) ──
   Future<void> fetchDetailKasus() async {
     try {
       isLoading.value = true;
+      final rawId = Get.arguments;
+      if (rawId == null) return;
 
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
-
-      // ✅ TANGKAP ID DARI HALAMAN DEPAN
-      final dynamic rawId = Get.arguments;
-
-      if (rawId == null) {
-        // ✅ DIBUNGKUS FUTURE.DELAYED AGAR TIDAK CRASH (LAYAR MERAH)
-        Future.delayed(Duration.zero, () {
-          Get.snackbar("Error", "ID Kasus tidak ditemukan dari halaman sebelumnya!");
-        });
-        return;
-      }
-
-      // Pastikan ID berbentuk String
-      final String kasusId = rawId.toString();
-
-      // ✅ CARI KASUS BERDASARKAN ID
-      final response = await supabase
-          .from('pengaduan')
-          .select()
-          .eq('id', kasusId)
-          .single();
-
+      final response = await supabase.from('pengaduan').select().eq('id', rawId.toString()).single();
       kasus.value = DetailKasus.fromJson(response);
-
     } catch (e) {
       print("Error Fetch Detail: $e");
-      Future.delayed(Duration.zero, () {
-        Get.snackbar("Info", "Data pengaduan belum tersedia / Gagal memuat data");
-      });
     } finally {
       isLoading.value = false;
     }
   }
 
-  // ── 3. LOGIC AMBIL KASUS (PARALEGAL SAJA) ──
-  Future<void> ambilKasus() async {
-    if (kasus.value == null) return;
-
+  // ✅ FUNGSI BUKA LAMPIRAN KE BROWSER/PDF VIEWER HP
+  Future<void> bukaLampiran(String url) async {
+    final Uri uri = Uri.parse(url);
     try {
-      Get.dialog(
-        const Center(child: CircularProgressIndicator()),
-        barrierDismissible: false,
-      );
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        Get.snackbar("Error", "Tidak dapat membuka file tersebut.");
+      }
+    } catch (e) {
+      Get.snackbar("Error", "URL tidak valid.");
+    }
+  }
 
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+  // ✅ FUNGSI BATALKAN PENGADUAN
+  Future<void> batalkanPengaduan() async {
+    if (kasus.value == null) return;
+    try {
+      Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
 
       await supabase.from('pengaduan').update({
-        'status': 'Diproses',
-        'paralegal_id': user.id,
+        'status': 'Dibatalkan'
       }).eq('id', kasus.value!.id);
 
-      Get.back(); // Tutup Loading
-
-      await fetchDetailKasus();
-
-      Get.snackbar(
-        'Berhasil',
-        'Kasus berhasil diambil. Silakan mulai penanganan.',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-
+      Get.back(); // Tutup loading
+      fetchDetailKasus(); // Refresh data
+      Get.snackbar("Berhasil", "Pengaduan telah dibatalkan.", backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
-      Get.back(); // Tutup Loading
-      Get.snackbar(
-        'Gagal',
-        'Terjadi kesalahan: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      Get.back();
+      Get.snackbar("Gagal", "Gagal membatalkan pengaduan.", backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
 }

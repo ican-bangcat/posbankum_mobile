@@ -3,7 +3,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:flutter_pdfview/flutter_pdfview.dart';
 import '../../../app/themes/app_colors.dart';
 import '../controllers/pengaduan_controller.dart';
 
@@ -81,7 +80,7 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                     child: _buildProgressBar(),
                   ),
-                  
+
                   // Scrollable Form Content
                   Expanded(
                     child: SingleChildScrollView(
@@ -91,10 +90,10 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildTextField(
-                            label: 'NIK', 
+                            label: 'NIK',
                             icon: Icons.person_outline,
-                            hint: 'Masukkan 16 digit NIK', 
-                            controller: controller.nikC, 
+                            hint: 'Masukkan 16 digit NIK',
+                            controller: controller.nikC,
                             keyboardType: TextInputType.number,
                             showDigitCount: true,
                             inputFormatters: [LengthLimitingTextInputFormatter(16)],
@@ -102,18 +101,18 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                           const SizedBox(height: 20),
 
                           _buildTextField(
-                            label: 'Nama Lurah/Kelurahan', 
+                            label: 'Nama Lurah/Kelurahan',
                             icon: Icons.domain,
-                            hint: 'Masukkan nama lurah/kelurahan', 
+                            hint: 'Masukkan nama lurah/kelurahan',
                             controller: controller.namaLurahC,
                           ),
                           const SizedBox(height: 20),
 
                           _buildTextField(
-                            label: 'No. Telepon', 
+                            label: 'No. Telepon',
                             icon: Icons.phone_outlined,
-                            hint: 'Contoh: 081234567890', 
-                            controller: controller.noHpC, 
+                            hint: 'Contoh: 081234567890',
+                            controller: controller.noHpC,
                             keyboardType: TextInputType.phone,
                             inputFormatters: [LengthLimitingTextInputFormatter(13)],
                           ),
@@ -126,9 +125,9 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                           const SizedBox(height: 20),
 
                           _buildTextField(
-                            label: 'Judul Pengaduan', 
+                            label: 'Judul Pengaduan',
                             icon: Icons.description_outlined,
-                            hint: 'Tulis judul singkat masalah', 
+                            hint: 'Tulis judul singkat masalah',
                             controller: controller.judulLaporanC,
                             bottomText: 'Contoh: Sengketa Tanah Warisan',
                           ),
@@ -138,9 +137,9 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                           const SizedBox(height: 20),
 
                           _buildTextField(
-                            label: 'Kronologi Singkat', 
+                            label: 'Kronologi Singkat',
                             icon: Icons.receipt_long_outlined,
-                            hint: 'Jelaskan kronologi permasalahan Anda secara detail...', 
+                            hint: 'Jelaskan kronologi permasalahan Anda secara detail...',
                             controller: controller.kronologiC,
                             maxLines: 5,
                             showCharacterCount: true,
@@ -148,9 +147,9 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                           const SizedBox(height: 20),
 
                           _buildTextField(
-                            label: 'Lokasi Kejadian', 
+                            label: 'Lokasi Kejadian',
                             icon: Icons.location_on_outlined,
-                            hint: 'Contoh: Jl. Sudirman No. 123, Jakarta', 
+                            hint: 'Contoh: Jl. Sudirman No. 123, Jakarta',
                             controller: controller.lokasiC,
                           ),
                           const SizedBox(height: 20),
@@ -248,10 +247,10 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
   }
 
   Widget _buildTextField({
-    required String label, 
+    required String label,
     required IconData icon,
-    required String hint, 
-    required TextEditingController controller, 
+    required String hint,
+    required TextEditingController controller,
     TextInputType keyboardType = TextInputType.text,
     int? maxLines = 1,
     String? bottomText,
@@ -270,7 +269,7 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
           maxLines: maxLines,
           inputFormatters: inputFormatters,
           decoration: InputDecoration(
-            hintText: hint, hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14), 
+            hintText: hint, hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
             filled: true, fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
@@ -295,7 +294,7 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
               },
             )
           else if (bottomText != null)
-            Text(bottomText, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              Text(bottomText, style: const TextStyle(fontSize: 12, color: Colors.grey)),
         ]
       ],
     );
@@ -314,7 +313,7 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                 isExpanded: true,
                 icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
                 decoration: InputDecoration(
-                  hintText: 'Pilih jenis masalah', 
+                  hintText: 'Pilih jenis masalah',
                   hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
                   filled: true, fillColor: Colors.white,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -325,7 +324,7 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                 items: _kategoriMasalah.map((kategori) => DropdownMenuItem(value: kategori, child: Text(kategori, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)))).toList(),
                 onChanged: (value) {
                   controller.selectedKategori = value;
-                  controller.calculateProgress(); 
+                  controller.calculateProgress();
                   controller.update();
                 },
               );
@@ -411,11 +410,11 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
               if (controller.selectedFiles.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 ...controller.selectedFiles.asMap().entries.map((entry) {
-                  int idx = entry.key; 
-                  File file = entry.value; 
+                  int idx = entry.key;
+                  File file = entry.value;
                   String fileName = file.path.split('/').last;
                   bool isImage = fileName.toLowerCase().endsWith('.jpg') || fileName.toLowerCase().endsWith('.jpeg') || fileName.toLowerCase().endsWith('.png');
-                  
+
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
@@ -457,7 +456,7 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                             ],
                           ),
                         ),
-                        
+
                         // Konten Tengah
                         if (isImage)
                           Padding(
@@ -492,9 +491,9 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                               ),
                             ),
                           ),
-                          
+
                         const SizedBox(height: 12),
-                        
+
                         // Info File di Bawah
                         Padding(
                           padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -525,43 +524,41 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                                   GestureDetector(
                                     behavior: HitTestBehavior.opaque,
                                     onTap: () {
-                                      Get.dialog(
-                                        Dialog(
-                                          insetPadding: const EdgeInsets.all(16),
-                                          backgroundColor: Colors.transparent,
-                                          child: Stack(
-                                            alignment: Alignment.center,
-                                            children: [
-                                              Container(
-                                                width: double.infinity,
-                                                height: Get.height * 0.7,
-                                                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                                                clipBehavior: Clip.hardEdge,
-                                                child: isImage
-                                                    ? Image.file(file, fit: BoxFit.contain)
-                                                    : PDFView(
-                                                        filePath: file.path,
-                                                        enableSwipe: true,
-                                                        swipeHorizontal: false,
-                                                        autoSpacing: false,
-                                                        pageFling: false,
-                                                      ),
-                                              ),
-                                              Positioned(
-                                                top: 12, right: 12,
-                                                child: GestureDetector(
-                                                  onTap: () => Get.back(),
-                                                  child: Container(
-                                                    padding: const EdgeInsets.all(8),
-                                                    decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                                                    child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                      // ✅ LOGIKA BARU: Image pakai Dialog, PDF pakai file launcher
+                                      if (isImage) {
+                                        Get.dialog(
+                                          Dialog(
+                                            insetPadding: const EdgeInsets.all(16),
+                                            backgroundColor: Colors.transparent,
+                                            child: Stack(
+                                              alignment: Alignment.center,
+                                              children: [
+                                                Container(
+                                                  width: double.infinity,
+                                                  height: Get.height * 0.7,
+                                                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                                                  clipBehavior: Clip.hardEdge,
+                                                  child: Image.file(file, fit: BoxFit.contain),
+                                                ),
+                                                Positioned(
+                                                  top: 12, right: 12,
+                                                  child: GestureDetector(
+                                                    onTap: () => Get.back(),
+                                                    child: Container(
+                                                      padding: const EdgeInsets.all(8),
+                                                      decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                                                      child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      );
+                                        );
+                                      } else {
+                                        // Lempar PDF ke open_filex di controller
+                                        controller.bukaFileLokal(file.path);
+                                      }
                                     },
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
@@ -597,8 +594,8 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
       child: Obx(() {
         final isComplete = controller.progressCount.value >= 9;
         return ElevatedButton(
-          onPressed: (isComplete && !controller.isLoading.value) 
-              ? () => controller.submitPengaduan() 
+          onPressed: (isComplete && !controller.isLoading.value)
+              ? () => controller.submitPengaduan()
               : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: primaryBlue,
