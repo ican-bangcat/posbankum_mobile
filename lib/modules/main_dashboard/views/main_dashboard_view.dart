@@ -6,6 +6,8 @@ import '../../pengaduan/controllers/daftar_pengaduan_controller.dart';
 import '../../pengaduan/views/daftar_pengaduan_view.dart';
 import '../../auth/views/home_masyarakat_screen.dart';
 import '../../profile/views/profile_view.dart'; // ✅ Tambah Import Profile View
+import '../../notifikasi_masyarakat/views/notifikasi_masyarakat_view.dart';
+import '../../notifikasi_masyarakat/controllers/notifikasi_masyarakat_controller.dart';
 
 class MainDashboardView extends GetView<MainDashboardController> {
   const MainDashboardView({super.key});
@@ -13,9 +15,10 @@ class MainDashboardView extends GetView<MainDashboardController> {
   @override
   Widget build(BuildContext context) {
     Get.put(DaftarPengaduanController());
+    Get.put(NotifikasiMasyarakatController()); // Inject Notification Controller
     // Ini daftar halaman yang akan diganti-ganti di tengah layar
     final List<Widget> pages = [
-      const Center(child: Text('Halaman Notification')), // Index 0
+      const NotifikasiMasyarakatView(), // Index 0
       const DaftarPengaduanView(),                      // Index 1
       const HomeMasyarakatScreen(),                      // Index 2 (Home)
       const Center(child: Text('Halaman Chat')),         // Index 3
