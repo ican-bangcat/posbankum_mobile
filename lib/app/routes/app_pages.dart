@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../modules/pengaduan/controllers/daftar_pengaduan_controller.dart';
 import '../../modules/splash/views/splash_screen.dart';
 import '../../modules/splash/controllers/splash_controller.dart';
 import '../../modules/onboarding/views/onboarding_screen.dart';
@@ -10,12 +11,12 @@ import '../../modules/auth/views/home_masyarakat_screen.dart';
 import '../../modules/auth/views/home_paralegal_screen.dart';
 import '../../modules/pengaduan/views/form_pengaduan_view.dart';
 import '../../modules/pengaduan/views/pengaduan_success_screen.dart';
-import '../../modules/pengaduan/controllers/pengaduan_controller.dart';
+import '../../modules/pengaduan/controllers/FormPengaduanController.dart';
 import '../../modules/auth/views/forgot_password_screen.dart';
 import '../../modules/auth/controllers/forgot_password_controller.dart';
 import '../../modules/auth/views/update_password_screen.dart';
 import '../../modules/auth/controllers/update_password_controller.dart';
-import '../../modules/pengaduan/views/riwayat_pengaduan_view.dart';
+import '../../modules/pengaduan/views/daftar_pengaduan_view.dart';
 import '../../modules/pengaduan/controllers/riwayat_pengaduan_controller.dart';
 import '../../modules/pengaduan/views/detail_kasus_view.dart';
 import '../../modules/pengaduan/bindings/detail_kasus_binding.dart';
@@ -136,14 +137,14 @@ class AppPages {
       transition: Transition.fadeIn,
       transitionDuration: const Duration(milliseconds: 400),
     ),
-    // ✅ RIWAYAT PENGADUAN
+    // ✅ Route ke Daftar Pengaduan
     GetPage(
-      name: AppRoutes.RIWAYAT_PENGADUAN,
-      page: () => const RiwayatPengaduanView(),
+      name: '/daftar-pengaduan', // Atur path rutenya
+      page: () => const DaftarPengaduanView(), // Arahkan ke View baru
       binding: BindingsBuilder(() {
-        Get.lazyPut<RiwayatPengaduanController>(() => RiwayatPengaduanController());
+        // Ikat (Bind) Controller barunya ke View ini
+        Get.lazyPut<DaftarPengaduanController>(() => DaftarPengaduanController());
       }),
-      transition: Transition.rightToLeft, // Animasi geser dari kanan
     ),
     GetPage(
       name: AppRoutes.DETAIL_KASUS,

@@ -184,35 +184,97 @@ class DetailKasusView extends GetView<DetailKasusController> {
       },
     );
   }
-
-  // ✅ TOMBOL BATALKAN (Khusus Pending)
+// ✅ TOMBOL BATALKAN (Khusus Pending) DENGAN CUSTOM POP-UP
   Widget _buildBatalkanButton() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-      decoration: BoxDecoration(color: whiteBgColor, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, -5))]),
+      decoration: BoxDecoration(
+          color: whiteBgColor,
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, -5))]
+      ),
       child: SizedBox(
         width: double.infinity,
         child: OutlinedButton(
           onPressed: () {
-            Get.defaultDialog(
-                title: "Batalkan Pengaduan?",
-                middleText: "Apakah Anda yakin ingin membatalkan pengaduan ini?",
-                textCancel: "Tidak",
-                textConfirm: "Ya, Batalkan",
-                confirmTextColor: Colors.white,
-                buttonColor: Colors.red,
-                onConfirm: () {
-                  Get.back();
-                  controller.batalkanPengaduan();
-                }
+            // ✅ CUSTOM POP-UP DI SINI
+            Get.dialog(
+              Dialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                backgroundColor: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // --- IKON PERINGATAN ---
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(color: Colors.red.shade50, shape: BoxShape.circle),
+                        child: const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 48),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // --- TEKS ---
+                      const Text(
+                        'Batalkan Pengaduan?',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Pengaduan yang dibatalkan tidak akan diproses oleh tim paralegal. Anda yakin ingin melanjutkan?',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.5),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // --- BARISAN TOMBOL ---
+                      Row(
+                        children: [
+                          // TOMBOL KEMBALI
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () => Get.back(), // Tutup pop-up
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFF1F5F9), // Abu-abu terang
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                elevation: 0,
+                              ),
+                              child: const Text('Kembali', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF475569))),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // TOMBOL BATALKAN
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Get.back(); // Tutup pop-up dulu
+                                controller.batalkanPengaduan(); // Eksekusi batal
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFEF4444), // Merah
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                elevation: 0,
+                              ),
+                              child: const Text('Ya, Batalkan', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             );
           },
           style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.red),
+              side: const BorderSide(color: Colors.red, width: 1.5),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
           ),
-          child: const Text('Batalkan Pengaduan', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w700, fontSize: 15)),
+          child: const Text('Batalkan Pengaduan', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w800, fontSize: 15)),
         ),
       ),
     );

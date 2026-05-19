@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/main_dashboard_controller.dart';
 
 // Import halaman riwayat yang sudah kamu buat
-import '../../pengaduan/views/riwayat_pengaduan_view.dart';
+import '../../pengaduan/views/daftar_pengaduan_view.dart';
 import '../../auth/views/home_masyarakat_screen.dart';
 import '../../profile/views/profile_view.dart'; // ✅ Tambah Import Profile View
 
@@ -15,7 +15,7 @@ class MainDashboardView extends GetView<MainDashboardController> {
     // Ini daftar halaman yang akan diganti-ganti di tengah layar
     final List<Widget> pages = [
       const Center(child: Text('Halaman Notification')), // Index 0
-      const RiwayatPengaduanView(),                      // Index 1
+      const DaftarPengaduanView(),                      // Index 1
       const HomeMasyarakatScreen(),                      // Index 2 (Home)
       const Center(child: Text('Halaman Chat')),         // Index 3
       const ProfileView(),                               // ✅ Index 4 (Ubah jadi ProfileView asli!)

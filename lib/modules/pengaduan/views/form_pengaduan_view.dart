@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../app/themes/app_colors.dart';
-import '../controllers/pengaduan_controller.dart';
+import '../controllers/FormPengaduanController.dart';
 
 class FormPengaduanScreen extends GetView<PengaduanController> {
   const FormPengaduanScreen({super.key});
