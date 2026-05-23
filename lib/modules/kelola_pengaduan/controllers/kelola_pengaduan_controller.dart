@@ -12,24 +12,35 @@ class KasusItem {
   final String status;
   final String? namaKlien;
   final String? noHpKlien;
+  final String? nikPelapor;
+  final String? namaLurah;
+  final String? waktuKejadian;
+  final List<String> lampiranUrls;
 
   KasusItem({
     required this.id, required this.judul, required this.kategori,
     required this.deskripsi, required this.lokasi, required this.tanggalPengajuan,
     this.tanggalKejadian, required this.status, this.namaKlien, this.noHpKlien,
+    this.nikPelapor, this.namaLurah, this.waktuKejadian, this.lampiranUrls = const [],
   });
 
   factory KasusItem.fromJson(Map<String, dynamic> json) {
-    String namaMasyarakat = 'Masyarakat (Klien)';
-    String noHpMasyarakat = '-';
-    if (json['masyarakat'] != null) {
+    String namaMasyarakat = json['nama_pelapor']?.toString() ?? 'Masyarakat (Klien)';
+    String noHpMasyarakat = json['no_hp_pelapor']?.toString() ?? '-';
+    
+    if (json['nama_pelapor'] == null && json['masyarakat'] != null) {
       if (json['masyarakat']['nama'] != null) namaMasyarakat = json['masyarakat']['nama'].toString();
       if (json['masyarakat']['no_hp'] != null) noHpMasyarakat = json['masyarakat']['no_hp'].toString();
     }
 
+    List<String> parsedLampiran = [];
+    if (json['lampiran_urls'] != null && json['lampiran_urls'] is List) {
+      parsedLampiran = List<String>.from(json['lampiran_urls']);
+    }
+
     return KasusItem(
       id: json['id']?.toString() ?? '',
-      judul: json['kategori_masalah']?.toString() ?? 'Kasus Tanpa Kategori',
+      judul: json['judul_laporan']?.toString() ?? json['kategori_masalah']?.toString() ?? 'Kasus Tanpa Kategori',
       kategori: json['kategori_masalah']?.toString() ?? 'Lain-lain',
       deskripsi: json['kronologi']?.toString() ?? 'Tidak ada kronologi',
       lokasi: json['lokasi_kejadian']?.toString() ?? 'Lokasi tidak diketahui',
@@ -38,6 +49,10 @@ class KasusItem {
       status: json['status']?.toString().toLowerCase() ?? 'pending',
       namaKlien: namaMasyarakat,
       noHpKlien: noHpMasyarakat,
+      nikPelapor: json['nik_pelapor']?.toString(),
+      namaLurah: json['nama_lurah']?.toString(),
+      waktuKejadian: json['waktu_kejadian']?.toString(),
+      lampiranUrls: parsedLampiran,
     );
   }
 }

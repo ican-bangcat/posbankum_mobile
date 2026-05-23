@@ -98,7 +98,7 @@ class AuthController extends GetxController {
           Get.offAllNamed(AppRoutes.MAIN_DASHBOARD_ADMIN);
           return;
         }
-      } on AuthException catch (e) {
+      } on AuthException {
         // Kalau di db web juga salah, baru kita tolak mentah-mentah
         throw const AuthException('Email atau password salah!');
       }
