@@ -51,6 +51,10 @@ import '../../modules/daftar_chat_paralegal/controllers/detail_chat_paralegal_co
 import '../../modules/daftar_chat_paralegal/views/detail_chat_paralegal_view.dart';
 import '../../modules/daftar_chat_paralegal/controllers/info_chat_posbankum_controller.dart';
 import '../../modules/daftar_chat_paralegal/views/info_chat_posbankum_view.dart';
+import '../../modules/daftar_chat_masyarakat/controllers/daftar_chat_masyarakat_controller.dart';
+import '../../modules/daftar_chat_masyarakat/views/daftar_chat_masyarakat_view.dart';
+import '../../modules/daftar_chat_masyarakat/controllers/detail_chat_masyarakat_controller.dart';
+import '../../modules/daftar_chat_masyarakat/views/detail_chat_masyarakat_view.dart';
 
 
 /// App Pages Configuration
@@ -264,6 +268,14 @@ class AppPages {
       binding: BindingsBuilder(() {
         Get.lazyPut<InfoChatPosbankumController>(() => InfoChatPosbankumController());
       }),
+    ),
+    GetPage(
+      name: AppRoutes.DAFTAR_CHAT_MASYARAKAT,
+      page: () => const DaftarChatMasyarakatView(),
+    ),
+    GetPage(
+      name: AppRoutes.DETAIL_CHAT_MASYARAKAT,
+      page: () => const DetailChatMasyarakatView(),
     ),
   ];
 }
