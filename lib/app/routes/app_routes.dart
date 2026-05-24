@@ -61,5 +61,9 @@ class AppRoutes {
   static const EDIT_PROFILE = '/edit-profile';
 
   static const PROFIL_POSBANKUM = '/profil-posbankum';
+//Fitur chat pov paralegal
+  static const DAFTAR_CHAT_PARALEGAL = '/daftar-chat-paralegal';
+  static const DETAIL_CHAT_PARALEGAL = '/detail-chat-paralegal';
+  static const INFO_CHAT_POSBANKUM = '/info-chat-posbankum';
 
 }

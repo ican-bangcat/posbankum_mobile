@@ -45,6 +45,14 @@ import '../../modules/profil_posbankum/bindings/profil_posbankum_binding.dart';
 import '../../modules/profil_posbankum/views/profil_posbankum_view.dart';
 import '../../modules/notifikasi_masyarakat/views/notifikasi_masyarakat_view.dart';
 import '../../modules/notifikasi_masyarakat/bindings/notifikasi_masyarakat_binding.dart';
+import '../../modules/daftar_chat_paralegal/controllers/daftar_chat_paralegal_controller.dart';
+import '../../modules/daftar_chat_paralegal/views/daftar_chat_paralegal_view.dart';
+import '../../modules/daftar_chat_paralegal/controllers/detail_chat_paralegal_controller.dart';
+import '../../modules/daftar_chat_paralegal/views/detail_chat_paralegal_view.dart';
+import '../../modules/daftar_chat_paralegal/controllers/info_chat_posbankum_controller.dart';
+import '../../modules/daftar_chat_paralegal/views/info_chat_posbankum_view.dart';
+
+
 /// App Pages Configuration
 class AppPages {
   AppPages._();
@@ -235,6 +243,27 @@ class AppPages {
       page: () => const NotifikasiMasyarakatView(),
       binding: NotifikasiMasyarakatBinding(),
       transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.DAFTAR_CHAT_PARALEGAL,
+      page: () => const DaftarChatParalegalView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<DaftarChatParalegalController>(() => DaftarChatParalegalController());
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.DETAIL_CHAT_PARALEGAL,
+      page: () => const DetailChatParalegalView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<DetailChatParalegalController>(() => DetailChatParalegalController());
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.INFO_CHAT_POSBANKUM,
+      page: () => const InfoChatPosbankumView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<InfoChatPosbankumController>(() => InfoChatPosbankumController());
+      }),
     ),
   ];
 }

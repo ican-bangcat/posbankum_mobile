@@ -12,35 +12,25 @@ class KasusItem {
   final String status;
   final String? namaKlien;
   final String? noHpKlien;
-  final String? nikPelapor;
-  final String? namaLurah;
-  final String? waktuKejadian;
-  final List<String> lampiranUrls;
 
   KasusItem({
     required this.id, required this.judul, required this.kategori,
     required this.deskripsi, required this.lokasi, required this.tanggalPengajuan,
     this.tanggalKejadian, required this.status, this.namaKlien, this.noHpKlien,
-    this.nikPelapor, this.namaLurah, this.waktuKejadian, this.lampiranUrls = const [],
   });
 
   factory KasusItem.fromJson(Map<String, dynamic> json) {
-    String namaMasyarakat = json['nama_pelapor']?.toString() ?? 'Masyarakat (Klien)';
-    String noHpMasyarakat = json['no_hp_pelapor']?.toString() ?? '-';
-    
-    if (json['nama_pelapor'] == null && json['masyarakat'] != null) {
+    String namaMasyarakat = 'Masyarakat (Klien)';
+    String noHpMasyarakat = '-';
+    if (json['masyarakat'] != null) {
       if (json['masyarakat']['nama'] != null) namaMasyarakat = json['masyarakat']['nama'].toString();
       if (json['masyarakat']['no_hp'] != null) noHpMasyarakat = json['masyarakat']['no_hp'].toString();
     }
 
-    List<String> parsedLampiran = [];
-    if (json['lampiran_urls'] != null && json['lampiran_urls'] is List) {
-      parsedLampiran = List<String>.from(json['lampiran_urls']);
-    }
-
     return KasusItem(
       id: json['id']?.toString() ?? '',
-      judul: json['judul_laporan']?.toString() ?? json['kategori_masalah']?.toString() ?? 'Kasus Tanpa Kategori',
+      // ✅ FIX MAPPING: Judul ngambil dari judul_laporan
+      judul: json['judul_laporan']?.toString() ?? 'Tanpa Judul',
       kategori: json['kategori_masalah']?.toString() ?? 'Lain-lain',
       deskripsi: json['kronologi']?.toString() ?? 'Tidak ada kronologi',
       lokasi: json['lokasi_kejadian']?.toString() ?? 'Lokasi tidak diketahui',
@@ -49,10 +39,6 @@ class KasusItem {
       status: json['status']?.toString().toLowerCase() ?? 'pending',
       namaKlien: namaMasyarakat,
       noHpKlien: noHpMasyarakat,
-      nikPelapor: json['nik_pelapor']?.toString(),
-      namaLurah: json['nama_lurah']?.toString(),
-      waktuKejadian: json['waktu_kejadian']?.toString(),
-      lampiranUrls: parsedLampiran,
     );
   }
 }
@@ -75,7 +61,6 @@ class KelolaPengaduanController extends GetxController {
     selectedTab.value = index;
   }
 
-  // ✅ KODE BERSIH SUPABASE (Sekarang pasti jalan karena relasi DB udah bener)
   Future<void> fetchPengaduan() async {
     try {
       isLoading.value = true;
@@ -107,11 +92,15 @@ class KelolaPengaduanController extends GetxController {
 
   List<KasusItem> get filteredKasus {
     List<KasusItem> filtered = allKasus.where((kasus) {
+      // ✅ LOGIKA GHAIB: Buang semua kasus yang dibatalkan!
+      if (kasus.status == 'dibatalkan') return false;
+
       bool matchTab = true;
       if (selectedTab.value == 1) matchTab = (kasus.status == 'proses' || kasus.status == 'dalam proses' || kasus.status == 'diproses');
       if (selectedTab.value == 2) matchTab = kasus.status == 'selesai';
 
       bool matchSearch = kasus.judul.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
+          kasus.kategori.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
           kasus.lokasi.toLowerCase().contains(searchQuery.value.toLowerCase());
 
       return matchTab && matchSearch;

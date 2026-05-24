@@ -7,40 +7,98 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
   const KelolaPengaduanView({super.key});
 
   final Color darkBlue = const Color(0xFF2A2E5E);
-  final Color bgColor = const Color(0xFFF8FAFC);
-  final Color indigoPrimary = const Color(0xFF3B4A8D); // Match detail page button color
+  final Color bgColor = const Color(0xFFF4F6F9);
 
   @override
   Widget build(BuildContext context) {
     Get.put(KelolaPengaduanController());
-
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
     return Scaffold(
       backgroundColor: darkBlue,
       body: Column(
         children: [
-          _buildHeader(),
+          // ─── 1. HEADER ───
+          Stack(
+            children: [
+              Positioned(
+                bottom: 0, left: 0,
+                child: Container(width: 50, height: 50, color: bgColor),
+              ),
+              Container(
+                width: double.infinity,
+                clipBehavior: Clip.hardEdge,
+                decoration: BoxDecoration(
+                  color: darkBlue,
+                  borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(28)),
+                ),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: -10, right: -5,
+                      child: Opacity(
+                        opacity: 0.8,
+                        child: Image.asset(
+                          'assets/images/icons/building_illustration3.png',
+                          width: 300, fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.account_balance, size: 150, color: Colors.white10),
+                        ),
+                      ),
+                    ),
+                    SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40, height: 40,
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.white.withOpacity(0.3)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
+                            ),
+                            const SizedBox(width: 16),
+                            const Text(
+                              'Kelola Data Kasus',
+                              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // ─── 2. BODY DINAMIS ───
           Expanded(
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
                 color: bgColor,
-                borderRadius: BorderRadius.zero, // Menghilangkan warna biru di sudut
+                borderRadius: const BorderRadius.only(topRight: Radius.circular(28)),
               ),
               child: Column(
                 children: [
                   const SizedBox(height: 24),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: _buildSearchBar(),
                   ),
                   const SizedBox(height: 16),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: _buildTabFilter(),
                   ),
                   const SizedBox(height: 20),
+
+                  // Label Kasus Tersedia
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -48,18 +106,16 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
                           'KASUS TERSEDIA',
                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 1.0),
                         ),
-                        Obx(() => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(12)),
-                          child: Text(
-                            '${controller.filteredKasus.length} Kasus',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF1E2452)),
-                          ),
+                        Obx(() => Text(
+                          '${controller.filteredKasus.length} Kasus',
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
                         )),
                       ],
                     ),
                   ),
                   const SizedBox(height: 12),
+
+                  // List Kasus Dinamis
                   Expanded(
                     child: Obx(() {
                       if (controller.isLoading.value) {
@@ -69,55 +125,71 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
                       final listKasus = controller.filteredKasus;
 
                       if (listKasus.isEmpty) {
-                        return _buildEmptyState();
+                        return const Center(child: Text("Belum ada kasus di kategori ini", style: TextStyle(color: Colors.grey)));
                       }
 
                       return RefreshIndicator(
                         onRefresh: () => controller.fetchPengaduan(),
                         child: ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 30),
+                          padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPadding + 30),
                           physics: const AlwaysScrollableScrollPhysics(),
                           itemCount: listKasus.length,
                           separatorBuilder: (context, index) => const SizedBox(height: 16),
                           itemBuilder: (context, index) {
                             final kasus = listKasus[index];
+
                             final tanggalStr = "${kasus.tanggalPengajuan.day.toString().padLeft(2, '0')}/${kasus.tanggalPengajuan.month.toString().padLeft(2, '0')}/${kasus.tanggalPengajuan.year}";
 
+                            // ✅ LOGIKA BADGE BAHASA INDONESIA
                             String badgeText = '';
                             Color badgeColor = Colors.grey;
                             Color badgeBg = Colors.grey.shade200;
                             IconData? badgeIcon;
+                            bool showButton = false;
+                            String buttonText = '';
 
                             if (kasus.status == 'pending') {
+                              showButton = true;
+                              buttonText = 'Ambil Kasus ->';
                               int prioritas = controller.getPriorityValue(kasus.kategori);
+
                               if (prioritas == 1) {
-                                badgeText = 'URGENT';
+                                badgeText = 'MENUNGGU (URGENT)';
                                 badgeColor = const Color(0xFFEF4444);
                                 badgeBg = const Color(0xFFFEE2E2);
+                                badgeIcon = Icons.warning_rounded;
                               } else {
-                                badgeText = 'BELUM DIPROSES';
+                                badgeText = 'MENUNGGU';
                                 badgeColor = const Color(0xFFF59E0B);
                                 badgeBg = const Color(0xFFFEF3C7);
+                                badgeIcon = Icons.hourglass_empty_rounded;
                               }
-                            } else if (kasus.status == 'proses' || kasus.status == 'dalam proses' || kasus.status == 'diproses') {
-                              badgeText = 'SEDANG DIPROSES';
+                            }
+                            else if (kasus.status == 'proses' || kasus.status == 'dalam proses' || kasus.status == 'diproses') {
+                              badgeText = 'DIPROSES';
                               badgeColor = const Color(0xFF3B82F6);
                               badgeBg = const Color(0xFFEFF6FF);
-                            } else if (kasus.status == 'selesai') {
-                              badgeText = 'KASUS SELESAI';
+                              badgeIcon = Icons.autorenew_rounded;
+                              showButton = true;
+                              buttonText = 'Update Progres ✎';
+                            }
+                            else if (kasus.status == 'selesai') {
+                              badgeText = 'SELESAI';
                               badgeColor = const Color(0xFF10B981);
                               badgeBg = const Color(0xFFECFDF5);
                               badgeIcon = Icons.check_circle_outline;
+                              showButton = false;
                             }
 
                             return _buildCaseCard(
-                              idKasus: kasus.id,
                               badgeText: badgeText, badgeColor: badgeColor, badgeBg: badgeBg, badgeIcon: badgeIcon,
                               date: tanggalStr,
                               title: kasus.judul,
                               kategori: kasus.kategori,
-                              lokasi: kasus.lokasi,
-                              namaKlien: kasus.namaKlien,
+                              deskripsi: kasus.status == 'pending' ? kasus.deskripsi : null,
+                              lokasi: (kasus.status == 'pending' || kasus.status == 'selesai') ? kasus.lokasi : null,
+                              namaKlien: kasus.status != 'pending' ? kasus.namaKlien : null,
+                              showButton: showButton, buttonText: buttonText,
                               onTapButton: () {
                                 Get.toNamed(AppRoutes.DETAIL_KASUS_PARALEGAL, arguments: {'id': kasus.id});
                               },
@@ -136,104 +208,16 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)]),
-            child: const Icon(Icons.assignment_outlined, size: 64, color: Color(0xFFCBD5E1)),
-          ),
-          const SizedBox(height: 24),
-          const Text('Belum ada kasus', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1E2452))),
-          const SizedBox(height: 8),
-          const Text('Tidak ada pengaduan yang sesuai\ndengan filter saat ini.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF94A3B8), height: 1.5)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Stack(
-      children: [
-        Positioned(
-          bottom: 0, left: 0,
-          child: Container(width: 50, height: 50, color: bgColor),
-        ),
-        Container(
-          width: double.infinity,
-          clipBehavior: Clip.hardEdge,
-          decoration: BoxDecoration(
-            color: darkBlue,
-            borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(28)),
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                top: -10, right: -5,
-                child: Opacity(
-                  opacity: 0.8,
-                  child: Image.asset(
-                    'assets/images/icons/building_illustration3.png',
-                    width: 300, fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.account_balance, size: 150, color: Colors.white10),
-                  ),
-                ),
-              ),
-              SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Get.back(),
-                        child: Container(
-                          width: 44, height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            border: Border.all(color: Colors.white.withOpacity(0.2)),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      const Text(
-                        'Kelola Data Kasus',
-                        style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: 0.5),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
+  // ─── KOMPONEN UI BAWAH ───
   Widget _buildSearchBar() {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white, 
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: TextField(
         onChanged: (val) => controller.searchQuery.value = val,
-        decoration: InputDecoration(
-          hintText: 'Cari berdasarkan judul atau lokasi...', 
-          hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13, fontWeight: FontWeight.w500),
-          prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8), size: 22),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: const InputDecoration(
+          hintText: 'Cari judul, kategori, atau lokasi...', hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+          prefixIcon: Icon(Icons.search_rounded, color: Color(0xFF94A3B8)),
+          border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         ),
       ),
     );
@@ -242,15 +226,11 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
   Widget _buildTabFilter() {
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white, 
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           _buildTabItem(0, 'Semua'),
-          _buildTabItem(1, 'Proses'),
+          _buildTabItem(1, 'Dalam Proses'),
           _buildTabItem(2, 'Selesai'),
         ],
       ),
@@ -263,18 +243,17 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
         final bool isActive = controller.selectedTab.value == index;
         return GestureDetector(
           onTap: () => controller.changeTab(index),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
-              color: isActive ? indigoPrimary : Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
+              color: isActive ? const Color(0xFFEFF6FF) : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               title, textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 13, fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-                color: isActive ? Colors.white : const Color(0xFF94A3B8),
+                fontSize: 13, fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                color: isActive ? darkBlue : const Color(0xFF64748B),
               ),
             ),
           ),
@@ -283,107 +262,130 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
     );
   }
 
+  // ✅ KARTU KASUS YANG UDAH DI-REDESIGN UX-NYA
   Widget _buildCaseCard({
-    required String idKasus,
     required String badgeText, required Color badgeColor, required Color badgeBg, IconData? badgeIcon,
     required String date, required String title, required String kategori,
-    String? lokasi, String? namaKlien, required VoidCallback onTapButton,
+    String? deskripsi, String? lokasi, String? namaKlien, String? lastUpdate,
+    bool showButton = true, String? buttonText, VoidCallback? onTapButton,
   }) {
     return Container(
-      clipBehavior: Clip.antiAlias,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white, 
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 8))],
+        color: Colors.white, borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 4))],
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(left: BorderSide(color: badgeColor, width: 6)),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(8)),
-                  child: Text('ID: #${idKasus.toUpperCase()}', style: const TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.w800, fontFamily: 'Monospace')),
-                ),
-                Text(date, style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1E2452), height: 1.3)),
-            const SizedBox(height: 4),
-            Text(kategori, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF3B82F6))),
-            const SizedBox(height: 16),
-            
-            if (namaKlien != null || lokasi != null)
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // --- BARIS 1: Badge Status & Tanggal ---
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12)),
-                child: Column(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(20)),
+                child: Row(
                   children: [
-                    if (namaKlien != null) _buildInfoRow(Icons.person_outline, namaKlien),
-                    if (namaKlien != null && lokasi != null) const SizedBox(height: 8),
-                    if (lokasi != null) _buildInfoRow(Icons.location_on_outlined, lokasi),
+                    if (badgeIcon != null) ...[Icon(badgeIcon, size: 14, color: badgeColor), const SizedBox(width: 4)],
+                    Text(badgeText, style: TextStyle(color: badgeColor, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
                   ],
                 ),
               ),
-            
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Text(date, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // --- BARIS 2: Judul Utama (Lebih Besar & Tegas) ---
+          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A), height: 1.3)),
+          const SizedBox(height: 10),
+
+          // --- BARIS 3: Kategori Masalah (Bentuk Tag/Label biar beda sama judul) ---
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9), // Abu-abu terang
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(20)),
-                  child: Row(
-                    children: [
-                      if (badgeIcon != null) ...[Icon(badgeIcon, size: 12, color: badgeColor), const SizedBox(width: 4)]
-                      else ...[Container(width: 6, height: 6, decoration: BoxDecoration(color: badgeColor, shape: BoxShape.circle)), const SizedBox(width: 6)],
-                      Text(badgeText, style: TextStyle(color: badgeColor, fontSize: 10, fontWeight: FontWeight.w800)),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: onTapButton,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(color: indigoPrimary, borderRadius: BorderRadius.circular(12)),
-                    child: const Row(
-                      children: [
-                        Text('Detail', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
-                        SizedBox(width: 4),
-                        Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 14),
-                      ],
-                    ),
+                const Icon(Icons.folder_special_rounded, size: 14, color: Color(0xFF475569)),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    kategori,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
                   ),
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 14),
+
+          // --- BARIS 4: Deskripsi (Kronologi Singkat) ---
+          if (deskripsi != null) ...[
+            Text(
+              deskripsi,
+              style: const TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.5),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 16),
           ],
-        ),
+
+          // --- GARIS PEMBATAS ---
+          const Divider(color: Color(0xFFF1F5F9), thickness: 1.5, height: 24),
+
+          // --- BARIS 5: Info Meta (Lokasi, Klien) ---
+          Row(
+            children: [
+              if (lokasi != null) Expanded(child: _buildMetaText(Icons.location_on_rounded, lokasi)),
+              if (namaKlien != null) Expanded(child: _buildMetaText(Icons.person_rounded, namaKlien)),
+              if (lastUpdate != null) Expanded(child: _buildMetaText(Icons.history_rounded, lastUpdate)),
+            ],
+          ),
+
+          if (showButton) const SizedBox(height: 20),
+          if (showButton)
+            SizedBox(
+              width: double.infinity, height: 48,
+              child: ElevatedButton(
+                onPressed: onTapButton,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF161B33),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                        buttonText == 'Ambil Kasus ->' ? 'Lihat Detail' : (buttonText ?? ''),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                        buttonText == 'Ambil Kasus ->' ? Icons.arrow_forward_rounded : Icons.edit_rounded,
+                        color: Colors.white,
+                        size: 18
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
+  Widget _buildMetaText(IconData icon, String text) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 14, color: const Color(0xFF94A3B8)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text, 
-            style: const TextStyle(fontSize: 12, color: Color(0xFF475569), fontWeight: FontWeight.w600), 
-            maxLines: 1, overflow: TextOverflow.ellipsis
-          )
-        ),
+        Icon(icon, size: 16, color: const Color(0xFF94A3B8)),
+        const SizedBox(width: 6),
+        Flexible(child: Text(text, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
       ],
     );
   }
