@@ -5,9 +5,9 @@ import '../controllers/info_chat_posbankum_controller.dart';
 class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
   const InfoChatPosbankumView({super.key});
 
-  final Color darkBlue = const Color(0xFF2A2E5E);
+  final Color darkBlue = const Color(0xFF2B3163);
   final Color primaryBlue = const Color(0xFF2563EB);
-  final Color bgColor = const Color(0xFFF8FAFC);
+  final Color bgColor = const Color(0xFFF4F4F5);
 
   @override
   Widget build(BuildContext context) {
@@ -15,27 +15,32 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: darkBlue,
       body: Column(
         children: [
-          // ─── HEADER BIRU (TETAP) ───
           _buildHeader(context),
-
-          // ─── BODY SCROLLABLE ───
           Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(0, 0, 0, bottomPadding + 30),
-              child: Column(
-                children: [
-                  _buildProfileSection(),
-                  const SizedBox(height: 32),
-                  _buildKasusTerkait(),
-                  const SizedBox(height: 32),
-                  _buildMediaSection(),
-                  const SizedBox(height: 32),
-                  _buildSettingsSection(),
-                ],
+            child: Container(
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(0, 24, 0, bottomPadding + 30),
+                child: Column(
+                  children: [
+                    _buildActionButtons(),
+                    _buildDataKlien(),
+                    _buildKasusTerkait(),
+                    _buildMediaSection(),
+                    _buildSettingsSection(),
+                    _buildClearChat(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -44,129 +49,131 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
     );
   }
 
-  // 1. Header Area
   Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 140,
-      decoration: BoxDecoration(
-        color: darkBlue,
-        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30)),
-      ),
+      color: darkBlue,
       child: Stack(
         children: [
           Positioned(
-            top: -10, right: -10,
-            child: Opacity(opacity: 0.1, child: Image.asset('assets/images/icons/building_illustration3.png', width: 200)),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Get.back(),
-                    child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
-                  ),
-                  const SizedBox(width: 16),
-                  const Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Info Chat', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('Online', style: TextStyle(color: Colors.greenAccent, fontSize: 12)),
-                    ],
-                  ),
-                ],
+            bottom: -20,
+            right: -20,
+            left: -20,
+            child: Opacity(
+              opacity: 0.1,
+              child: Image.asset(
+                'assets/images/icons/building_illustration3.png',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox(),
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  // 2. Profile Section (Avatar & Nama)
-  Widget _buildProfileSection() {
-    return Transform.translate(
-      offset: const Offset(0, -40), // Menaikkan avatar agar overlap dengan header
-      child: Column(
-        children: [
-          // Avatar
-          Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(100),
-                  child: Image.asset('assets/images/icons/lawyer_profile.png', width: 120, height: 120, fit: BoxFit.cover,
-                      errorBuilder: (_,__,___) => Container(width: 120, height: 120, color: Colors.grey[300], child: const Icon(Icons.person, size: 60))),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
-                child: const Icon(Icons.check, color: Colors.white, size: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Text('Posbakum Tuah Madani', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-          const SizedBox(height: 4),
-          Text('VERIFIED PROVIDER', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: primaryBlue, letterSpacing: 1.2)),
-          const SizedBox(height: 4),
-          const Text('Sertifikasi Akreditasi A • Aktif', style: TextStyle(fontSize: 13, color: Colors.grey)),
-          const SizedBox(height: 24),
-          // Search Button
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(16)),
-            child: Icon(Icons.search, color: primaryBlue, size: 28),
-          ),
-          const SizedBox(height: 8),
-          const Text('SEARCH', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
-        ],
-      ),
-    );
-  }
-
-  // 3. Kasus Terkait Section
-  Widget _buildKasusTerkait() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Kasus Terkait', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-              Text('LIHAT SEMUA', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryBlue)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
-            child: Row(
+          SafeArea(
+            bottom: false,
+            child: Column(
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
                     children: [
-                      Text('PERDATA', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: primaryBlue, letterSpacing: 1.1)),
-                      const SizedBox(height: 4),
-                      const Text('Sengketa Tanah Waris', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                      const Text('Case ID: #LAW-2023-089', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white38),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: InkWell(
+                          onTap: () => Get.back(),
+                          child: const Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 16),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Info Chat', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                          Text('Online', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        ],
+                      ),
                     ],
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEFF6FF), elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                  child: Text('Detail >', style: TextStyle(color: primaryBlue, fontSize: 12, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.orange.shade300, width: 2), // Orange border
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(50),
+                        child: Container(
+                          color: const Color(0xFF1E3A8A), // Inner blue
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Positioned(
+                                top: 20,
+                                child: Container(width: 30, height: 30, decoration: const BoxDecoration(color: Color(0xFFFDE047), shape: BoxShape.circle)),
+                              ),
+                              Positioned(
+                                bottom: -10,
+                                child: Container(width: 70, height: 50, decoration: BoxDecoration(color: const Color(0xFFB45309), borderRadius: BorderRadius.circular(30))),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(color: Color(0xFFF97316), shape: BoxShape.circle),
+                      child: const Icon(Icons.person_outline, color: Colors.white, size: 14),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 16),
+                const Text('Ibu Siti Rahayu', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border.all(color: Colors.orange.shade700),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(color: Color(0xFFFDE047), shape: BoxShape.circle),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'PELAPOR AKTIF',
+                        style: TextStyle(color: Color(0xFFFDE047), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle)),
+                    const SizedBox(width: 6),
+                    const Text('Kelurahan Sukamaju • Bandung Selatan', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                  ],
+                ),
+                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -175,32 +182,102 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
     );
   }
 
-  // 4. Media & Dokumen Section
-  Widget _buildMediaSection() {
+  Widget _buildActionButtons() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _actionItem(Icons.search, 'Cari'),
+          _actionItem(Icons.notifications_off_outlined, 'Bisukan'),
+          _actionItem(Icons.star_border, 'Bintang'),
+          _actionItem(Icons.lock_outline, 'Enkripsi'),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionItem(IconData icon, String label) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Media & Dokumen', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const Text('12 File', style: TextStyle(fontSize: 12, color: Colors.grey)),
-            ],
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: const BoxDecoration(
+            color: Colors.transparent,
+            shape: BoxShape.circle,
           ),
+          child: Icon(icon, color: const Color(0xFF2D3360), size: 24),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+
+  Widget _buildCard({required List<Widget> children}) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+
+  Widget _buildDataKlien() {
+    return _buildCard(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Data Klien', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text('Terverifikasi', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF2563EB))),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 100,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+        _buildDataTile(Icons.shield_outlined, Colors.blue, 'NIK', '3271012505900003'),
+        const SizedBox(height: 12),
+        _buildDataTile(Icons.phone_outlined, Colors.green, 'No. Telepon', '081234567890'),
+        const SizedBox(height: 12),
+        _buildDataTile(Icons.business_outlined, Colors.purple, 'Lurah / Kelurahan', 'Budi Santoso, S.Sos'),
+        const SizedBox(height: 12),
+        _buildDataTile(Icons.location_on_outlined, Colors.orange, 'Alamat', 'Jl. Merdeka No. 45, RT 03/RW 05, Sukan...'),
+      ],
+    );
+  }
+
+  Widget _buildDataTile(IconData icon, Color color, String title, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildMediaItem(img: 'assets/images/icons/doc_sample1.png'),
-              _buildMediaItem(img: 'assets/images/icons/doc_sample2.png'),
-              _buildMediaItem(isPdf: true, fileName: 'SURAT_K...PDF'),
-              _buildMediaItem(isMore: true),
+              Text(title, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+              const SizedBox(height: 2),
+              Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0F172A))),
             ],
           ),
         ),
@@ -208,53 +285,269 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
     );
   }
 
-  Widget _buildMediaItem({String? img, bool isPdf = false, bool isMore = false, String? fileName}) {
-    return Container(
-      width: 100,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFDBEAFE))),
-      child: isMore
-          ? const Center(child: Text('LIHA...', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue)))
-          : isPdf
-          ? Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.description, color: Colors.blue, size: 30),
-          const SizedBox(height: 4),
-          Text(fileName!, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.blue)),
-        ],
-      )
-          : ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.asset(img!, fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.image))),
+  Widget _buildKasusTerkait() {
+    return _buildCard(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Kasus Terkait', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+            const Text('LIHAT SEMUA', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF3B5998))),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF3B5998),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.description_outlined, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text('SEDANG DIPROSES', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFFD97706), letterSpacing: 0.5)),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text('Masalah Warisan\nKeluarga', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                  const SizedBox(height: 2),
+                  const Text('#K-2023-0345', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Row(
+                children: [
+                  Text('Detail', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
+                  SizedBox(width: 4),
+                  Icon(Icons.arrow_forward_ios, size: 10, color: Color(0xFF64748B)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
-  // 5. Settings List Section
-  Widget _buildSettingsSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+  Widget _buildMediaSection() {
+    return _buildCard(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Media & Dokumen', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text('2 File', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.grey)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Lebar total dibagi 3, dikurangi spacing
+            double itemWidth = (constraints.maxWidth - 24) / 3;
+            return Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _buildMediaDocItem(width: itemWidth, color: Colors.blue, filename: 'SALINAN_PUTUSAN.PDF'),
+                _buildMediaDocItem(width: itemWidth, color: Colors.red, filename: 'BERITA_ACARA.PDF', isRed: true),
+                _buildMediaImageItem(width: itemWidth, color: const Color(0xFF2D3360), icon: Icons.menu),
+                _buildMediaImageItem(width: itemWidth, color: const Color(0xFFF97316), icon: Icons.circle),
+                _buildMediaImageItem(width: itemWidth, color: const Color(0xFF059669)),
+                _buildMediaMoreItem(width: itemWidth),
+              ],
+            );
+          }
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMediaImageItem({required double width, required Color color, IconData? icon}) {
+    return Container(
+      width: width,
+      height: width,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: icon != null
+          ? Center(child: Icon(icon, color: Colors.white.withOpacity(0.3), size: 30))
+          : null,
+    );
+  }
+
+  Widget _buildMediaDocItem({required double width, required Color color, required String filename, bool isRed = false}) {
+    return Container(
+      width: width,
+      height: width,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isRed ? Colors.red.shade50 : Colors.white,
+        border: Border.all(color: isRed ? Colors.red.shade100 : Colors.blue.shade100),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildListTile(Icons.notifications_none_rounded, 'Bisukan Notifikasi', hasSwitch: true),
-          _buildListTile(Icons.star_outline_rounded, 'Pesan Berbintang'),
-          _buildListTile(Icons.lock_outline_rounded, 'Enkripsi End-to-End'),
-          _buildListTile(Icons.delete_outline_rounded, 'Bersihkan Chat', isDestructive: true),
+          Icon(Icons.description_outlined, color: isRed ? Colors.red : Colors.blue, size: 24),
+          const SizedBox(height: 8),
+          Text(filename, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 6, fontWeight: FontWeight.bold, color: isRed ? Colors.red : Colors.blue)),
         ],
       ),
     );
   }
 
-  Widget _buildListTile(IconData icon, String title, {bool hasSwitch = false, bool isDestructive = false}) {
-    return ListTile(
-      leading: Icon(icon, color: isDestructive ? Colors.red : const Color(0xFF64748B)),
-      title: Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: isDestructive ? Colors.red : const Color(0xFF0F172A))),
-      trailing: hasSwitch
-          ? Obx(() => Switch(
-        value: controller.isMuted.value,
-        onChanged: (v) => controller.toggleMute(v),
-        activeColor: primaryBlue,
-      ))
-          : const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-      onTap: () {},
+  Widget _buildMediaMoreItem({required double width}) {
+    return Container(
+      width: width,
+      height: width,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('+10', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF475569))),
+          Text('lainnya', style: TextStyle(fontSize: 10, color: Colors.grey)),
+        ],
+      ),
     );
   }
+
+  Widget _buildSettingsSection() {
+    return _buildCard(
+      children: [
+        const Text('Pengaturan Chat', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+        const SizedBox(height: 12),
+        _buildSettingTile(
+          icon: Icons.notifications_off_outlined,
+          iconColor: Colors.orange.shade700,
+          iconBgColor: Colors.orange.shade50,
+          title: 'Bisukan Notifikasi',
+          trailing: Transform.scale(
+            scale: 0.8,
+            child: Obx(() => Switch(
+              value: controller.isMuted.value,
+              onChanged: (v) => controller.toggleMute(v),
+              activeColor: Colors.white,
+              activeTrackColor: Colors.grey.shade300,
+              inactiveThumbColor: Colors.white,
+              inactiveTrackColor: Colors.grey.shade300,
+            )),
+          ),
+        ),
+        const SizedBox(height: 8),
+        _buildSettingTile(
+          icon: Icons.star_border,
+          iconColor: Colors.amber.shade600,
+          iconBgColor: Colors.amber.shade50,
+          title: 'Pesan Berbintang',
+          trailing: const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
+        ),
+        const SizedBox(height: 8),
+        _buildSettingTile(
+          icon: Icons.lock_outline,
+          iconColor: Colors.green.shade600,
+          iconBgColor: Colors.green.shade50,
+          title: 'Enkripsi End-to-End',
+          subtitle: 'Pesan dilindungi',
+          subtitleColor: Colors.green.shade600,
+          trailing: const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettingTile({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBgColor,
+    required String title,
+    String? subtitle,
+    Color? subtitleColor,
+    required Widget trailing,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF0F172A))),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: TextStyle(fontSize: 10, color: subtitleColor ?? Colors.grey)),
+                ],
+              ],
+            ),
+          ),
+          trailing,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClearChat() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.red.shade100),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+          ),
+          const SizedBox(width: 16),
+          const Text('Bersihkan Chat', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.red)),
+        ],
+      ),
+    );
+  }
+
 }
