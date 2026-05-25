@@ -11,6 +11,10 @@ class ProfileController extends GetxController {
   var namaLengkap = ''.obs;
   var displayId = ''.obs;
   var avatarUrl = ''.obs;
+  var nik = ''.obs;
+  var noHp = ''.obs;
+  var alamat = ''.obs;
+  var kelurahanInfo = ''.obs;
 
   @override
   void onInit() {
@@ -31,7 +35,17 @@ class ProfileController extends GetxController {
         // Tarik data dari tabel masyarakat berdasarkan ID user
         final data = await supabase
             .from('masyarakat')
-            .select('nama, id, avatar_url')
+            .select('''
+              id, 
+              nama, 
+              avatar_url,
+              nik,
+              no_hp,
+              alamat,
+              kelurahan (nama),
+              kecamatan (nama),
+              kabupaten (nama)
+            ''')
             .eq('id', user.id)
             .maybeSingle(); // Ambil 1 baris data
 
@@ -45,6 +59,21 @@ class ProfileController extends GetxController {
           displayId.value = 'ID: PB-$rawId';
 
           avatarUrl.value = data['avatar_url'] ?? '';
+          nik.value = data['nik'] ?? '-';
+          noHp.value = data['no_hp'] ?? '-';
+          alamat.value = data['alamat'] ?? '-';
+
+          // Format info daerah (Kelurahan, Kecamatan)
+          String namaKelurahan = data['kelurahan']?['nama'] ?? '';
+          String namaKecamatan = data['kecamatan']?['nama'] ?? '';
+          
+          if (namaKelurahan.isNotEmpty && namaKecamatan.isNotEmpty) {
+            kelurahanInfo.value = '$namaKelurahan, $namaKecamatan';
+          } else if (namaKelurahan.isNotEmpty) {
+            kelurahanInfo.value = namaKelurahan;
+          } else {
+            kelurahanInfo.value = '-';
+          }
         }
       }
     } catch (e) {
