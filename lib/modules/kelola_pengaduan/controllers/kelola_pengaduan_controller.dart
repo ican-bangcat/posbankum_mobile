@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../main.dart'; // Sesuaikan path ini agar bisa memanggil supabaseB dari main.dart
 
 class KasusItem {
   final String id;
@@ -29,7 +30,6 @@ class KasusItem {
 
     return KasusItem(
       id: json['id']?.toString() ?? '',
-      // ✅ FIX MAPPING: Judul ngambil dari judul_laporan
       judul: json['judul_laporan']?.toString() ?? 'Tanpa Judul',
       kategori: json['kategori_masalah']?.toString() ?? 'Lain-lain',
       deskripsi: json['kronologi']?.toString() ?? 'Tidak ada kronologi',
@@ -44,7 +44,8 @@ class KasusItem {
 }
 
 class KelolaPengaduanController extends GetxController {
-  final supabase = Supabase.instance.client;
+  // Panggil Supabase A (Database Mobile) dari instance bawaan
+  final supabaseA = Supabase.instance.client;
 
   var selectedTab = 0.obs;
   var searchQuery = ''.obs;
@@ -64,18 +65,38 @@ class KelolaPengaduanController extends GetxController {
   Future<void> fetchPengaduan() async {
     try {
       isLoading.value = true;
-      final response = await supabase
-          .from('pengaduan')
-          .select('*, masyarakat(nama, no_hp)')
-          .order('tgl_lapor', ascending: true);
 
-      final List<KasusItem> fetchedData = (response as List)
-          .map((data) => KasusItem.fromJson(data))
-          .toList();
+      // 1. Ambil data identitas Paralegal dari Database B
+      final sessionDB = supabaseB.auth.currentSession;
+      final userMeta = supabaseB.auth.currentUser?.userMetadata;
 
-      allKasus.assignAll(fetchedData);
+      if (sessionDB == null || userMeta == null) {
+        throw 'Sesi Paralegal tidak valid. Silakan login ulang.';
+      }
+
+      final posbankumId = userMeta['id_posbankum'] ?? '';
+      final token = sessionDB.accessToken;
+
+      // 2. TEMBAK EDGE FUNCTION DI DATABASE A
+      // Menggantikan query .from('pengaduan').select(...) yang terblokir RLS
+      final response = await supabaseA.functions.invoke(
+        'get-pengaduan-paralegal',
+        body: {
+          'posbankum_id': posbankumId,
+          'token': token
+        },
+      );
+
+      // 3. Olah data response menjadi list KasusItem
+      if (response.data != null) {
+        final List<KasusItem> fetchedData = (response.data as List)
+            .map((data) => KasusItem.fromJson(data))
+            .toList();
+        allKasus.assignAll(fetchedData);
+      }
     } catch (e) {
       print('Error fetch pengaduan: $e');
+      Get.snackbar('Gagal', 'Tidak dapat memuat daftar kasus.');
     } finally {
       isLoading.value = false;
     }
@@ -92,7 +113,6 @@ class KelolaPengaduanController extends GetxController {
 
   List<KasusItem> get filteredKasus {
     List<KasusItem> filtered = allKasus.where((kasus) {
-      // ✅ LOGIKA GHAIB: Buang semua kasus yang dibatalkan!
       if (kasus.status == 'dibatalkan') return false;
 
       bool matchTab = true;
