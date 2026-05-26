@@ -62,32 +62,34 @@ class KelolaPengaduanController extends GetxController {
     selectedTab.value = index;
   }
 
+  // Di dalam KelolaPengaduanController lo
   Future<void> fetchPengaduan() async {
     try {
       isLoading.value = true;
 
-      // 1. Ambil data identitas Paralegal dari Database B
       final sessionDB = supabaseB.auth.currentSession;
       final userMeta = supabaseB.auth.currentUser?.userMetadata;
 
-      if (sessionDB == null || userMeta == null) {
-        throw 'Sesi Paralegal tidak valid. Silakan login ulang.';
-      }
+      if (sessionDB == null || userMeta == null) throw 'Sesi tidak valid';
 
       final posbankumId = userMeta['id_posbankum'] ?? '';
       final token = sessionDB.accessToken;
 
-      // 2. TEMBAK EDGE FUNCTION DI DATABASE A
-      // Menggantikan query .from('pengaduan').select(...) yang terblokir RLS
+      // Ambil nama Posbankum dari DB B (Contoh: "Posbankum Air Hitam")
+      // Kita bersihkan teksnya atau ambil kata kuncinya saja untuk dicocokkan ke nama_lurah
+      String namaPosbankum = userMeta['nama'] ?? userMeta['nama_posbankum'] ?? '';
+      String keywordKelurahan = namaPosbankum.replaceAll('Posbankum', '').trim(); // Menjadi "Air Hitam"
+
+      // TEMBAK EDGE FUNCTION DENGAN PARAMETER BARU
       final response = await supabaseA.functions.invoke(
         'get-pengaduan-paralegal',
         body: {
           'posbankum_id': posbankumId,
+          'kelurahan': keywordKelurahan, // 🚀 LEMPAR KEYWORD KELURAHAN KELUAR
           'token': token
         },
       );
 
-      // 3. Olah data response menjadi list KasusItem
       if (response.data != null) {
         final List<KasusItem> fetchedData = (response.data as List)
             .map((data) => KasusItem.fromJson(data))
@@ -96,7 +98,6 @@ class KelolaPengaduanController extends GetxController {
       }
     } catch (e) {
       print('Error fetch pengaduan: $e');
-      Get.snackbar('Gagal', 'Tidak dapat memuat daftar kasus.');
     } finally {
       isLoading.value = false;
     }
