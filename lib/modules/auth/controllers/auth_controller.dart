@@ -32,7 +32,7 @@ class AuthController extends GetxController {
       if (event == AuthChangeEvent.passwordRecovery) {
         Get.toNamed(AppRoutes.UPDATE_PASSWORD);
       }
-      // 🚀 TAMBAHAN BARU: Menangkap momen saat user sukses terverifikasi dari link email
+      // 🚀 Menangkap momen saat user sukses terverifikasi dari link email
       else if (event == AuthChangeEvent.signedIn && session != null) {
         // Otomatis cek role dan arahkan ke dashboard
         _checkRoleAndRedirect(session.user.id);
@@ -128,7 +128,7 @@ class AuthController extends GetxController {
           await supabase.from('profiles').insert({
             'id': user.id,
             'full_name': namaGoogle,
-            'role': 'user',
+            'role': 'pelapor', // 🚀 SUDAH DIUBAH KE PELAPOR
           });
           await supabase.from('masyarakat').insert({
             'id': user.id,
@@ -165,7 +165,7 @@ class AuthController extends GetxController {
     if (cleanCaptcha != expectedCaptchaResult.value.toString()) {
       Get.snackbar('Otentikasi Gagal', 'Jawaban Captcha tidak tepat. Silakan coba lagi.',
           backgroundColor: Colors.orange, colorText: Colors.white);
-      generateCaptcha(); // Perbarui soal jika salah
+      generateCaptcha();
       return;
     }
 
@@ -188,12 +188,17 @@ class AuthController extends GetxController {
       final AuthResponse res = await supabase.auth.signUp(
         email: cleanEmail,
         password: cleanPassword,
+        // 🚀 INI DIA DATA METADATA YANG DITUNGGU-TUNGU
+        data: {
+          'full_name': cleanName,
+          'role': 'pelapor',
+        },
       );
 
       if (res.user != null) {
         debugPrint('✅ [SUCCESS] Kredensial berhasil dibuat. Database Trigger akan memproses tabel profiles.');
 
-        // 🚀 TAMBAHAN BARU: Memperbarui soal Captcha untuk mengantisipasi sesi berikutnya
+        // Memperbarui soal Captcha untuk mengantisipasi sesi berikutnya
         generateCaptcha();
 
         Get.snackbar(
@@ -224,14 +229,14 @@ class AuthController extends GetxController {
           .maybeSingle();
 
       if (profileData != null) {
-        // 🚀 FIX 1: Tangkap role aslinya, lalu ubah ke huruf kecil semua biar kebal Case Sensitive
+        // Tangkap role aslinya, lalu ubah ke huruf kecil semua biar kebal Case Sensitive
         final String rawRole = profileData['role']?.toString() ?? 'pelapor';
         final String userRole = rawRole.toLowerCase().trim();
         final String userName = profileData['full_name'] ?? 'Pengguna';
 
         debugPrint('🔵 [INFO DB] Role dari database: "$rawRole" -> Dibaca sistem: "$userRole"');
 
-        // 🚀 FIX 2: Tambahkan opsi 'masyarakat' jaga-jaga kalau tim Web pakai nama itu
+        // Tambahkan opsi 'masyarakat' jaga-jaga kalau tim Web pakai nama itu
         if (userRole == 'pelapor' || userRole == 'user' || userRole == 'masyarakat') {
           Get.snackbar('Otorisasi Berhasil', 'Selamat datang kembali, $userName',
               backgroundColor: Colors.green, colorText: Colors.white);
