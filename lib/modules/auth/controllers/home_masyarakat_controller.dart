@@ -23,21 +23,19 @@ class HomeMasyarakatController extends GetxController {
       // 1. Ambil ID user yang login
       final userId = supabase.auth.currentUser?.id;
 
-      // ✅ Kunci utamanya di sini: Kalau belum login / null, langsung stop prosesnya.
-      // Ini bikin Dart yakin kalau di kode bawahnya, userId PASTI ada isinya.
       if (userId == null) return;
 
-      // 2. Ambil Nama User
-      final userRes = await supabase.from('masyarakat').select('nama').eq('id', userId).maybeSingle();
-      if (userRes != null && userRes['nama'] != null) {
-        userName.value = userRes['nama'];
+      // 🚀 FIX: Ambil dari tabel 'profiles' dan kolom 'full_name' (Sesuai skema database)
+      final userRes = await supabase.from('profiles').select('full_name').eq('id', userId).maybeSingle();
+      if (userRes != null && userRes['full_name'] != null) {
+        userName.value = userRes['full_name'];
       }
 
       // 3. Ambil Data Pengaduan
       final List<dynamic> allPengaduan = await supabase
           .from('pengaduan')
           .select('id, status, kategori_masalah, tgl_lapor')
-          .eq('masyarakat_id', userId) // ✅ Garis merah pasti hilang karena userId udah aman
+          .eq('masyarakat_id', userId)
           .order('tgl_lapor', ascending: false);
 
       int aktif = 0, selesai = 0;

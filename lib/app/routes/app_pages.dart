@@ -144,12 +144,17 @@ class AppPages {
     GetPage(
       name: AppRoutes.PENGADUAN_SUCCESS,
       page: () {
-        // Ambil pengaduanId dari arguments yang dikirim controller
-        final pengaduanId = Get.arguments as String? ?? 'PGN-UNKNOWN';
-        return PengaduanSuccessScreen(pengaduanId: pengaduanId);
+        // Ambil data dari arguments yang dikirim controller sebagai Map
+        final args = Get.arguments as Map<String, dynamic>? ?? {};
+
+        final pengaduanId = args['pengaduanId'] as String? ?? 'PGN-UNKNOWN';
+        final uuidDb = args['uuidDb'] as String? ?? '';
+
+        return PengaduanSuccessScreen(
+          pengaduanId: pengaduanId,
+          uuidDb: uuidDb, // 🚀 Masukkan parameter kedua di sini!
+        );
       },
-      transition: Transition.fadeIn,
-      transitionDuration: const Duration(milliseconds: 400),
     ),
     // ✅ Route ke Daftar Pengaduan
     GetPage(

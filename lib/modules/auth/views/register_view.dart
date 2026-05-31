@@ -19,6 +19,7 @@ class _RegisterViewState extends State<RegisterView> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _captchaController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -37,15 +38,19 @@ class _RegisterViewState extends State<RegisterView> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _captchaController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // 🚀 MENGAMBIL KETEBALAN NAVBAR BAWAH SECARA DINAMIS
+    final double bottomNavBarPadding = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        bottom: false,
+        bottom: false, // Dimatikan agar warna biru bisa mentok ke bawah layar
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Column(
@@ -94,7 +99,7 @@ class _RegisterViewState extends State<RegisterView> {
                   children: [
                     // --- ILUSTRASI BACKGROUND BAWAH ---
                     Positioned(
-                      bottom: 0, // Ditempelkan ke dasar container
+                      bottom: 0,
                       right: 0,
                       left: 0,
                       child: IgnorePointer(
@@ -148,7 +153,7 @@ class _RegisterViewState extends State<RegisterView> {
                             const SizedBox(height: 16),
 
                             // --- KONFIRMASI KATA SANDI ---
-                            _buildLabel('Password'),
+                            _buildLabel('Konfirmasi Kata Sandi'), // 🚀 PERBAIKAN LABEL
                             _buildTextField(
                               hint: '••••••••••••',
                               icon: Icons.lock_outline,
@@ -157,6 +162,11 @@ class _RegisterViewState extends State<RegisterView> {
                               obscureValue: _obscureConfirmPassword,
                               onToggleObscure: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                             ),
+                            const SizedBox(height: 16),
+
+                            // --- CAPTCHA OTENTIKASI ---
+                            _buildLabel('Otentikasi (Captcha)'),
+                            _buildCaptchaField(),
                             const SizedBox(height: 24),
 
                             // --- TOMBOL DAFTAR ---
@@ -172,11 +182,11 @@ class _RegisterViewState extends State<RegisterView> {
 
                             const SizedBox(height: 24),
 
-                            // --- LINK LOGIN (Pindah ke atas ilustrasi) ---
+                            // --- LINK LOGIN ---
                             _buildLoginLink(),
 
-                            // Spacer agar ilustrasi di bawah punya ruang dan halaman bisa discroll mentok ke bawah
-                            const SizedBox(height: 120),
+                            // 🚀 SPASI BAWAH DINAMIS: 100px base + Ketebalan Navbar HP
+                            SizedBox(height: 100 + bottomNavBarPadding),
                           ],
                         ),
                       ),
@@ -187,6 +197,69 @@ class _RegisterViewState extends State<RegisterView> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // --- WIDGET CAPTCHA ---
+  Widget _buildCaptchaField() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Obx(() => Text(
+              'Berapa hasil dari ${authC.captchaNum1.value} + ${authC.captchaNum2.value} ?',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            )),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 80,
+            child: TextFormField(
+              controller: _captchaController,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textDark),
+              decoration: InputDecoration(
+                hintText: 'Hasil',
+                hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              validator: (v) => v == null || v.isEmpty ? 'Isi!' : null,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: yellowAccent.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.refresh, color: yellowAccent),
+              onPressed: () {
+                authC.generateCaptcha();
+                _captchaController.clear();
+              },
+              tooltip: 'Ganti Soal',
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -309,6 +382,7 @@ class _RegisterViewState extends State<RegisterView> {
               _emailController.text,
               _passwordController.text,
               _confirmPasswordController.text,
+              _captchaController.text,
             );
           } else if (!_agreeToTerms) {
             Get.snackbar(
@@ -347,7 +421,6 @@ class _RegisterViewState extends State<RegisterView> {
       width: double.infinity,
       height: 48,
       child: ElevatedButton(
-        // ✅ FUNGSI GOOGLE DIKEMBALIKAN
         onPressed: () => authC.loginWithGoogle(),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
@@ -356,7 +429,6 @@ class _RegisterViewState extends State<RegisterView> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
         ),
         child: Row(
-          // 🔥 KODE INI YANG BIKIN LOGO & TEKS KE TENGAH
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
@@ -369,8 +441,8 @@ class _RegisterViewState extends State<RegisterView> {
               'Daftar dengan Google',
               style: TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.w600, // Sedikit ditebalkan biar mantap
-                color: textLight, // Pakai warna abu-abu standar yang udah kita definisikan
+                fontWeight: FontWeight.w600,
+                color: textLight,
               ),
             ),
           ],

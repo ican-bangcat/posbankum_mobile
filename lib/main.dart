@@ -8,40 +8,32 @@ import 'app/routes/app_pages.dart';
 import 'app/themes/app_colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-// 🚀 BIKIN VARIABEL GLOBAL UNTUK SUPABASE B (Tim Web / Paralegal)
-// Supabase A (Masyarakat) akan tetap pakai Supabase.instance.client
-late final SupabaseClient supabaseB;
-
 void main() async {
+  // Memastikan inisialisasi binding Flutter selesai sebelum menjalankan asinkronus
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize GetStorage
+  // Menginisialisasi modul GetStorage untuk penyimpanan data lokal
   await GetStorage.init();
 
-  // Biar DateFormat bisa bahasa Indonesia
+  // Mengatur pelokalan format penanggalan ke standar Indonesia
   await initializeDateFormatting('id_ID', null);
 
-  // Load data dari file .env
+  // Memuat variabel lingkungan dari berkas .env
   await dotenv.load(fileName: ".env");
 
-  // 🚀 INISIALISASI SUPABASE A (DATABASE MOBILE - MASYARAKAT)
-  await Supabase.initialize(
-    url: dotenv.env['MY_SUPABASE_URL']!,
-    anonKey: dotenv.env['MY_SUPABASE_KEY']!,
+  // Menginisialisasi koneksi tunggal ke layanan Supabase
+    await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_KEY']!,
   );
 
-  // 🚀 INISIALISASI SUPABASE B (DATABASE WEB - PARALEGAL)
-  supabaseB = SupabaseClient(
-    dotenv.env['WEB_SUPABASE_URL']!,
-    dotenv.env['WEB_SUPABASE_KEY']!,
-  );
-
+  // Membatasi orientasi perangkat hanya pada mode potret
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // Set system UI overlay style
+  // Mengatur gaya visual antarmuka sistem (status bar dan navigation bar)
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -51,6 +43,7 @@ void main() async {
     ),
   );
 
+  // Menjalankan widget utama aplikasi
   runApp(const PosbankumApp());
 }
 
@@ -59,9 +52,12 @@ class PosbankumApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Menggunakan GetMaterialApp untuk mengaktifkan manajemen state dan rute dari GetX
     return GetMaterialApp(
       title: 'Posbankum Mobile',
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: false, // Menyembunyikan indikator mode debug
+
+      // Konfigurasi tema global aplikasi untuk menjaga konsistensi antarmuka
       theme: ThemeData(
         primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.backgroundWhite,

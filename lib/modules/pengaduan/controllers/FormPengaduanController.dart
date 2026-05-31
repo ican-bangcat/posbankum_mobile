@@ -6,15 +6,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:open_filex/open_filex.dart';
 import '../views/pengaduan_success_screen.dart';
-
+import '../../../app/routes/app_routes.dart';
 class PengaduanController extends GetxController {
   final supabase = Supabase.instance.client;
   var isLoading = false.obs;
 
-  // ✅ VARIABLE PROGRESS BAR (Otomatis mantau 9 field wajib)
   var progressCount = 0.obs;
 
-  // Input Controllers (Text)
   final judulLaporanC = TextEditingController();
   final namaLurahC = TextEditingController();
   final kronologiC = TextEditingController();
@@ -28,13 +26,11 @@ class PengaduanController extends GetxController {
   TimeOfDay? selectedTime;
   String? selectedKategori;
 
-  // Variable Array File
   var selectedFiles = <File>[].obs;
 
   @override
   void onInit() {
     super.onInit();
-    // Pasang "Telinga" di setiap text field, kalau diketik progress nambah!
     nikC.addListener(calculateProgress);
     namaLurahC.addListener(calculateProgress);
     noHpC.addListener(calculateProgress);
@@ -58,7 +54,6 @@ class PengaduanController extends GetxController {
     super.onClose();
   }
 
-  // ✅ FUNGSI PENGHITUNG PROGRESS
   void calculateProgress() {
     int count = 0;
     if (nikC.text.trim().isNotEmpty) count++;
@@ -73,6 +68,7 @@ class PengaduanController extends GetxController {
 
     progressCount.value = count;
   }
+
   Future<void> bukaFileLokal(String path) async {
     try {
       final result = await OpenFilex.open(path);
@@ -83,7 +79,7 @@ class PengaduanController extends GetxController {
       Get.snackbar("Error", "Gagal membuka file.");
     }
   }
-  // --- FUNGSI PICKER & UPLOAD FILE (TETAP SAMA) ---
+
   Future<void> pickMultipleFiles() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -117,7 +113,7 @@ class PengaduanController extends GetxController {
     if (picked != null && picked != selectedDate) {
       selectedDate = picked;
       tglKejadianC.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-      calculateProgress(); // Update progress manual saat tanggal dipilih
+      calculateProgress();
     }
   }
 
@@ -126,13 +122,12 @@ class PengaduanController extends GetxController {
     if (picked != null) {
       selectedTime = picked;
       waktuKejadianC.text = "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
-      calculateProgress(); // Update progress manual saat waktu dipilih
+      calculateProgress();
     }
   }
 
-  // --- LOGIKA SUBMIT SUPABASE (TETAP SAMA) ---
   Future<void> submitPengaduan() async {
-    if (progressCount.value < 9) { // Pastikan 9 field wajib terisi
+    if (progressCount.value < 9) {
       Get.snackbar("Error", "Mohon lengkapi semua data wajib (${progressCount.value}/9 Lengkap)", backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
@@ -144,7 +139,6 @@ class PengaduanController extends GetxController {
         Get.snackbar("Error", "Sesi habis, silakan login ulang");
         return;
       }
-
 
       final dataPelapor = await supabase
           .from('masyarakat')
@@ -160,9 +154,9 @@ class PengaduanController extends GetxController {
 
       String prioritasOtomatis = _determinePriority(selectedKategori!);
       String customId = _generatePengaduanId();
-
-      await supabase.from('pengaduan').insert({
-        'id': customId,
+// 🚀 BUG FIX: Tambahkan .select('id').single() agar kita bisa tau UUID yang baru digenerate Supabase!
+      final insertedData = await supabase.from('pengaduan').insert({
+        'no_tiket': customId,
         'masyarakat_id': user.id,
         'nama_pelapor': namaOtomatis,
         'nik_pelapor': nikC.text,
@@ -178,21 +172,28 @@ class PengaduanController extends GetxController {
         'tgl_kejadian': tglKejadianC.text,
         'status': 'Pending',
         'tgl_lapor': DateTime.now().toIso8601String(),
-      });
+      }).select('id').single();
 
-      Get.off(() => PengaduanSuccessScreen(pengaduanId: customId));
+      // Tangkap UUID-nya
+      String generatedUuid = insertedData['id'];
 
+      // 🚀 KIRIM KEDUA DATA DALAM BENTUK MAP/DICTIONARY KE APP PAGES
+      Get.offNamed(
+        '/pengaduan-success', // SESUAIKAN: Ganti dengan AppRoutes.PENGADUAN_SUCCESS jika kamu pakai class AppRoutes
+        arguments: {
+          'pengaduanId': customId,
+          'uuidDb': generatedUuid,
+        },
+      );
     } catch (e) {
       print("Error Submit: $e");
-
-      // ✅ JURUS CURANG: Nampilin error aslinya langsung di layar HP!
       Get.snackbar(
-        "GAGAL - BACA ERROR INI!", // Judulnya
-        e.toString(),              // Nampilin pesan error asli dari Supabase
+        "GAGAL - BACA ERROR INI!",
+        e.toString(),
         backgroundColor: Colors.red,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 10), // Ditahan 10 detik biar sempat di-screenshot
+        duration: const Duration(seconds: 10),
       );
     } finally {
       isLoading.value = false;

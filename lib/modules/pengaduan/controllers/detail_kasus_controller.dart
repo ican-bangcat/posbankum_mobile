@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart'; // ✅ Import untuk buka PDF/Gambar
+import 'package:url_launcher/url_launcher.dart';
 
-// ── MODEL DATA ──
 class TimelineItem {
   final String title;
   final String? tanggal;
@@ -15,14 +14,14 @@ class TimelineItem {
 
 class DetailKasus {
   final String id;
-  final String judulLaporan; // ✅ Judul spesifik
-  final String kategoriMasalah; // ✅ Kategori (Perdata, dll)
+  final String judulLaporan;
+  final String kategoriMasalah;
   final String idKasus;
   final String tanggalDibuat;
   final String status;
   final String kronologi;
   final List<TimelineItem> timeline;
-  final List<String> lampiranUrls; // ✅ Array lampiran
+  final List<String> lampiranUrls;
   final String? catatanParalegal;
 
   DetailKasus({
@@ -46,7 +45,6 @@ class DetailKasus {
     }
 
     String timelineDate = formattedDate;
-
     String status = json['status'] ?? 'Pending';
     List<TimelineItem> generatedTimeline = [
       TimelineItem(title: 'Pengaduan diterima', tanggal: timelineDate, isActive: true),
@@ -64,15 +62,16 @@ class DetailKasus {
     }
 
     return DetailKasus(
-      id: json['id'].toString(),
-      judulLaporan: json['judul_laporan'] ?? 'Tanpa Judul', // ✅ Map ke Judul Laporan
-      kategoriMasalah: json['kategori_masalah'] ?? 'Tanpa Kategori', // ✅ Map ke Kategori
-      idKasus: json['id'].toString().substring(0, 13).toUpperCase(),
+      id: json['id'].toString(), // ✅ Tetap UUID untuk fungsi update/hapus di database
+      judulLaporan: json['judul_laporan'] ?? 'Tanpa Judul',
+      kategoriMasalah: json['kategori_masalah'] ?? 'Tanpa Kategori',
+      // ✅ LANGSUNG AMBIL DARI no_tiket, TIDAK PERLU SUBSTRING LAGI
+      idKasus: json['no_tiket']?.toString().toUpperCase() ?? 'TIDAK ADA TIKET',
       tanggalDibuat: formattedDate,
       status: status,
       kronologi: json['kronologi'] ?? 'Tidak ada kronologi',
       timeline: generatedTimeline,
-      lampiranUrls: json['lampiran_urls'] != null ? List<String>.from(json['lampiran_urls']) : [], // ✅ Map Array URL
+      lampiranUrls: json['lampiran_urls'] != null ? List<String>.from(json['lampiran_urls']) : [],
       catatanParalegal: json['catatan_paralegal'],
     );
   }
@@ -92,7 +91,7 @@ class DetailKasusController extends GetxController {
   Future<void> fetchDetailKasus() async {
     try {
       isLoading.value = true;
-      final rawId = Get.arguments;
+      final rawId = Get.arguments; // ✅ Ini akan menerima UUID dari halaman list
       if (rawId == null) return;
 
       final response = await supabase.from('pengaduan').select().eq('id', rawId.toString()).single();
@@ -104,7 +103,6 @@ class DetailKasusController extends GetxController {
     }
   }
 
-  // ✅ FUNGSI BUKA LAMPIRAN KE BROWSER/PDF VIEWER HP
   Future<void> bukaLampiran(String url) async {
     final Uri uri = Uri.parse(url);
     try {
@@ -116,7 +114,6 @@ class DetailKasusController extends GetxController {
     }
   }
 
-  // ✅ FUNGSI BATALKAN PENGADUAN
   Future<void> batalkanPengaduan() async {
     if (kasus.value == null) return;
     try {
@@ -124,10 +121,10 @@ class DetailKasusController extends GetxController {
 
       await supabase.from('pengaduan').update({
         'status': 'Dibatalkan'
-      }).eq('id', kasus.value!.id);
+      }).eq('id', kasus.value!.id); // ✅ Menggunakan UUID untuk mencari data yang akan diupdate
 
-      Get.back(); // Tutup loading
-      fetchDetailKasus(); // Refresh data
+      Get.back();
+      fetchDetailKasus();
       Get.snackbar("Berhasil", "Pengaduan telah dibatalkan.", backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       Get.back();

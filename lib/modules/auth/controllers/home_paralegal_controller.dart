@@ -1,10 +1,10 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../main.dart'; // ✅ WAJIB IMPORT INI biar bisa panggil supabaseB
 
 class HomeParalegalController extends GetxController {
-  // Client DB A (untuk nembak Edge Function)
-  final supabaseA = Supabase.instance.client;
+  // Menggunakan instance tunggal Supabase (Single Source of Truth)
+  final supabase = Supabase.instance.client;
 
   var isLoadingData = true.obs;
   var countPending = 0.obs;
@@ -19,37 +19,35 @@ class HomeParalegalController extends GetxController {
     fetchDashboardData();
   }
 
-// Di dalam HomeParalegalController lo
   Future<void> fetchDashboardData() async {
     try {
       isLoadingData.value = true;
 
-      final sessionDB = supabaseB.auth.currentSession;
-      final userMeta = supabaseB.auth.currentUser?.userMetadata;
+      // Memverifikasi keberadaan sesi autentikasi pengguna yang sedang aktif
+      final sessionDB = supabase.auth.currentSession;
+      final userMeta = supabase.auth.currentUser?.userMetadata;
 
       if (sessionDB == null || userMeta == null) throw 'Sesi tidak valid';
 
+      // Mengekstraksi identitas Posbankum dari metadata autentikasi
       String namaPosbankum = userMeta['nama'] ?? userMeta['nama_posbankum'] ?? '';
       userName.value = namaPosbankum;
 
-      final posbankumId = userMeta['id_posbankum'];
-      final token = sessionDB.accessToken;
+      // Membersihkan string "Posbankum" untuk mendapatkan entitas Kelurahan spesifik
       String keywordKelurahan = namaPosbankum.replaceAll('Posbankum', '').trim();
 
-      // TEMBAK EDGE FUNCTION
-      final response = await supabaseA.functions.invoke(
-        'get-pengaduan-paralegal',
-        body: {
-          'posbankum_id': posbankumId,
-          'kelurahan': keywordKelurahan, // 🚀 SINKRONKAN JUGA DI SINI
-          'token': token
-        },
-      );
+      // MENGGANTI EDGE FUNCTION DENGAN QUERY NATIVE SUPABASE
+      // TODO: Pastikan kolom 'nama_lurah' di tabel 'pengaduan' sudah sesuai dengan logika penugasan kasus
+      final response = await supabase
+          .from('pengaduan')
+          .select()
+          .ilike('nama_lurah', '%$keywordKelurahan%'); // Mengambil kasus yang mengandung nama kelurahan tersebut
 
-      if (response.data != null) {
-        final List<dynamic> allPengaduan = response.data;
+      if (response != null) {
+        final List<dynamic> allPengaduan = response;
         int pending = 0, proses = 0, selesai = 0;
 
+        // Mengklasifikasikan pengaduan berdasarkan status penyelesaian
         for (final item in allPengaduan) {
           final status = (item['status']?.toString() ?? '').toLowerCase().trim();
           if (status == 'pending') pending++;
@@ -61,10 +59,10 @@ class HomeParalegalController extends GetxController {
         countProses.value = proses;
         countSelesai.value = selesai;
 
-        // ... Sisa logika sorting top 3 recent activities biarkan sama ...
+        // Logika penyortiran aktivitas terbaru dapat ditambahkan kembali di sini jika diperlukan
       }
     } catch (e) {
-      print('❌ Error dashboard fetch: $e');
+      debugPrint('Kesalahan penarikan data dasbor: $e');
     } finally {
       isLoadingData.value = false;
     }

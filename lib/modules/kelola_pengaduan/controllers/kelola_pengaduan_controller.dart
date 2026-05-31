@@ -1,7 +1,8 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../main.dart'; // Sesuaikan path ini agar bisa memanggil supabaseB dari main.dart
 
+// Definisi model data kasus
 class KasusItem {
   final String id;
   final String judul;
@@ -23,6 +24,8 @@ class KasusItem {
   factory KasusItem.fromJson(Map<String, dynamic> json) {
     String namaMasyarakat = 'Masyarakat (Klien)';
     String noHpMasyarakat = '-';
+
+    // Mengekstraksi data relasional klien (apabila ada pada skema join)
     if (json['masyarakat'] != null) {
       if (json['masyarakat']['nama'] != null) namaMasyarakat = json['masyarakat']['nama'].toString();
       if (json['masyarakat']['no_hp'] != null) noHpMasyarakat = json['masyarakat']['no_hp'].toString();
@@ -44,8 +47,8 @@ class KasusItem {
 }
 
 class KelolaPengaduanController extends GetxController {
-  // Panggil Supabase A (Database Mobile) dari instance bawaan
-  final supabaseA = Supabase.instance.client;
+  // Menggunakan instance tunggal Supabase (Single Source of Truth)
+  final supabase = Supabase.instance.client;
 
   var selectedTab = 0.obs;
   var searchQuery = ''.obs;
@@ -58,51 +61,47 @@ class KelolaPengaduanController extends GetxController {
     fetchPengaduan();
   }
 
+  // Fungsi navigasi tab antarmuka
   void changeTab(int index) {
     selectedTab.value = index;
   }
 
-  // Di dalam KelolaPengaduanController lo
+  // Fungsi utama penarikan data daftar pengaduan
   Future<void> fetchPengaduan() async {
     try {
       isLoading.value = true;
 
-      final sessionDB = supabaseB.auth.currentSession;
-      final userMeta = supabaseB.auth.currentUser?.userMetadata;
+      // Memverifikasi sesi aktif pengguna (Paralegal)
+      final sessionDB = supabase.auth.currentSession;
+      final userMeta = supabase.auth.currentUser?.userMetadata;
 
-      if (sessionDB == null || userMeta == null) throw 'Sesi tidak valid';
+      if (sessionDB == null || userMeta == null) throw 'Sesi autentikasi tidak valid';
 
-      final posbankumId = userMeta['id_posbankum'] ?? '';
-      final token = sessionDB.accessToken;
-
-      // Ambil nama Posbankum dari DB B (Contoh: "Posbankum Air Hitam")
-      // Kita bersihkan teksnya atau ambil kata kuncinya saja untuk dicocokkan ke nama_lurah
+      // Mendapatkan identifikasi yurisdiksi Posbankum
       String namaPosbankum = userMeta['nama'] ?? userMeta['nama_posbankum'] ?? '';
-      String keywordKelurahan = namaPosbankum.replaceAll('Posbankum', '').trim(); // Menjadi "Air Hitam"
+      String keywordKelurahan = namaPosbankum.replaceAll('Posbankum', '').trim();
 
-      // TEMBAK EDGE FUNCTION DENGAN PARAMETER BARU
-      final response = await supabaseA.functions.invoke(
-        'get-pengaduan-paralegal',
-        body: {
-          'posbankum_id': posbankumId,
-          'kelurahan': keywordKelurahan, // 🚀 LEMPAR KEYWORD KELURAHAN KELUAR
-          'token': token
-        },
-      );
+      // MENGGANTI EDGE FUNCTION DENGAN QUERY NATIVE SUPABASE
+      // TODO: Pastikan kolom yang digunakan untuk filter yurisdiksi adalah 'nama_lurah' atau sesuaikan dengan relasi yang benar
+      final response = await supabase
+          .from('pengaduan')
+          .select('*, masyarakat:masyarakat_id(nik)') // TODO: Sesuaikan bagian join ini jika ingin menautkan profil pelapor
+          .ilike('nama_lurah', '%$keywordKelurahan%');
 
-      if (response.data != null) {
-        final List<KasusItem> fetchedData = (response.data as List)
+      if (response != null) {
+        final List<KasusItem> fetchedData = (response as List)
             .map((data) => KasusItem.fromJson(data))
             .toList();
         allKasus.assignAll(fetchedData);
       }
     } catch (e) {
-      print('Error fetch pengaduan: $e');
+      debugPrint('Kegagalan sinkronisasi data pengaduan: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
+  // Menentukan bobot prioritas berbasis kategorisasi kasus
   int getPriorityValue(String kategori) {
     final kat = kategori.toLowerCase();
     if (kat.contains('fisik') || kat.contains('seksual') || kat.contains('narkotika')) return 1;
@@ -112,6 +111,7 @@ class KelolaPengaduanController extends GetxController {
     return 5;
   }
 
+  // Getter reaktif untuk filtrasi dan pencarian
   List<KasusItem> get filteredKasus {
     List<KasusItem> filtered = allKasus.where((kasus) {
       if (kasus.status == 'dibatalkan') return false;
@@ -127,6 +127,7 @@ class KelolaPengaduanController extends GetxController {
       return matchTab && matchSearch;
     }).toList();
 
+    // Mengurutkan hasil berdasarkan bobot prioritas tertinggi dan urgensi waktu
     filtered.sort((a, b) {
       int prioA = getPriorityValue(a.kategori);
       int prioB = getPriorityValue(b.kategori);

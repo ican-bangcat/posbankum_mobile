@@ -234,7 +234,8 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
     return GestureDetector(
       onTap: () {
         Get.delete<DetailKasusController>();
-        Get.toNamed('/detail-kasus', arguments: item.idTiket);
+        // 🚀 BUG FIX: Kirim idDb (UUID Asli) ke Controller Detail, BUKAN idTiket
+        Get.toNamed('/detail-kasus', arguments: item.idDb);
       },
       child: Container(
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 6))]),

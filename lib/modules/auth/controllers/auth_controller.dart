@@ -1,39 +1,51 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // ✅ WAJIB IMPORT INI
-import '../../../app/data/services/supabase_service.dart';
 import '../../../app/routes/app_routes.dart';
-import '../views/home_masyarakat_screen.dart';
-import '../views/home_paralegal_screen.dart';
 
 class AuthController extends GetxController {
-  // 1. Inisialisasi Supabase Database Sendiri (Masyarakat/Paralegal)
+  // Menggunakan instance tunggal Supabase (Single Source of Truth)
   final supabase = Supabase.instance.client;
-
-  // 🔥 2. Inisialisasi Supabase Database Tim Web (Posbankum)
-  final webSupabase = SupabaseClient(
-    dotenv.env['WEB_SUPABASE_URL']!,
-    dotenv.env['WEB_SUPABASE_KEY']!,
-  );
 
   var isLoading = false.obs;
   var isPasswordHidden = true.obs;
+
+  // --- VARIABEL UNTUK MATH CAPTCHA ---
+  var captchaNum1 = 0.obs;
+  var captchaNum2 = 0.obs;
+  var expectedCaptchaResult = 0.obs;
 
   @override
   void onInit() {
     super.onInit();
 
-    // DENGARKAN PERUBAHAN STATUS LOGIN (Deep Link & Auth State)
+    // Menginisialisasi soal captcha pertama kali
+    generateCaptcha();
+
+    // Memantau perubahan status autentikasi secara real-time
     supabase.auth.onAuthStateChange.listen((data) {
       final AuthChangeEvent event = data.event;
+      final Session? session = data.session;
 
-      // KALAU USER KLIK LINK RESET PASSWORD DI EMAIL
       if (event == AuthChangeEvent.passwordRecovery) {
         Get.toNamed(AppRoutes.UPDATE_PASSWORD);
       }
+      // 🚀 TAMBAHAN BARU: Menangkap momen saat user sukses terverifikasi dari link email
+      else if (event == AuthChangeEvent.signedIn && session != null) {
+        // Otomatis cek role dan arahkan ke dashboard
+        _checkRoleAndRedirect(session.user.id);
+      }
     });
+  }
+
+  // --- FUNGSI GENERATE SOAL CAPTCHA ---
+  void generateCaptcha() {
+    final random = Random();
+    captchaNum1.value = random.nextInt(10) + 1; // Angka acak 1-10
+    captchaNum2.value = random.nextInt(10) + 1; // Angka acak 1-10
+    expectedCaptchaResult.value = captchaNum1.value + captchaNum2.value;
   }
 
   // --- FUNGSI TOGGLE MATA PASSWORD ---
@@ -41,87 +53,44 @@ class AuthController extends GetxController {
     isPasswordHidden.value = !isPasswordHidden.value;
   }
 
-  // --- 🔥 FUNGSI LOGIN MULTI-DATABASE (MAGIC HAPPENS HERE) ---
+  // --- FUNGSI MASUK (LOGIN) UNTUK SEMUA PERAN ---
   Future<void> login(String email, String password) async {
-    if (email.isEmpty || password.isEmpty) {
-      Get.snackbar('Error', 'Email dan password wajib diisi',
+    final String cleanEmail = email.trim();
+    final String cleanPassword = password.trim();
+
+    if (cleanEmail.isEmpty || cleanPassword.isEmpty) {
+      Get.snackbar('Kesalahan', 'Alamat email dan kata sandi tidak boleh kosong',
           backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
 
     try {
       isLoading.value = true;
+      final AuthResponse res = await supabase.auth.signInWithPassword(
+        email: cleanEmail,
+        password: cleanPassword,
+      );
 
-      // 🟢 SKENARIO 1: Coba login ke Database Sendiri (Masyarakat/Paralegal lokal)
-      try {
-        final AuthResponse res = await supabase.auth.signInWithPassword(
-          email: email,
-          password: password,
-        );
-
-        if (res.user != null) {
-          await _checkRoleAndRedirect(res.user!.id);
-          return; // Sukses? Berhenti di sini.
-        }
-      } on AuthException catch (e) {
-        // Kalau errornya BUKAN karena salah email/password, lempar errornya
-        if (!e.message.toLowerCase().contains('invalid')) {
-          rethrow;
-        }
-        // Kalau errornya Invalid Credentials, KITA JANGAN NYERAH. Lanjut Skenario 2!
+      if (res.user != null) {
+        await _checkRoleAndRedirect(res.user!.id);
       }
-
-// 🔵 SKENARIO 2: Coba login ke Database Web (Posbankum)
-      try {
-        // ✅ 1. Pakai WebSupabaseService
-        final AuthResponse webRes = await WebSupabaseService.client.auth.signInWithPassword(
-          email: email,
-          password: password,
-        );
-
-        if (webRes.user != null) {
-          // ✅ 2. Ambil nama posbankum dari database web
-          final dataPosbankum = await WebSupabaseService.client
-              .from('posbankum')
-              .select('nama')
-              .eq('id_posbankum', webRes.user!.id)
-              .maybeSingle();
-
-          // Kalau namanya ada, pakai itu. Kalau kosong, panggil 'Posbankum'
-          String namaPosbankum = dataPosbankum != null ? dataPosbankum['nama'] : 'Posbankum';
-
-          // ✅ 3. Tampilkan pesan dengan nama dinamis
-          Get.snackbar('Selamat Datang', 'Berhasil login sebagai $namaPosbankum',
-              backgroundColor: Colors.green, colorText: Colors.white);
-
-          // Langsung arahin ke Dashboard Admin
-          Get.offAllNamed(AppRoutes.MAIN_DASHBOARD_ADMIN);
-          return;
-        }
-      } on AuthException {
-        // Kalau di db web juga salah, baru kita tolak mentah-mentah
-        throw const AuthException('Email atau password salah!');
-      }
-
     } on AuthException catch (e) {
-      Get.snackbar('Gagal Login', e.message,
+      Get.snackbar('Gagal Autentikasi', e.message,
           backgroundColor: Colors.red, colorText: Colors.white);
     } catch (e) {
-      print("Error Login: $e");
-      Get.snackbar('Error', 'Terjadi kesalahan sistem',
+      debugPrint("Kesalahan Sistem Login: $e");
+      Get.snackbar('Kesalahan Sistem', 'Terjadi kendala pada peladen. Silakan coba kembali.',
           backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
   }
 
-  // --- FUNGSI LOGIN WITH GOOGLE (Khusus Masyarakat DB Sendiri) ---
+  // --- FUNGSI MASUK MENGGUNAKAN GOOGLE (SSO) ---
   Future<void> loginWithGoogle() async {
     try {
       isLoading.value = true;
-
       const webClientId = '544639004251-hpijg9mt4k9eqmj4hqetcae06ga64ooc.apps.googleusercontent.com';
-
       final GoogleSignIn googleSignIn = GoogleSignIn(
         clientId: webClientId,
         serverClientId: webClientId,
@@ -138,7 +107,7 @@ class AuthController extends GetxController {
       final accessToken = googleAuth.accessToken;
       final idToken = googleAuth.idToken;
 
-      if (idToken == null) throw 'No ID Token found.';
+      if (idToken == null) throw 'Token ID tidak ditemukan dalam respons kredensial Google.';
 
       final AuthResponse res = await supabase.auth.signInWithIdToken(
         provider: OAuthProvider.google,
@@ -148,119 +117,143 @@ class AuthController extends GetxController {
 
       if (res.user != null) {
         final user = res.user!;
-
-        final existingMasyarakat = await supabase
-            .from('masyarakat')
+        final existingProfile = await supabase
+            .from('profiles')
             .select()
             .eq('id', user.id)
             .maybeSingle();
 
-        final existingParalegal = await supabase
-            .from('paralegal')
-            .select()
-            .eq('id', user.id)
-            .maybeSingle();
-
-        if (existingMasyarakat == null && existingParalegal == null) {
-          final String namaGoogle = user.userMetadata?['full_name'] ?? 'Warga Baru';
-
+        if (existingProfile == null) {
+          final String namaGoogle = user.userMetadata?['full_name'] ?? 'Pengguna Baru';
+          await supabase.from('profiles').insert({
+            'id': user.id,
+            'full_name': namaGoogle,
+            'role': 'user',
+          });
           await supabase.from('masyarakat').insert({
             'id': user.id,
-            'nama': namaGoogle,
-            'created_at': DateTime.now().toIso8601String(),
           });
-
-          Get.snackbar('Selamat Datang', 'Akun berhasil dibuat otomatis!',
+          Get.snackbar('Pendaftaran Berhasil', 'Akun berhasil dibuat secara otomatis melalui Google.',
               backgroundColor: Colors.green, colorText: Colors.white);
         }
-
         await _checkRoleAndRedirect(user.id);
       }
-
     } catch (e) {
-      Get.snackbar('Error', 'Gagal Login Google: $e',
+      Get.snackbar('Gagal Autentikasi SSO', 'Kegagalan otorisasi Google: $e',
           backgroundColor: Colors.red, colorText: Colors.white);
-      print("Google Sign In Error: $e");
+      debugPrint("Kesalahan Google Sign In: $e");
     } finally {
       isLoading.value = false;
     }
   }
 
-  // --- FUNGSI REGISTER EMAIL/PASSWORD (Khusus Masyarakat DB Sendiri) ---
-  Future<void> register(String name, String email, String password, String confirmPassword) async {
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      Get.snackbar('Error', 'Semua field harus diisi',
+  // --- FUNGSI PENDAFTARAN PENGGUNA BARU (REGISTRASI) ---
+  Future<void> register(String name, String email, String password, String confirmPassword, String userCaptchaAnswer) async {
+    final String cleanName = name.trim();
+    final String cleanEmail = email.replaceAll(RegExp(r'\s+'), '').replaceAll(RegExp(r'\u200B'), '').trim();
+    final String cleanPassword = password.replaceAll(RegExp(r'\s+'), '').trim();
+    final String cleanConfirm = confirmPassword.replaceAll(RegExp(r'\s+'), '').trim();
+    final String cleanCaptcha = userCaptchaAnswer.trim();
+
+    if (cleanName.isEmpty || cleanEmail.isEmpty || cleanPassword.isEmpty || cleanCaptcha.isEmpty) {
+      Get.snackbar('Validasi Gagal', 'Seluruh kolom isian termasuk Captcha wajib dilengkapi',
           backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
 
-    if (password != confirmPassword) {
-      Get.snackbar('Error', 'Password konfirmasi tidak sama',
+    // Validasi Captcha
+    if (cleanCaptcha != expectedCaptchaResult.value.toString()) {
+      Get.snackbar('Otentikasi Gagal', 'Jawaban Captcha tidak tepat. Silakan coba lagi.',
+          backgroundColor: Colors.orange, colorText: Colors.white);
+      generateCaptcha(); // Perbarui soal jika salah
+      return;
+    }
+
+    if (cleanPassword != cleanConfirm) {
+      Get.snackbar('Validasi Gagal', 'Kata sandi konfirmasi tidak selaras',
+          backgroundColor: Colors.red, colorText: Colors.white);
+      return;
+    }
+
+    if (cleanPassword.length < 8) {
+      Get.snackbar('Validasi Gagal', 'Kata sandi harus terdiri dari minimal 8 karakter',
           backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
 
     try {
       isLoading.value = true;
+      debugPrint('🔵 [INFO] Memulai proses registrasi untuk email: $cleanEmail');
 
       final AuthResponse res = await supabase.auth.signUp(
-        email: email,
-        password: password,
+        email: cleanEmail,
+        password: cleanPassword,
       );
 
       if (res.user != null) {
-        await supabase.from('masyarakat').insert({
-          'id': res.user!.id,
-          'nama': name,
-          'created_at': DateTime.now().toIso8601String(),
-        });
+        debugPrint('✅ [SUCCESS] Kredensial berhasil dibuat. Database Trigger akan memproses tabel profiles.');
+
+        // 🚀 TAMBAHAN BARU: Memperbarui soal Captcha untuk mengantisipasi sesi berikutnya
+        generateCaptcha();
 
         Get.snackbar(
-          'Berhasil', 'Akun berhasil dibuat! Silakan Login.',
+          'Pendaftaran Berhasil', 'Silakan cek kotak masuk Email Anda untuk verifikasi sebelum Login.',
           backgroundColor: Colors.green, colorText: Colors.white,
-          duration: const Duration(seconds: 2),
+          duration: const Duration(seconds: 4),
         );
 
-        await Future.delayed(const Duration(milliseconds: 1500));
+        await Future.delayed(const Duration(milliseconds: 2000));
         Get.offAllNamed(AppRoutes.LOGIN_FORM);
       }
     } on AuthException catch (e) {
-      Get.snackbar('Gagal Daftar', e.message,
-          backgroundColor: Colors.red, colorText: Colors.white);
-    } catch (e) {
-      Get.snackbar('Error', 'Terjadi kesalahan: $e',
+      debugPrint('❌ [ERROR LOG] Gagal mendaftar: ${e.message}');
+      Get.snackbar('Pendaftaran Ditolak', e.message,
           backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
   }
 
-  // --- HELPER: CEK ROLE LOKAL & REDIRECT ---
+  // --- FUNGSI VALIDASI PERAN (ROLE) DAN PENGALIHAN RUTE ---
   Future<void> _checkRoleAndRedirect(String userId) async {
-    final masyarakatData = await supabase
-        .from('masyarakat')
-        .select()
-        .eq('id', userId)
-        .maybeSingle();
+    try {
+      final profileData = await supabase
+          .from('profiles')
+          .select('role, full_name, id_posbankum')
+          .eq('id', userId)
+          .maybeSingle();
 
-    if (masyarakatData != null) {
-      Get.offAllNamed(AppRoutes.MAIN_DASHBOARD);
-      return;
+      if (profileData != null) {
+        // 🚀 FIX 1: Tangkap role aslinya, lalu ubah ke huruf kecil semua biar kebal Case Sensitive
+        final String rawRole = profileData['role']?.toString() ?? 'pelapor';
+        final String userRole = rawRole.toLowerCase().trim();
+        final String userName = profileData['full_name'] ?? 'Pengguna';
+
+        debugPrint('🔵 [INFO DB] Role dari database: "$rawRole" -> Dibaca sistem: "$userRole"');
+
+        // 🚀 FIX 2: Tambahkan opsi 'masyarakat' jaga-jaga kalau tim Web pakai nama itu
+        if (userRole == 'pelapor' || userRole == 'user' || userRole == 'masyarakat') {
+          Get.snackbar('Otorisasi Berhasil', 'Selamat datang kembali, $userName',
+              backgroundColor: Colors.green, colorText: Colors.white);
+          Get.offAllNamed(AppRoutes.MAIN_DASHBOARD);
+        } else if (userRole == 'posbankum' || userRole == 'admin') {
+          Get.snackbar('Otorisasi Berhasil', 'Akses administrator diberikan kepada $userName',
+              backgroundColor: Colors.green, colorText: Colors.white);
+          Get.offAllNamed(AppRoutes.MAIN_DASHBOARD_ADMIN);
+        } else {
+          debugPrint('❌ [ERROR ROLE] Role "$userRole" tidak ada di logika percabangan!');
+          Get.snackbar('Otorisasi Ditolak', 'Peran pengguna ($rawRole) tidak dikenali sistem.',
+              backgroundColor: Colors.orange, colorText: Colors.white);
+          await supabase.auth.signOut();
+        }
+      } else {
+        Get.snackbar('Integritas Data Gagal', 'Data profil Anda tidak ditemukan dalam sistem.',
+            backgroundColor: Colors.red, colorText: Colors.white);
+        await supabase.auth.signOut();
+      }
+    } catch (e) {
+      debugPrint('❌ [ERROR CHECK ROLE] $e');
+      await supabase.auth.signOut();
     }
-
-    final paralegalData = await supabase
-        .from('paralegal')
-        .select()
-        .eq('id', userId)
-        .maybeSingle();
-
-    if (paralegalData != null) {
-      Get.offAllNamed(AppRoutes.MAIN_DASHBOARD_ADMIN);
-      return;
-    }
-
-    Get.snackbar('Akses Ditolak', 'Data profil anda tidak ditemukan.',
-        backgroundColor: Colors.orange, colorText: Colors.white);
-    await supabase.auth.signOut();
   }
 }
