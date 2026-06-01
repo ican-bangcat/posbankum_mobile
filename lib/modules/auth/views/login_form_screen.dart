@@ -16,6 +16,7 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _captchaController = TextEditingController(); // 🚀 Controller baru untuk captcha
 
   bool _obscurePassword = true;
 
@@ -29,13 +30,15 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _captchaController.dispose();
     super.dispose();
   }
 
-  // FUNGSI MODAL DIHAPUS DARI SINI
-
   @override
   Widget build(BuildContext context) {
+    // Mengamankan jarak bawah dari tombol navbar fisik/swipe smartphone
+    final double bottomNavBarPadding = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -51,27 +54,27 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(32, 52, 32, 0),
+                        padding: const EdgeInsets.fromLTRB(32, 40, 32, 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildLogoRow(),
-                            const SizedBox(height: 28),
+                            const SizedBox(height: 20),
                             const Text(
                               'Selamat Datang',
-                              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w600, color: textDark, letterSpacing: -0.5),
+                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: textDark, letterSpacing: -0.5),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 4),
                             const Text(
                               'Masuk untuk melanjutkan',
-                              style: TextStyle(fontSize: 15, color: textLight),
+                              style: TextStyle(fontSize: 14, color: textLight),
                             ),
                           ],
                         ),
                       ),
 
                       SizedBox(
-                        height: (MediaQuery.of(context).size.height * 0.18).clamp(120.0, 200.0),
+                        height: (MediaQuery.of(context).size.height * 0.15).clamp(100.0, 160.0),
                         child: Image.asset(
                           'assets/images/icons/logo_halaman_login.png',
                           fit: BoxFit.contain,
@@ -82,7 +85,7 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
 
                       Expanded(
                         child: Container(
-                          padding: const EdgeInsets.fromLTRB(28, 36, 28, 0),
+                          padding: const EdgeInsets.fromLTRB(28, 32, 28, 0),
                           decoration: const BoxDecoration(
                             color: darkBlueColor,
                             borderRadius: BorderRadius.only(
@@ -95,32 +98,34 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Email', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+                                const Text('Email', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
                                 const SizedBox(height: 8),
                                 TextFormField(
                                   controller: _emailController,
                                   keyboardType: TextInputType.emailAddress,
+                                  style: const TextStyle(color: textDark, fontSize: 14),
                                   decoration: _inputDecoration('Email', Icons.email_outlined),
                                   validator: (v) => v!.isEmpty ? 'Email wajib diisi' : null,
                                 ),
 
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 16),
 
-                                const Text('Kata Sandi', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+                                const Text('Kata Sandi', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
                                 const SizedBox(height: 8),
                                 TextFormField(
                                   controller: _passwordController,
                                   obscureText: _obscurePassword,
+                                  style: const TextStyle(color: textDark, fontSize: 14),
                                   decoration: _inputDecoration('Kata Sandi', Icons.lock_outline).copyWith(
                                     suffixIcon: IconButton(
-                                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey, size: 20),
+                                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey, size: 18),
                                       onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                                     ),
                                   ),
                                   validator: (v) => v!.isEmpty ? 'Kata sandi wajib diisi' : null,
                                 ),
 
-                                const SizedBox(height: 10),
+                                const SizedBox(height: 6),
 
                                 Align(
                                   alignment: Alignment.centerRight,
@@ -131,31 +136,42 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                                       minimumSize: const Size(50, 30),
                                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                     ),
-                                    child: const Text('Lupa kata sandi?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: yellowAccent)),
+                                    child: const Text('Lupa kata sandi?', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: yellowAccent)),
                                   ),
                                 ),
+
+                                const SizedBox(height: 12),
+
+                                // 🚀 INTERFASI MATH CAPTCHA BARU
+                                const Text('Otentikasi (Captcha)', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 8),
+                                _buildCaptchaField(),
 
                                 const SizedBox(height: 24),
 
                                 SizedBox(
                                   width: double.infinity,
-                                  height: 52,
+                                  height: 48,
                                   child: Obx(() => ElevatedButton(
                                     onPressed: authC.isLoading.value
                                         ? null
                                         : () {
                                       if (_formKey.currentState!.validate()) {
-                                        authC.login(_emailController.text, _passwordController.text);
+                                        authC.login(
+                                          _emailController.text,
+                                          _passwordController.text,
+                                          _captchaController.text, // 🚀 Kirim jawaban captcha
+                                        );
                                       }
                                     },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                       elevation: 0,
                                     ),
                                     child: authC.isLoading.value
-                                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: darkBlueColor))
-                                        : const Text('Masuk', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: darkBlueColor)),
+                                        ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: darkBlueColor, strokeWidth: 2.5))
+                                        : const Text('Masuk', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: darkBlueColor)),
                                   )),
                                 ),
 
@@ -163,37 +179,38 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
 
                                 SizedBox(
                                   width: double.infinity,
-                                  height: 52,
+                                  height: 48,
                                   child: ElevatedButton.icon(
                                     onPressed: () => authC.loginWithGoogle(),
-                                    icon: Image.asset('assets/images/icons/google.png', height: 22, errorBuilder: (c, e, s) => const Icon(Icons.g_mobiledata, color: darkBlueColor, size: 28)),
-                                    label: const Text('Masuk dengan Google', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textLight)),
+                                    icon: Image.asset('assets/images/icons/google.png', height: 20, errorBuilder: (c, e, s) => const Icon(Icons.g_mobiledata, color: darkBlueColor, size: 24)),
+                                    label: const Text('Masuk dengan Google', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textLight)),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                       elevation: 0,
                                     ),
                                   ),
                                 ),
 
                                 const Spacer(),
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 16),
 
                                 Center(
                                   child: Wrap(
                                     alignment: WrapAlignment.center,
                                     crossAxisAlignment: WrapCrossAlignment.center,
                                     children: [
-                                      const Text('Belum punya akun? ', style: TextStyle(fontSize: 14, color: Colors.white)),
+                                      const Text('Belum punya akun? ', style: TextStyle(fontSize: 13, color: Colors.white)),
                                       GestureDetector(
-                                        // ✅ BERUBAH: Langsung navigasi ke rute Register
                                         onTap: () => Get.toNamed(AppRoutes.REGISTER),
-                                        child: const Text('Daftar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: yellowAccent)),
+                                        child: const Text('Daftar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: yellowAccent)),
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 28),
+
+                                // Jarak dinamis pengaman navbar bawah smartphone
+                                SizedBox(height: 24 + bottomNavBarPadding),
                               ],
                             ),
                           ),
@@ -210,23 +227,75 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
     );
   }
 
+  Widget _buildCaptchaField() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Obx(() => Text(
+              'Berapa hasil dari ${authC.captchaNum1.value} + ${authC.captchaNum2.value} ?',
+              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+            )),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 80,
+            child: TextFormField(
+              controller: _captchaController,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: textDark),
+              decoration: InputDecoration(
+                hintText: 'Hasil',
+                hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+              ),
+              validator: (v) => v == null || v.isEmpty ? 'Wajib!' : null,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            decoration: BoxDecoration(color: yellowAccent.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+            child: IconButton(
+              icon: const Icon(Icons.refresh, color: yellowAccent, size: 20),
+              onPressed: () {
+                authC.generateCaptcha();
+                _captchaController.clear();
+              },
+              tooltip: 'Ganti Soal',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLogoRow() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Image.asset(
           'assets/images/logo/logo_kemenkum.png',
-          width: 52, height: 52, fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) => Container(width: 52, height: 52, color: Colors.grey[200], child: const Icon(Icons.broken_image)),
+          width: 44, height: 44, fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => Container(width: 44, height: 44, color: Colors.grey[200], child: const Icon(Icons.broken_image)),
         ),
-        const SizedBox(width: 14),
-        Container(width: 2, height: 40, color: darkBlueColor),
-        const SizedBox(width: 14),
+        const SizedBox(width: 12),
+        Container(width: 1.5, height: 36, color: darkBlueColor),
+        const SizedBox(width: 12),
         const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Posbankum', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: darkBlueColor, height: 1.1)),
-            Text('Kanwil kemenkum Riau', style: TextStyle(fontSize: 13, color: textLight)),
+            Text('Posbankum', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: darkBlueColor, height: 1.1)),
+            Text('Kanwil kemenkum Riau', style: TextStyle(fontSize: 12, color: textLight)),
           ],
         ),
       ],
@@ -236,14 +305,14 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
   InputDecoration _inputDecoration(String hint, IconData icon) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-      prefixIcon: Icon(icon, size: 20, color: const Color(0xFF94A3B8)),
+      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+      prefixIcon: Icon(icon, size: 18, color: const Color(0xFF94A3B8)),
       filled: true,
       fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(vertical: 16),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: yellowAccent, width: 2)),
+      contentPadding: const EdgeInsets.symmetric(vertical: 14),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: yellowAccent, width: 1.5)),
     );
   }
 }

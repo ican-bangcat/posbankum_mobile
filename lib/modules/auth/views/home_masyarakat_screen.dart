@@ -21,24 +21,15 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
   final storage = GetStorage();
   final supabase = Supabase.instance.client;
 
-  // ✅ Daftarkan Controller
   late final HomeMasyarakatController _dashboardCtrl;
-
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-
-
-
   @override
   void initState() {
     super.initState();
-
-    // ✅ Inisialisasi Controller
     _dashboardCtrl = Get.put(HomeMasyarakatController());
-
-
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -55,7 +46,6 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
 
     _animationController.forward();
   }
-
 
   Future<void> _handleLogout() async {
     try {
@@ -147,7 +137,6 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
                   borderRadius: BorderRadius.only(topLeft: Radius.circular(20)),
                 ),
                 child: RefreshIndicator(
-                  // ✅ Tarik ke bawah untuk Refresh Data
                   onRefresh: _dashboardCtrl.fetchDashboardData,
                   child: FadeTransition(
                     opacity: _fadeAnimation,
@@ -215,7 +204,6 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Halo,', style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 13)),
-                          // ✅ DIBUNGKUS OBX AGAR NAMA REAKTIF DARI DATABASE
                           Obx(() => Text(
                             _dashboardCtrl.userName.value,
                             style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
@@ -241,6 +229,7 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
       ),
     );
   }
+
   Widget _buildConsultationCard() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -251,10 +240,7 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
           gradient: const RadialGradient(
             center: Alignment(0.8, 0.5),
             radius: 1.2,
-            colors: [
-              Color(0xFF4B53A6), // glow color
-              Color(0xFF323669), // base color
-            ],
+            colors: [Color(0xFF4B53A6), Color(0xFF323669)],
           ),
           boxShadow: [BoxShadow(color: const Color(0xFF323669).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 8))],
         ),
@@ -292,7 +278,6 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
     );
   }
 
-  // ✅ DIBUNGKUS OBX AGAR DINAMIS
   Widget _buildCaseSummarySection() {
     return Obx(() => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -307,7 +292,7 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
                 child: _buildCaseCard(
                   icon: Icons.gavel_rounded, iconColor: const Color(0xFFED8936), iconBg: const Color(0xFFFFF3E0),
                   label: 'Kasus Aktif',
-                  count: _dashboardCtrl.countAktif.value.toString(), // ✅ Dari Database
+                  count: _dashboardCtrl.countAktif.value.toString(),
                 ),
               ),
               const SizedBox(width: 14),
@@ -315,7 +300,7 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
                 child: _buildCaseCard(
                   icon: Icons.check_circle_rounded, iconColor: const Color(0xFF38A169), iconBg: const Color(0xFFE6FFFA),
                   label: 'Selesai',
-                  count: _dashboardCtrl.countSelesai.value.toString(), // ✅ Dari Database
+                  count: _dashboardCtrl.countSelesai.value.toString(),
                 ),
               ),
             ],
@@ -353,7 +338,6 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
     );
   }
 
-  // ✅ DIBUNGKUS OBX AGAR DINAMIS
   Widget _buildRecentHistorySection() {
     return Obx(() => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -384,32 +368,32 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
             const Center(child: Padding(padding: EdgeInsets.all(20), child: Text("Belum ada riwayat pengaduan.", style: TextStyle(color: Colors.grey))))
           else
             ..._dashboardCtrl.recentHistory.map((kasus) {
-              // Logika status UI
-              String statusRaw = (kasus['status']?.toString() ?? 'pending').toLowerCase();
-              String badgeText = 'Pending';
-              Color badgeColor = const Color(0xFFEF6C00); // Orange
+              String statusRaw = (kasus['status']?.toString() ?? 'diproses').toLowerCase();
+              String badgeText = 'Diproses';
+              Color badgeColor = const Color(0xFFED8936);
               Color badgeBg = const Color(0xFFFFF3E0);
 
-              if (statusRaw.contains('proses')) {
-                badgeText = 'Diproses';
-                badgeColor = const Color(0xFFED8936); // Orange
-                badgeBg = const Color(0xFFFFF3E0);
-              } else if (statusRaw == 'selesai') {
+              if (statusRaw == 'selesai') {
                 badgeText = 'Selesai';
-                badgeColor = const Color(0xFF38A169); // Hijau
+                badgeColor = const Color(0xFF38A169);
                 badgeBg = const Color(0xFFE6FFFA);
               }
 
-              // ✅ GANTI: Parse menggunakan tgl_lapor
-              DateTime dt = DateTime.parse(kasus['tgl_lapor']).toLocal();
+              // ✅ MENGGUNAKAN created_at SESUAI NAMA KOLOM ASLI
+              DateTime dt = DateTime.parse(kasus['created_at']).toLocal();
               String timeStr = "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}";
+
+              // ✅ MENGGUNAKAN judul_pengaduan atau jenis_masalah SEBAGAI JUDUL KARTU
+              String judulKasus = kasus['judul_pengaduan'] ?? kasus['jenis_masalah'] ?? 'Pengaduan Hukum';
+              // ✅ MENGAMBIL STRING UUID UNTUK ID PENGADUAN
+              String idKasus = kasus['id_pengaduan'] != null ? kasus['id_pengaduan'].toString().substring(0, 5).toUpperCase() : 'XXXXX';
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _buildHistoryCard(
                   iconData: Icons.image,
-                  title: kasus['kategori_masalah'] ?? 'Pengaduan Hukum',
-                  subtitle: 'ID: #${kasus['id'].toString().substring(0, 5).toUpperCase()}',
+                  title: judulKasus,
+                  subtitle: 'ID: #$idKasus',
                   badgeText: badgeText,
                   badgeColor: badgeColor,
                   badgeBg: badgeBg,

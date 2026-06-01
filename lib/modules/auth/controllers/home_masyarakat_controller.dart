@@ -25,26 +25,26 @@ class HomeMasyarakatController extends GetxController {
 
       if (userId == null) return;
 
-      // 🚀 FIX: Ambil dari tabel 'profiles' dan kolom 'full_name' (Sesuai skema database)
+      // 2. Ambil dari tabel 'profiles' dan kolom 'full_name'
       final userRes = await supabase.from('profiles').select('full_name').eq('id', userId).maybeSingle();
       if (userRes != null && userRes['full_name'] != null) {
         userName.value = userRes['full_name'];
       }
 
-      // 3. Ambil Data Pengaduan
+      // 3. Ambil Data Pengaduan (Disesuaikan dengan nama kolom asli)
       final List<dynamic> allPengaduan = await supabase
           .from('pengaduan')
-          .select('id, status, kategori_masalah, tgl_lapor')
+          .select('id_pengaduan, status, jenis_masalah, judul_pengaduan, created_at')
           .eq('masyarakat_id', userId)
-          .order('tgl_lapor', ascending: false);
+          .order('created_at', ascending: false);
 
       int aktif = 0, selesai = 0;
 
       for (final item in allPengaduan) {
         final status = (item['status']?.toString() ?? '').toLowerCase().trim();
 
-        // Kasus Aktif = Proses & Pending
-        if (status == 'pending' || status == 'proses' || status == 'dalam proses' || status == 'diproses') {
+        // Kasus Aktif = diproses (sesuai ENUM database)
+        if (status == 'diproses') {
           aktif++;
         } else if (status == 'selesai') {
           selesai++;

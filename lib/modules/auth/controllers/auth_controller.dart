@@ -32,9 +32,8 @@ class AuthController extends GetxController {
       if (event == AuthChangeEvent.passwordRecovery) {
         Get.toNamed(AppRoutes.UPDATE_PASSWORD);
       }
-      // 🚀 Menangkap momen saat user sukses terverifikasi dari link email
+      // 🚀 SOLUSI DOUBLE NOTIF: Menggunakan satu pintu gerbang redireksi otomatis ketika status terotentikasi
       else if (event == AuthChangeEvent.signedIn && session != null) {
-        // Otomatis cek role dan arahkan ke dashboard
         _checkRoleAndRedirect(session.user.id);
       }
     });
@@ -53,31 +52,44 @@ class AuthController extends GetxController {
     isPasswordHidden.value = !isPasswordHidden.value;
   }
 
-  // --- FUNGSI MASUK (LOGIN) UNTUK SEMUA PERAN ---
-  Future<void> login(String email, String password) async {
+  // --- FUNGSI MASUK (LOGIN) DENGAN VALIDASI CAPTCHA ---
+  Future<void> login(String email, String password, String userCaptchaAnswer) async {
     final String cleanEmail = email.trim();
     final String cleanPassword = password.trim();
+    final String cleanCaptcha = userCaptchaAnswer.trim();
 
-    if (cleanEmail.isEmpty || cleanPassword.isEmpty) {
-      Get.snackbar('Kesalahan', 'Alamat email dan kata sandi tidak boleh kosong',
+    if (cleanEmail.isEmpty || cleanPassword.isEmpty || cleanCaptcha.isEmpty) {
+      Get.snackbar('Kesalahan', 'Alamat email, kata sandi, dan Captcha tidak boleh kosong',
           backgroundColor: Colors.red, colorText: Colors.white);
+      return;
+    }
+
+    // 🚀 VALIDASI CAPTCHA SEBELUM HIT LAYANAN SUPABASE AUTH
+    if (cleanCaptcha != expectedCaptchaResult.value.toString()) {
+      Get.snackbar('Otentikasi Gagal', 'Jawaban Captcha tidak tepat. Silakan coba lagi.',
+          backgroundColor: Colors.orange, colorText: Colors.white);
+      generateCaptcha(); // Perbarui soal jika salah
       return;
     }
 
     try {
       isLoading.value = true;
-      final AuthResponse res = await supabase.auth.signInWithPassword(
+
+      // Melakukan autentikasi kredensial ke layanan Supabase Auth
+      await supabase.auth.signInWithPassword(
         email: cleanEmail,
         password: cleanPassword,
       );
 
-      if (res.user != null) {
-        await _checkRoleAndRedirect(res.user!.id);
-      }
+      // 🚀 CATATAN: _checkRoleAndRedirect() di sini sengaja dihapus agar tidak bentrok
+      // dengan listener stream di onInit (Menghilangkan bug double popup)
+
     } on AuthException catch (e) {
+      generateCaptcha(); // Perbarui soal jika gagal masuk
       Get.snackbar('Gagal Autentikasi', e.message,
           backgroundColor: Colors.red, colorText: Colors.white);
     } catch (e) {
+      generateCaptcha();
       debugPrint("Kesalahan Sistem Login: $e");
       Get.snackbar('Kesalahan Sistem', 'Terjadi kendala pada peladen. Silakan coba kembali.',
           backgroundColor: Colors.red, colorText: Colors.white);
@@ -128,7 +140,7 @@ class AuthController extends GetxController {
           await supabase.from('profiles').insert({
             'id': user.id,
             'full_name': namaGoogle,
-            'role': 'pelapor', // 🚀 SUDAH DIUBAH KE PELAPOR
+            'role': 'pelapor', // Konsisten menggunakan entitas pelapor
           });
           await supabase.from('masyarakat').insert({
             'id': user.id,
@@ -165,7 +177,7 @@ class AuthController extends GetxController {
     if (cleanCaptcha != expectedCaptchaResult.value.toString()) {
       Get.snackbar('Otentikasi Gagal', 'Jawaban Captcha tidak tepat. Silakan coba lagi.',
           backgroundColor: Colors.orange, colorText: Colors.white);
-      generateCaptcha();
+      generateCaptcha(); // Perbarui soal jika salah
       return;
     }
 
@@ -188,7 +200,7 @@ class AuthController extends GetxController {
       final AuthResponse res = await supabase.auth.signUp(
         email: cleanEmail,
         password: cleanPassword,
-        // 🚀 INI DIA DATA METADATA YANG DITUNGGU-TUNGU
+        // 🚀 DATA METADATA MANDATORI UNTUK DIBACA TRIGGERS DATABASE POSTGRESQL
         data: {
           'full_name': cleanName,
           'role': 'pelapor',
@@ -236,7 +248,7 @@ class AuthController extends GetxController {
 
         debugPrint('🔵 [INFO DB] Role dari database: "$rawRole" -> Dibaca sistem: "$userRole"');
 
-        // Tambahkan opsi 'masyarakat' jaga-jaga kalau tim Web pakai nama itu
+        // Akseptasi alur rute untuk tingkat kewenangan Pelapor / Masyarakat umum
         if (userRole == 'pelapor' || userRole == 'user' || userRole == 'masyarakat') {
           Get.snackbar('Otorisasi Berhasil', 'Selamat datang kembali, $userName',
               backgroundColor: Colors.green, colorText: Colors.white);
