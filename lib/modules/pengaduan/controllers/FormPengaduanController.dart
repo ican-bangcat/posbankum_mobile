@@ -140,13 +140,15 @@ class PengaduanController extends GetxController {
         return;
       }
 
+      // Ambil nama dari tabel profil (atau masyarakat)
       final dataPelapor = await supabase
-          .from('masyarakat')
-          .select('nama')
+          .from('profiles')
+          .select('full_name')
           .eq('id', user.id)
           .maybeSingle();
 
-      String namaOtomatis = dataPelapor?['nama'] ?? 'Tanpa Nama';
+      String namaOtomatis = dataPelapor?['full_name'] ?? 'Tanpa Nama';
+
       List<String> listUrlLampiran = [];
       if (selectedFiles.isNotEmpty) {
         listUrlLampiran = await _uploadMultipleFiles(user.id);
@@ -154,39 +156,41 @@ class PengaduanController extends GetxController {
 
       String prioritasOtomatis = _determinePriority(selectedKategori!);
       String customId = _generatePengaduanId();
-// 🚀 BUG FIX: Tambahkan .select('id').single() agar kita bisa tau UUID yang baru digenerate Supabase!
+
+      // 🚀 FIX: Sesuaikan Key/Kolom Insert dengan Skema Database Web
+      // 🚀 FIX: Pakai .select('id_pengaduan') untuk menangkap kembalian UUID-nya
       final insertedData = await supabase.from('pengaduan').insert({
-        'no_tiket': customId,
+        'nomor_pengaduan': customId,
         'masyarakat_id': user.id,
         'nama_pelapor': namaOtomatis,
         'nik_pelapor': nikC.text,
         'no_hp_pelapor': noHpC.text,
-        'judul_laporan': judulLaporanC.text,
+        'judul_pengaduan': judulLaporanC.text,
         'nama_lurah': namaLurahC.text,
-        'kategori_masalah': selectedKategori,
+        'jenis_masalah': selectedKategori,
         'kronologi': kronologiC.text,
         'lokasi_kejadian': lokasiC.text,
         'waktu_kejadian': waktuKejadianC.text,
         'prioritas': prioritasOtomatis,
         'lampiran_urls': listUrlLampiran.isNotEmpty ? listUrlLampiran : null,
         'tgl_kejadian': tglKejadianC.text,
-        'status': 'Pending',
-        'tgl_lapor': DateTime.now().toIso8601String(),
-      }).select('id').single();
+        'status': 'diproses', // Standar enum DB biasanya pakai huruf kecil
+        // 'created_at' otomatis diisi oleh default NOW() di database
+      }).select('id_pengaduan').single();
 
-      // Tangkap UUID-nya
-      String generatedUuid = insertedData['id'];
+      // Tangkap UUID-nya yang berharga
+      String generatedUuid = insertedData['id_pengaduan'];
 
-      // 🚀 KIRIM KEDUA DATA DALAM BENTUK MAP/DICTIONARY KE APP PAGES
+      // Lempar ke halaman Sukses
       Get.offNamed(
-        '/pengaduan-success', // SESUAIKAN: Ganti dengan AppRoutes.PENGADUAN_SUCCESS jika kamu pakai class AppRoutes
+        '/pengaduan-success',
         arguments: {
           'pengaduanId': customId,
           'uuidDb': generatedUuid,
         },
       );
     } catch (e) {
-      print("Error Submit: $e");
+      print("❌ Error Submit: $e");
       Get.snackbar(
         "GAGAL - BACA ERROR INI!",
         e.toString(),

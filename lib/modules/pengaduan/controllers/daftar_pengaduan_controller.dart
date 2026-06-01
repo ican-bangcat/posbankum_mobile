@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 enum StatusPengaduan { semua, dalamProses, selesai }
 
 class PengaduanItem {
-  final String idDb; // ✅ Tambahkan ini untuk menyimpan UUID aslinya
+  final String idDb;
   final String idTiket;
   final String judul;
   final String tanggal;
@@ -23,16 +23,18 @@ class PengaduanItem {
 
   factory PengaduanItem.fromJson(Map<String, dynamic> json) {
     String formattedDate = '-';
-    if (json['tgl_lapor'] != null) {
-      final dt = DateTime.parse(json['tgl_lapor']).toLocal();
+    // ✅ FIX: Ganti tgl_lapor jadi created_at
+    if (json['created_at'] != null) {
+      final dt = DateTime.parse(json['created_at']).toLocal();
       formattedDate = DateFormat('dd MMM yyyy').format(dt);
     }
     return PengaduanItem(
-      idDb: json['id'].toString(), // ✅ Menyimpan UUID untuk fungsi onTap detail kasus
-      idTiket: json['no_tiket']?.toString().toUpperCase() ?? 'TIDAK ADA TIKET', // ✅ Mengambil PGN-xxx untuk UI
-      judul: json['judul_laporan'] ?? 'Tanpa Judul',
+      // ✅ FIX: Sesuaikan nama kolom dengan database Web
+      idDb: json['id_pengaduan'].toString(),
+      idTiket: json['nomor_pengaduan']?.toString().toUpperCase() ?? 'TIDAK ADA TIKET',
+      judul: json['judul_pengaduan'] ?? 'Tanpa Judul',
       tanggal: formattedDate,
-      kategoriMasalah: json['kategori_masalah'] ?? 'Lain-lain',
+      kategoriMasalah: json['jenis_masalah'] ?? 'Lain-lain',
       status: json['status'] ?? 'Pending',
     );
   }
@@ -63,11 +65,12 @@ class DaftarPengaduanController extends GetxController {
       final user = supabase.auth.currentUser;
       if (user == null) return;
 
+      // ✅ FIX: Ambil kolom spesifik yang benar & order by created_at
       final List<dynamic> resultData = await supabase
           .from('pengaduan')
-          .select()
+          .select('id_pengaduan, nomor_pengaduan, judul_pengaduan, jenis_masalah, status, created_at')
           .eq('masyarakat_id', user.id)
-          .order('tgl_lapor', ascending: false);
+          .order('created_at', ascending: false);
 
       List<PengaduanItem> rawList = resultData.map((e) => PengaduanItem.fromJson(e)).toList();
 
@@ -75,7 +78,7 @@ class DaftarPengaduanController extends GetxController {
       applyFilterAndSearch();
 
     } catch (e) {
-      print("Error fetch daftar: $e");
+      print("❌ Error fetch daftar pengaduan: $e");
       Get.snackbar('Error', 'Gagal memuat daftar pengaduan');
     } finally {
       isLoading.value = false;

@@ -39,13 +39,14 @@ class DetailKasus {
 
   factory DetailKasus.fromJson(Map<String, dynamic> json) {
     String formattedDate = '-';
-    if (json['tgl_lapor'] != null) {
-      final dt = DateTime.parse(json['tgl_lapor']).toLocal();
+    // 🚀 FIX: tgl_lapor diganti jadi created_at
+    if (json['created_at'] != null) {
+      final dt = DateTime.parse(json['created_at']).toLocal();
       formattedDate = DateFormat('dd MMM yyyy').format(dt);
     }
 
     String timelineDate = formattedDate;
-    String status = json['status'] ?? 'Pending';
+    String status = json['status'] ?? 'pending';
     List<TimelineItem> generatedTimeline = [
       TimelineItem(title: 'Pengaduan diterima', tanggal: timelineDate, isActive: true),
     ];
@@ -62,11 +63,11 @@ class DetailKasus {
     }
 
     return DetailKasus(
-      id: json['id'].toString(), // ✅ Tetap UUID untuk fungsi update/hapus di database
-      judulLaporan: json['judul_laporan'] ?? 'Tanpa Judul',
-      kategoriMasalah: json['kategori_masalah'] ?? 'Tanpa Kategori',
-      // ✅ LANGSUNG AMBIL DARI no_tiket, TIDAK PERLU SUBSTRING LAGI
-      idKasus: json['no_tiket']?.toString().toUpperCase() ?? 'TIDAK ADA TIKET',
+      // 🚀 FIX: Sesuaikan Key JSON dengan Database Web
+      id: json['id_pengaduan'].toString(),
+      judulLaporan: json['judul_pengaduan'] ?? 'Tanpa Judul',
+      kategoriMasalah: json['jenis_masalah'] ?? 'Tanpa Kategori',
+      idKasus: json['nomor_pengaduan']?.toString().toUpperCase() ?? 'TIDAK ADA TIKET',
       tanggalDibuat: formattedDate,
       status: status,
       kronologi: json['kronologi'] ?? 'Tidak ada kronologi',
@@ -91,13 +92,14 @@ class DetailKasusController extends GetxController {
   Future<void> fetchDetailKasus() async {
     try {
       isLoading.value = true;
-      final rawId = Get.arguments; // ✅ Ini akan menerima UUID dari halaman list
+      final rawId = Get.arguments;
       if (rawId == null) return;
 
-      final response = await supabase.from('pengaduan').select().eq('id', rawId.toString()).single();
+      // 🚀 FIX: Cari berdasarkan kolom id_pengaduan, BUKAN id
+      final response = await supabase.from('pengaduan').select().eq('id_pengaduan', rawId.toString()).single();
       kasus.value = DetailKasus.fromJson(response);
     } catch (e) {
-      print("Error Fetch Detail: $e");
+      print("❌ Error Fetch Detail: $e");
     } finally {
       isLoading.value = false;
     }
@@ -119,15 +121,17 @@ class DetailKasusController extends GetxController {
     try {
       Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
 
+      // 🚀 FIX: Update berdasarkan id_pengaduan, nilai status pakai huruf kecil biar aman di database (ENUM)
       await supabase.from('pengaduan').update({
-        'status': 'Dibatalkan'
-      }).eq('id', kasus.value!.id); // ✅ Menggunakan UUID untuk mencari data yang akan diupdate
+        'status': 'dibatalkan'
+      }).eq('id_pengaduan', kasus.value!.id);
 
       Get.back();
       fetchDetailKasus();
       Get.snackbar("Berhasil", "Pengaduan telah dibatalkan.", backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       Get.back();
+      print("❌ Error Batal Pengaduan: $e");
       Get.snackbar("Gagal", "Gagal membatalkan pengaduan.", backgroundColor: Colors.red, colorText: Colors.white);
     }
   }

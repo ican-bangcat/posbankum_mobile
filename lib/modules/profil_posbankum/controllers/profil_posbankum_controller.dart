@@ -1,8 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../app/data/services/supabase_service.dart';
+import '../../../app/routes/app_routes.dart';
 
 class ProfilPosbankumController extends GetxController {
+  // Gunakan instance Supabase Flutter yang resmi, jangan pakai WebService
+  final supabase = Supabase.instance.client;
 
   var isLoading = true.obs;
 
@@ -15,7 +18,7 @@ class ProfilPosbankumController extends GetxController {
   var kodePos = ''.obs;
   var jmlParalegal = 0.obs;
 
-  var paralegalList = [].obs;
+  var paralegalList = <Map<String, dynamic>>[].obs;
 
   @override
   void onInit() {
@@ -27,78 +30,103 @@ class ProfilPosbankumController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 1. Ambil User yang sedang login dari Pintu Samping (Web)
-      final user = WebSupabaseService.client.auth.currentUser;
+      // 1. Ambil User yang sedang login
+      final user = supabase.auth.currentUser;
 
       if (user == null) {
         Get.snackbar('Sesi Berakhir', 'Silakan login kembali');
         return;
       }
 
-      final String userEmail = user.email ?? '';
+      // 2. Ambil id_posbankum dari tabel profiles
+      final profileData = await supabase
+          .from('profiles')
+          .select('id_posbankum')
+          .eq('id', user.id)
+          .maybeSingle();
 
-      if (userEmail.isEmpty) {
-        Get.snackbar('Error Data', 'Email akun tidak ditemukan pada sesi login ini.');
+      final idPosbankumAsli = profileData?['id_posbankum'];
+
+      if (idPosbankumAsli == null) {
+        Get.snackbar('Akses Ditolak', 'Akun Anda belum ditautkan ke Posbankum manapun.');
         return;
       }
 
-      // 🔵 2. NARIK DATA POSBANKUM + JOIN KABUPATEN & KECAMATAN
-      final dataPosbankum = await WebSupabaseService.client
+      // 3. NARIK DATA POSBANKUM + SIHIR JOIN 3 WILAYAH SEKALIGUS
+      final dataPosbankum = await supabase
           .from('posbankum')
-      // ✅ SIHIR JOIN: Cukup tambahkan nama_tabel (nama_kolom)
           .select('''
-            id_posbankum, 
             nama, 
             email_akun, 
-            kelurahan, 
             alamat, 
             kode_pos, 
-            jml_paralegal,
             kabupaten (nama),
-            kecamatan (nama)
+            kecamatan (nama),
+            kelurahan (nama)
           ''')
-          .eq('email_akun', userEmail)
+          .eq('id_posbankum', idPosbankumAsli)
           .maybeSingle();
 
       if (dataPosbankum != null) {
-        final String idPosbankumAsli = dataPosbankum['id_posbankum'];
-
-        // 🔵 3. NARIK DATA PARALEGAL
-        final dataParalegal = await WebSupabaseService.client
+        // 4. NARIK DATA PARALEGAL
+        final dataParalegal = await supabase
             .from('paralegal_members')
             .select('nama_paralegal, nomor_telepon, is_primary')
             .eq('id_posbankum', idPosbankumAsli)
             .order('is_primary', ascending: false);
 
-        // 🟢 4. MASUKKAN KE UI
-        namaPosbankum.value = dataPosbankum['nama'] ?? '';
-        email.value = dataPosbankum['email_akun'] ?? '';
-        kelurahan.value = dataPosbankum['kelurahan'] ?? '';
-        alamat.value = dataPosbankum['alamat'] ?? '';
-        kodePos.value = dataPosbankum['kode_pos'] ?? '';
+        // 5. MASUKKAN KE UI
+        namaPosbankum.value = dataPosbankum['nama'] ?? '-';
+        email.value = dataPosbankum['email_akun'] ?? '-';
+        alamat.value = dataPosbankum['alamat'] ?? '-';
+        kodePos.value = dataPosbankum['kode_pos'] ?? '-';
 
-        // ✅ CARA MENGAMBIL DATA DARI HASIL JOIN
-        // Karena datanya bersarang (nested JSON), kita panggil nama tabelnya dulu, baru nama kolomnya
-        kabupaten.value = dataPosbankum['kabupaten']?['nama'] ?? '';
-        kecamatan.value = dataPosbankum['kecamatan']?['nama'] ?? '';
+        // EKSTRAK DATA JOIN BERSARANG (NESTED JSON)
+        kabupaten.value = dataPosbankum['kabupaten']?['nama'] ?? '-';
+        kecamatan.value = dataPosbankum['kecamatan']?['nama'] ?? '-';
+        kelurahan.value = dataPosbankum['kelurahan']?['nama'] ?? '-';
 
-        jmlParalegal.value = dataPosbankum['jml_paralegal'] != null
-            ? int.tryParse(dataPosbankum['jml_paralegal'].toString()) ?? 0
-            : 0;
-
-        if (dataParalegal != null) {
-          paralegalList.value = dataParalegal;
+        if (dataParalegal.isNotEmpty) {
+          paralegalList.assignAll(dataParalegal.map((e) => e as Map<String, dynamic>).toList());
+          jmlParalegal.value = paralegalList.length; // Hitung riil dari jumlah data paralegal
+        } else {
+          jmlParalegal.value = 0;
         }
-
-      } else {
-        print("⚠ Peringatan: Data Posbankum tidak ditemukan untuk Email: $userEmail");
       }
 
     } catch (e) {
-      Get.snackbar('Error Koneksi Web', 'Gagal menarik data: $e');
-      print('Error detail: $e');
+      debugPrint('❌ Error fetchProfilDariWeb: $e');
+      Get.snackbar('Error Sistem', 'Gagal menarik data profil Posbankum');
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // --- FUNGSI LOGOUT AMAN ---
+  void logout() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Keluar Akun'),
+        content: const Text('Yakin ingin keluar dari akun Posbankum ini?'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Get.back();
+              Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
+              try {
+                await supabase.auth.signOut();
+                Get.offAllNamed(AppRoutes.LOGIN_FORM);
+              } catch (e) {
+                Get.back();
+                Get.snackbar('Error', 'Gagal logout: $e');
+              }
+            },
+            child: const Text('Ya, Keluar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 }

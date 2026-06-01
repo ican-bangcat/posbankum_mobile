@@ -16,7 +16,7 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _captchaController = TextEditingController(); // 🚀 Controller baru untuk captcha
+  final _captchaController = TextEditingController();
 
   bool _obscurePassword = true;
 
@@ -36,7 +36,6 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Mengamankan jarak bawah dari tombol navbar fisik/swipe smartphone
     final double bottomNavBarPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
@@ -142,7 +141,6 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
 
                                 const SizedBox(height: 12),
 
-                                // 🚀 INTERFASI MATH CAPTCHA BARU
                                 const Text('Otentikasi (Captcha)', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
                                 const SizedBox(height: 8),
                                 _buildCaptchaField(),
@@ -160,7 +158,7 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                                         authC.login(
                                           _emailController.text,
                                           _passwordController.text,
-                                          _captchaController.text, // 🚀 Kirim jawaban captcha
+                                          _captchaController.text,
                                         );
                                       }
                                     },
@@ -209,7 +207,6 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                                   ),
                                 ),
 
-                                // Jarak dinamis pengaman navbar bawah smartphone
                                 SizedBox(height: 24 + bottomNavBarPadding),
                               ],
                             ),
