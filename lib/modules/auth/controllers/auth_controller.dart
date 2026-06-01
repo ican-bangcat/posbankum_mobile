@@ -205,6 +205,7 @@ class AuthController extends GetxController {
           'full_name': cleanName,
           'role': 'pelapor',
         },
+        emailRedirectTo: 'io.posbankum.app://login-callback',
       );
 
       if (res.user != null) {
