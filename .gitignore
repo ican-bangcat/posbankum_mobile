@@ -11,6 +11,16 @@
 .svn/
 .swiftpm/
 
+# 🚀 ENVIRONMENT VARIABLES & SECRETS (SUPER PENTING!)
+.env
+.env.*
+*.env
+
+# 🚀 ANDROID KEYSTORE & SIGNING (JANGAN SAMPAI BOCOR)
+*.jks
+*.keystore
+android/key.properties
+
 # IntelliJ / Android Studio related (Punya Kamu)
 *.iml
 *.ipr
@@ -24,11 +34,13 @@
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
 /build/
 /coverage/
+lib/generated_plugin_registrant.dart
 
 # Android specific (Biar cache Android Studio gak bentrok)
 android/local.properties
@@ -40,6 +52,11 @@ android/.gradle
 # iOS specific
 ios/.symlinks
 ios/Pods/
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/Generated.xcconfig
+ios/Flutter/app.flx
+ios/Flutter/flutter_assets/
+ios/Flutter/App.framework
 
 # Symbolication related
 app.*.symbols

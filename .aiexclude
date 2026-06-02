@@ -1,0 +1,17 @@
+# Ignore Flutter build and auto-generated folders
+build/
+.dart_tool/
+.pub-cache/
+
+# Ignore iOS and Android specific builds/caches
+android/.gradle/
+android/app/build/
+ios/Pods/
+
+# Ignore IDE configuration files
+.idea/
+.vscode/
+
+# Ignore files with sensitive keys or passwords (update this to match your actual files)
+lib/config/secrets.dart
+.env
