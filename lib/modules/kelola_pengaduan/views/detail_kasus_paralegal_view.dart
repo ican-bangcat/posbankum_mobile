@@ -76,7 +76,6 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                           _buildTitleCard(kasus, statusText, statusColor, statusBg),
                           const SizedBox(height: 16),
 
-                          // Kalau kasus ditolak, tampilkan alert alasan tolak
                           if (kasus.status == 'dibatalkan' && kasus.catatanAdmin != null) ...[
                             _buildPenolakanAlert(kasus.catatanAdmin!),
                             const SizedBox(height: 16),
@@ -88,7 +87,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                           const SizedBox(height: 16),
                           _buildKronologiCard(kasus),
                           const SizedBox(height: 16),
-                          _buildLampiranSection(kasus),
+                          _buildLampiranSection(kasus), // ✅ UI Lampiran
                           const SizedBox(height: 16),
                           _buildRiwayatUpdateCard(),
                         ],
@@ -557,39 +556,41 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
     });
   }
 
+  // ✅ UI LIST LAMPIRAN
   Widget _buildLampiranSection(dynamic kasus) {
-    List<String> lampiranUrls = kasus.lampiranUrls;
-    if (lampiranUrls.isEmpty) return const SizedBox.shrink();
+    List<LampiranItem> lampiranList = kasus.lampiranList;
+    if (lampiranList.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            const Icon(Icons.insert_drive_file_outlined, color: Color(0xFF1E2452), size: 20),
+            const Icon(Icons.attach_file, color: Color(0xFF1E2452), size: 20),
             const SizedBox(width: 8),
             const Expanded(child: Text('Lampiran Dikirim', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF1E2452)))),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(12)),
-              child: Text('${lampiranUrls.length} File', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF1E2452))),
+              child: Text('${lampiranList.length} File', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF1E2452))),
             ),
           ],
         ),
         const SizedBox(height: 16),
-        ...lampiranUrls.map((url) {
-          String fileName = url.split('/').last;
-          if (fileName.contains('?')) fileName = fileName.split('?').first;
+        ...lampiranList.map((file) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: _buildLampiranCard(fileName, 'Dokumen Terlampir'),
+            child: _buildLampiranCard(file),
           );
         }).toList(),
       ],
     );
   }
 
-  Widget _buildLampiranCard(String title, String subtitle) {
+  // ✅ KARTU LAMPIRAN & FUNGSI KLIK
+  Widget _buildLampiranCard(LampiranItem file) {
+    bool isImage = file.mimeType?.toLowerCase().contains('image') ?? false;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -606,11 +607,11 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: const Color(0xFF1E2452), borderRadius: BorderRadius.circular(12)),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.description, color: Colors.white, size: 10),
-                    SizedBox(width: 4),
-                    Text('FILE', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
+                    Icon(isImage ? Icons.image : Icons.description, color: Colors.white, size: 10),
+                    const SizedBox(width: 4),
+                    Text(isImage ? 'GAMBAR' : 'DOKUMEN', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
                   ],
                 ),
               ),
@@ -624,22 +625,29 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
             child: Center(
               child: Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: const Color(0xFFEF4444), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.description, color: Colors.white, size: 32),
+                decoration: BoxDecoration(color: isImage ? const Color(0xFF3B82F6) : const Color(0xFFEF4444), borderRadius: BorderRadius.circular(12)),
+                child: Icon(isImage ? Icons.image_outlined : Icons.picture_as_pdf_outlined, color: Colors.white, size: 32),
               ),
             ),
           ),
           const SizedBox(height: 16),
-          Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF1E2452))),
-          const SizedBox(height: 4),
-          Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+          Text(file.namaFile, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF1E2452)), maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 12),
-          const Row(
-            children: [
-              Icon(Icons.remove_red_eye_outlined, color: Color(0xFF3B82F6), size: 14),
-              SizedBox(width: 4),
-              Text('Lihat', style: TextStyle(color: Color(0xFF3B82F6), fontSize: 12, fontWeight: FontWeight.w800)),
-            ],
+
+          // ✅ TOMBOL KLIK BUKA LAMPIRAN
+          InkWell(
+            onTap: () => controller.bukaLampiran(file.pathFile, file.mimeType),
+            borderRadius: BorderRadius.circular(8),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.remove_red_eye_outlined, color: Color(0xFF3B82F6), size: 16),
+                  SizedBox(width: 6),
+                  Text('Lihat Lampiran', style: TextStyle(color: Color(0xFF3B82F6), fontSize: 13, fontWeight: FontWeight.w800)),
+                ],
+              ),
+            ),
           ),
         ],
       ),
