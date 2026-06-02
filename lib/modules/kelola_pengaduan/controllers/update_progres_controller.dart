@@ -1,10 +1,9 @@
-// update_progres_controller.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'kelola_pengaduan_controller.dart';
 import 'detail_kasus_paralegal_controller.dart';
-import '../../auth/controllers/home_paralegal_controller.dart'; // ✅ TAMBAH IMPORT INI
+import '../../auth/controllers/home_paralegal_controller.dart';
 
 class UpdateProgresController extends GetxController {
   final supabase = Supabase.instance.client;
@@ -13,6 +12,7 @@ class UpdateProgresController extends GetxController {
   String kasusId = '';
   String namaKasus = '';
 
+  final judulController = TextEditingController(); // ✅ Tambahan Controller Judul
   final catatanController = TextEditingController();
   var selectedDate = DateTime.now().obs;
 
@@ -38,30 +38,45 @@ class UpdateProgresController extends GetxController {
   }
 
   Future<void> simpanProgres({required bool isSelesai}) async {
-    if (isLoading.value) return; // ✅ Anti-spam sudah ada di sini
+    if (isLoading.value) return;
 
-    if (catatanController.text.trim().isEmpty) {
-      Get.snackbar('Peringatan', 'Catatan progres tidak boleh kosong!',
+    if (judulController.text.trim().isEmpty || catatanController.text.trim().isEmpty) {
+      Get.snackbar('Peringatan', 'Judul dan Catatan progres tidak boleh kosong!',
           backgroundColor: Colors.orange, colorText: Colors.white);
       return;
     }
 
     try {
       isLoading.value = true;
+      final userId = supabase.auth.currentUser?.id;
 
-      await supabase.from('progres_kasus').insert({
-        'pengaduan_id': kasusId,
-        'deskripsi_progres': catatanController.text.trim(),
-        'tanggal_progres': selectedDate.value.toIso8601String(),
+      await supabase.from('pengaduan_timeline').insert({
+        'id_pengaduan': kasusId,
+        'title': judulController.text.trim(),
+        'deskripsi': catatanController.text.trim(),
+        'tanggal': selectedDate.value.toIso8601String(),
+        'created_by': userId
       });
 
       if (isSelesai) {
         await supabase
             .from('pengaduan')
-            .update({'status': 'selesai', 'tgl_selesai': DateTime.now().toIso8601String()})
-            .eq('id', kasusId);
+            .update({
+          'status': 'selesai',
+          'tgl_selesai': DateTime.now().toIso8601String()
+        })
+            .eq('id_pengaduan', kasusId);
       }
 
+      // 1. Kosongkan form biar bersih
+      judulController.clear();
+      catatanController.clear();
+      selectedDate.value = DateTime.now();
+
+      // 2. 🚀 TENDANG BALIK DULUAN (Biar nutup halaman form)
+      Get.back();
+
+      // 3. Munculkan Notif (Akan muncul di atas layar Detail Kasus)
       Get.snackbar(
         'Berhasil',
         isSelesai ? 'Kasus telah diselesaikan!' : 'Laporan progres berhasil disimpan!',
@@ -71,21 +86,16 @@ class UpdateProgresController extends GetxController {
         duration: const Duration(seconds: 2),
       );
 
-      // ✅ Refresh semua controller yang terdaftar
+      // 4. Refresh data tanpa 'await' agar berjalan di background & tidak bikin UI nge-lag
       if (Get.isRegistered<DetailKasusParalegalController>()) {
-        await Get.find<DetailKasusParalegalController>().fetchDetailKasus(kasusId);
+        Get.find<DetailKasusParalegalController>().fetchDetailKasus(kasusId);
       }
       if (Get.isRegistered<KelolaPengaduanController>()) {
         Get.find<KelolaPengaduanController>().fetchPengaduan();
       }
-      // ✅ FIX PROBLEM 3: Trigger refresh Dashboard Home
       if (Get.isRegistered<HomeParalegalController>()) {
         Get.find<HomeParalegalController>().fetchDashboardData();
       }
-
-      Future.delayed(const Duration(milliseconds: 500), () {
-        Get.back();
-      });
 
     } catch (e) {
       print('❌ Error simpan progres: $e');

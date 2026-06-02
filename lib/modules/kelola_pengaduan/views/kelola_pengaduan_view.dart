@@ -51,13 +51,16 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
                         padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
                         child: Row(
                           children: [
-                            Container(
-                              width: 40, height: 40,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.white.withOpacity(0.3)),
-                                borderRadius: BorderRadius.circular(12),
+                            GestureDetector(
+                              onTap: () => Get.back(),
+                              child: Container(
+                                width: 40, height: 40,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
                               ),
-                              child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
                             ),
                             const SizedBox(width: 16),
                             const Text(
@@ -148,12 +151,15 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
                             bool showButton = false;
                             String buttonText = '';
 
-                            if (kasus.status == 'pending') {
+                            // 🚀 FIX: Baca status 'menunggu' sesuai aturan database baru
+                            if (kasus.status == 'menunggu') {
                               showButton = true;
                               buttonText = 'Ambil Kasus ->';
-                              int prioritas = controller.getPriorityValue(kasus.kategori);
 
-                              if (prioritas == 1) {
+                              // 🚀 FIX: Langsung pakai controller.getPriorityValue(kasus.prioritas)
+                              int levelPrioritas = controller.getPriorityValue(kasus.prioritas);
+
+                              if (levelPrioritas == 1) {
                                 badgeText = 'MENUNGGU (URGENT)';
                                 badgeColor = const Color(0xFFEF4444);
                                 badgeBg = const Color(0xFFFEE2E2);
@@ -186,9 +192,9 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
                               date: tanggalStr,
                               title: kasus.judul,
                               kategori: kasus.kategori,
-                              deskripsi: kasus.status == 'pending' ? kasus.deskripsi : null,
-                              lokasi: (kasus.status == 'pending' || kasus.status == 'selesai') ? kasus.lokasi : null,
-                              namaKlien: kasus.status != 'pending' ? kasus.namaKlien : null,
+                              deskripsi: kasus.status == 'menunggu' ? kasus.deskripsi : null,
+                              lokasi: (kasus.status == 'menunggu' || kasus.status == 'selesai') ? kasus.lokasi : null,
+                              namaKlien: kasus.status != 'menunggu' ? kasus.namaKlien : null,
                               showButton: showButton, buttonText: buttonText,
                               onTapButton: () {
                                 Get.toNamed(AppRoutes.DETAIL_KASUS_PARALEGAL, arguments: {'id': kasus.id});

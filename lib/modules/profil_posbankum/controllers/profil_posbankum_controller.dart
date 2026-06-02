@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/routes/app_routes.dart';
 
 class ProfilPosbankumController extends GetxController {
-  // Gunakan instance Supabase Flutter yang resmi, jangan pakai WebService
   final supabase = Supabase.instance.client;
 
   var isLoading = true.obs;
@@ -30,15 +29,14 @@ class ProfilPosbankumController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 1. Ambil User yang sedang login
+      // 1. Cek Sesi User
       final user = supabase.auth.currentUser;
-
       if (user == null) {
         Get.snackbar('Sesi Berakhir', 'Silakan login kembali');
         return;
       }
 
-      // 2. Ambil id_posbankum dari tabel profiles
+      // 2. Ambil id_posbankum
       final profileData = await supabase
           .from('profiles')
           .select('id_posbankum')
@@ -46,13 +44,12 @@ class ProfilPosbankumController extends GetxController {
           .maybeSingle();
 
       final idPosbankumAsli = profileData?['id_posbankum'];
-
       if (idPosbankumAsli == null) {
         Get.snackbar('Akses Ditolak', 'Akun Anda belum ditautkan ke Posbankum manapun.');
         return;
       }
 
-      // 3. NARIK DATA POSBANKUM + SIHIR JOIN 3 WILAYAH SEKALIGUS
+      // 3. Tarik Data Utama Posbankum + Wilayah (Sihir JOIN)
       final dataPosbankum = await supabase
           .from('posbankum')
           .select('''
@@ -60,35 +57,35 @@ class ProfilPosbankumController extends GetxController {
             email_akun, 
             alamat, 
             kode_pos, 
-            kabupaten (nama),
-            kecamatan (nama),
-            kelurahan (nama)
+            kabupaten:id_kabupaten (nama), 
+            kecamatan:id_kecamatan (nama), 
+            kelurahan:id_kelurahan (nama)
           ''')
           .eq('id_posbankum', idPosbankumAsli)
           .maybeSingle();
 
       if (dataPosbankum != null) {
-        // 4. NARIK DATA PARALEGAL
+        // 4. Tarik Data Paralegal
         final dataParalegal = await supabase
             .from('paralegal_members')
             .select('nama_paralegal, nomor_telepon, is_primary')
             .eq('id_posbankum', idPosbankumAsli)
             .order('is_primary', ascending: false);
 
-        // 5. MASUKKAN KE UI
+        // 5. Masukkan Data ke UI
         namaPosbankum.value = dataPosbankum['nama'] ?? '-';
         email.value = dataPosbankum['email_akun'] ?? '-';
         alamat.value = dataPosbankum['alamat'] ?? '-';
         kodePos.value = dataPosbankum['kode_pos'] ?? '-';
 
-        // EKSTRAK DATA JOIN BERSARANG (NESTED JSON)
+        // Ekstrak data Join wilayah
         kabupaten.value = dataPosbankum['kabupaten']?['nama'] ?? '-';
         kecamatan.value = dataPosbankum['kecamatan']?['nama'] ?? '-';
         kelurahan.value = dataPosbankum['kelurahan']?['nama'] ?? '-';
 
         if (dataParalegal.isNotEmpty) {
-          paralegalList.assignAll(dataParalegal.map((e) => e as Map<String, dynamic>).toList());
-          jmlParalegal.value = paralegalList.length; // Hitung riil dari jumlah data paralegal
+          paralegalList.assignAll(List<Map<String, dynamic>>.from(dataParalegal));
+          jmlParalegal.value = paralegalList.length;
         } else {
           jmlParalegal.value = 0;
         }

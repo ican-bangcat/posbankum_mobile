@@ -5,8 +5,7 @@ import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:open_filex/open_filex.dart';
-import '../views/pengaduan_success_screen.dart';
-import '../../../app/routes/app_routes.dart';
+
 class PengaduanController extends GetxController {
   final supabase = Supabase.instance.client;
   var isLoading = false.obs;
@@ -127,6 +126,20 @@ class PengaduanController extends GetxController {
   }
 
   Future<void> submitPengaduan() async {
+    // 🚀 VALIDASI 1: Bersihkan spasi gaib dan pastikan tepat 16 digit!
+    String nikBersih = nikC.text.trim();
+    if (nikBersih.length != 16) {
+      Get.snackbar(
+        "Validasi NIK Gagal",
+        "NIK wajib 16 digit angka! Saat ini ketikan terbaca: ${nikBersih.length} karakter.",
+        backgroundColor: Colors.orange.shade700,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+
+    // 🚀 VALIDASI 2: Cek progress wajib 9/9
     if (progressCount.value < 9) {
       Get.snackbar("Error", "Mohon lengkapi semua data wajib (${progressCount.value}/9 Lengkap)", backgroundColor: Colors.red, colorText: Colors.white);
       return;
@@ -140,48 +153,62 @@ class PengaduanController extends GetxController {
         return;
       }
 
-      // Ambil nama dari tabel profil (atau masyarakat)
+      // Ambil nama dari tabel profil
       final dataPelapor = await supabase
           .from('profiles')
           .select('full_name')
           .eq('id', user.id)
           .maybeSingle();
-
       String namaOtomatis = dataPelapor?['full_name'] ?? 'Tanpa Nama';
 
-      List<String> listUrlLampiran = [];
-      if (selectedFiles.isNotEmpty) {
-        listUrlLampiran = await _uploadMultipleFiles(user.id);
+      // 🚀 LOGIKA POSBANKUM: Cari id_kelurahan milik pelapor
+      final dataMasyarakat = await supabase.from('masyarakat').select('id_kelurahan').eq('id', user.id).maybeSingle();
+      if (dataMasyarakat == null || dataMasyarakat['id_kelurahan'] == null) {
+        Get.snackbar("Profil Belum Lengkap", "Data kelurahan Anda tidak ditemukan. Silakan lengkapi profil terlebih dahulu.", backgroundColor: Colors.orange.shade700, colorText: Colors.white);
+        return;
       }
+      String idKelurahanUser = dataMasyarakat['id_kelurahan'];
+
+      // 🚀 LOGIKA POSBANKUM: Cari id_posbankum yang melayani kelurahan pelapor
+      final posbankumTujuan = await supabase.from('posbankum').select('id_posbankum').eq('id_kelurahan', idKelurahanUser).maybeSingle();
+      if (posbankumTujuan == null) {
+        Get.snackbar("Peringatan", "Tidak ada Posbankum yang melayani kelurahan Anda saat ini.", backgroundColor: Colors.red, colorText: Colors.white);
+        return;
+      }
+      String idPosbankum = posbankumTujuan['id_posbankum'];
 
       String prioritasOtomatis = _determinePriority(selectedKategori!);
       String customId = _generatePengaduanId();
+      String gabunganKronologi = 'Lurah/Kelurahan: ${namaLurahC.text.trim()}\n\nKronologi:\n${kronologiC.text.trim()}';
 
-      // 🚀 FIX: Sesuaikan Key/Kolom Insert dengan Skema Database Web
-      // 🚀 FIX: Pakai .select('id_pengaduan') untuk menangkap kembalian UUID-nya
+      // 🔵 TAHAP 1: SIMPAN DATA UTAMA KE TABEL `pengaduan`
       final insertedData = await supabase.from('pengaduan').insert({
+        'id_posbankum': idPosbankum, // 🚀 WAJIB DIISI!
         'nomor_pengaduan': customId,
         'masyarakat_id': user.id,
+        'created_by': user.id,
         'nama_pelapor': namaOtomatis,
-        'nik_pelapor': nikC.text,
-        'no_hp_pelapor': noHpC.text,
-        'judul_pengaduan': judulLaporanC.text,
-        'nama_lurah': namaLurahC.text,
+        'nik': nikBersih,
+        'nomor_telepon': noHpC.text.trim(),
+        'judul_pengaduan': judulLaporanC.text.trim(),
         'jenis_masalah': selectedKategori,
-        'kronologi': kronologiC.text,
-        'lokasi_kejadian': lokasiC.text,
+        'kronologi': gabunganKronologi,
+        'lokasi_kejadian': lokasiC.text.trim(),
+        'tanggal_kejadian': tglKejadianC.text,
         'waktu_kejadian': waktuKejadianC.text,
         'prioritas': prioritasOtomatis,
-        'lampiran_urls': listUrlLampiran.isNotEmpty ? listUrlLampiran : null,
-        'tgl_kejadian': tglKejadianC.text,
-        'status': 'diproses', // Standar enum DB biasanya pakai huruf kecil
-        // 'created_at' otomatis diisi oleh default NOW() di database
+        'status': 'menunggu', // 🚀 SESUAI ATURAN BARU
       }).select('id_pengaduan').single();
 
-      // Tangkap UUID-nya yang berharga
+      // Tangkap UUID pengaduan yang baru dibuat
       String generatedUuid = insertedData['id_pengaduan'];
 
-      // Lempar ke halaman Sukses
+      // 🔵 TAHAP 2: JIKA ADA FILE, UPLOAD & SIMPAN KE TABEL `pengaduan_lampiran`
+      if (selectedFiles.isNotEmpty) {
+        await _uploadAndInsertLampiran(user.id, generatedUuid);
+      }
+
+      // 🔵 TAHAP 3: LEMPAR KE HALAMAN SUKSES
       Get.offNamed(
         '/pengaduan-success',
         arguments: {
@@ -204,22 +231,51 @@ class PengaduanController extends GetxController {
     }
   }
 
-  Future<List<String>> _uploadMultipleFiles(String userId) async {
-    List<String> uploadedUrls = [];
+  // 🚀 FUNGSI UPLOAD & INSERT KE TABEL LAMPIRAN
+  Future<void> _uploadAndInsertLampiran(String userId, String idPengaduan) async {
+    List<Map<String, dynamic>> lampiranDataToInsert = [];
+
     for (var file in selectedFiles) {
       try {
         final fileExt = file.path.split('.').last;
+        final fileSize = file.lengthSync();
         final fileName = 'bukti_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}.$fileExt';
+
+        // Format Path: UUID-User/nama-file.jpg
         final filePath = '$userId/$fileName';
-        await supabase.storage.from('pengaduan-files').upload(filePath, file, fileOptions: const FileOptions(cacheControl: '3600', upsert: false));
-        uploadedUrls.add(supabase.storage.from('pengaduan-files').getPublicUrl(filePath));
-      } catch (e) { print("Gagal upload file: $e"); }
+
+        // 1. Upload ke Storage Bucket "pengaduan-lampiran"
+        await supabase.storage.from('pengaduan-lampiran').upload(
+            filePath,
+            file,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: false)
+        );
+
+        // 2. Dapatkan URL Publik
+        final publicUrl = supabase.storage.from('pengaduan-lampiran').getPublicUrl(filePath);
+
+        // 3. Siapkan data untuk dimasukkan ke tabel `pengaduan_lampiran`
+        lampiranDataToInsert.add({
+          'id_pengaduan': idPengaduan,
+          'nama_file': fileName,
+          'path_file': publicUrl,
+          'mime_type': fileExt,
+          'size_bytes': fileSize,
+        });
+      } catch (e) {
+        print("❌ Gagal upload file: $e");
+      }
     }
-    return uploadedUrls;
+
+    // 4. Lakukan Insert Massal (Batch Insert) ke Database
+    if (lampiranDataToInsert.isNotEmpty) {
+      await supabase.from('pengaduan_lampiran').insert(lampiranDataToInsert);
+    }
   }
 
   String _generatePengaduanId() { return 'PGN-${DateTime.now().year}-${Random().nextInt(90000) + 10000}'; }
 
+  // 🚀 PRIORITAS VERSI OWNER
   String _determinePriority(String kategori) {
     switch (kategori) {
       case 'Kekerasan & Pelanggaran Fisik': case 'Kejahatan Seksual': case 'Narkotika & Psikotropika': return 'Sangat Tinggi';

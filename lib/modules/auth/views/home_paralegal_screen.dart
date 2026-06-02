@@ -1,11 +1,10 @@
-// home_paralegal_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/routes/app_routes.dart';
 import 'login_screen.dart';
-import '../controllers/home_paralegal_controller.dart'; // ✅ Import controller baru
+import '../controllers/home_paralegal_controller.dart';
 import '../../main_dashboard_admin/controllers/main_dashboard_admin_controller.dart';
 
 class HomeParalegalScreen extends StatefulWidget {
@@ -20,60 +19,40 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
   final storage = GetStorage();
   final supabase = Supabase.instance.client;
 
-  // ✅ Gunakan controller GetX — bukan state lokal lagi
   late final HomeParalegalController _dashboardCtrl;
-
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-
-
-
   @override
   void initState() {
     super.initState();
-
-    // ✅ Daftarkan controller (jika belum ada, otomatis dibuat)
     _dashboardCtrl = Get.put(HomeParalegalController());
-
-
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-          parent: _animationController,
-          curve: const Interval(0.0, 0.6, curve: Curves.easeOut)),
+      CurvedAnimation(parent: _animationController, curve: const Interval(0.0, 0.6, curve: Curves.easeOut)),
     );
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-          CurvedAnimation(
-              parent: _animationController,
-              curve:
-              const Interval(0.2, 1.0, curve: Curves.easeOutCubic)),
-        );
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+      CurvedAnimation(parent: _animationController, curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic)),
+    );
     _animationController.forward();
   }
 
-
   Future<void> _handleLogout() async {
     try {
-      Get.dialog(
-          const Center(child: CircularProgressIndicator(color: Colors.white)),
-          barrierDismissible: false);
+      Get.dialog(const Center(child: CircularProgressIndicator(color: Colors.white)), barrierDismissible: false);
       await supabase.auth.signOut();
       await storage.erase();
       Get.back();
       Get.offAll(() => const LoginScreen());
-      Get.snackbar('Berhasil', 'Anda telah logout',
-          backgroundColor: Colors.green, colorText: Colors.white);
+      Get.snackbar('Berhasil', 'Anda telah logout', backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       Get.back();
-      Get.snackbar('Error', 'Gagal logout: $e',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Gagal logout: $e', backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
 
@@ -81,22 +60,13 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
     Get.bottomSheet(
       Container(
         padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2))),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 20),
-            const Text('Menu Profil',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Menu Profil', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             ListTile(
               leading: const Icon(Icons.person, color: Color(0xFF2A2E5E)),
@@ -109,8 +79,7 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title:
-              const Text('Logout', style: TextStyle(color: Colors.red)),
+              title: const Text('Logout', style: TextStyle(color: Colors.red)),
               onTap: () {
                 Get.back();
                 _confirmLogout();
@@ -160,13 +129,8 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
             child: Container(
               color: const Color(0xFF2A2E5E),
               child: Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF4F6F9),
-                  borderRadius:
-                  BorderRadius.only(topLeft: Radius.circular(20)),
-                ),
+                decoration: const BoxDecoration(color: Color(0xFFF4F6F9), borderRadius: BorderRadius.only(topLeft: Radius.circular(20))),
                 child: RefreshIndicator(
-                  // ✅ Memanggil method di controller, bukan fungsi lokal
                   onRefresh: _dashboardCtrl.fetchDashboardData,
                   child: FadeTransition(
                     opacity: _fadeAnimation,
@@ -179,9 +143,9 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
                           const SizedBox(height: 24),
                           _buildActionCard(),
                           const SizedBox(height: 24),
-                          _buildStatsSection(), // ✅ Dibungkus Obx di dalam
+                          _buildStatsSection(),
                           const SizedBox(height: 24),
-                          _buildRecentActivitySection(), // ✅ Dibungkus Obx di dalam
+                          _buildRecentActivitySection(),
                           const SizedBox(height: 40),
                         ],
                       ),
@@ -245,7 +209,6 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Halo,', style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 13)),
-                          // ✅ DIBUNGKUS OBX AGAR NAMA REAKTIF DARI DATABASE
                           Obx(() => Text(
                             _dashboardCtrl.userName.value,
                             style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
@@ -298,7 +261,11 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
               const SizedBox(height: 24),
               Center(
                 child: InkWell(
-                  onTap: () => Get.snackbar('Info', 'Form laporan akan segera tersedia'),
+                  onTap: () {
+                    if (Get.isRegistered<MainDashboardAdminController>()) {
+                      Get.find<MainDashboardAdminController>().changeTab(0);
+                    }
+                  },
                   borderRadius: BorderRadius.circular(50),
                   child: Container(
                     width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 14),
@@ -321,46 +288,30 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
     );
   }
 
-  // ✅ Dibungkus Obx — otomatis rebuild saat countPending/Proses/Selesai berubah
   Widget _buildStatsSection() {
     return Obx(() => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Ringkasan Kerja',
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1F36))),
+          const Text('Ringkasan Kerja', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1F36))),
           const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
                   child: _buildStatCard(
-                      iconEmoji: 'NEW',
-                      iconBg: const Color(0xFFEFF6FF),
-                      iconColor: const Color(0xFF3B82F6),
-                      // ✅ Ambil dari controller, bukan variabel lokal
-                      number: _dashboardCtrl.countPending.value.toString(),
-                      label: 'KASUS BARU',
-                      isTextIcon: true)),
+                      iconEmoji: 'NEW', iconBg: const Color(0xFFEFF6FF), iconColor: const Color(0xFF3B82F6),
+                      number: _dashboardCtrl.countPending.value.toString(), label: 'KASUS BARU', isTextIcon: true)),
               const SizedBox(width: 12),
               Expanded(
                   child: _buildStatCard(
-                      icon: Icons.sync_rounded,
-                      iconBg: const Color(0xFFFFF7ED),
-                      iconColor: const Color(0xFFF97316),
-                      number: _dashboardCtrl.countProses.value.toString(),
-                      label: 'DALAM\nPROSES')),
+                      icon: Icons.sync_rounded, iconBg: const Color(0xFFFFF7ED), iconColor: const Color(0xFFF97316),
+                      number: _dashboardCtrl.countProses.value.toString(), label: 'DALAM\nPROSES')),
               const SizedBox(width: 12),
               Expanded(
                   child: _buildStatCard(
-                      icon: Icons.check_circle_outline_rounded,
-                      iconBg: const Color(0xFFECFDF5),
-                      iconColor: const Color(0xFF10B981),
-                      number: _dashboardCtrl.countSelesai.value.toString(),
-                      label: 'SELESAI')),
+                      icon: Icons.check_circle_outline_rounded, iconBg: const Color(0xFFECFDF5), iconColor: const Color(0xFF10B981),
+                      number: _dashboardCtrl.countSelesai.value.toString(), label: 'SELESAI')),
             ],
           ),
         ],
@@ -397,8 +348,7 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
     );
   }
 
-  // ✅ Dibungkus Obx — otomatis rebuild saat recentActivities berubah
-// ✅ FUNGSI LENGKAP: UI AKTIVITAS TERBARU (FIX MAPPING DATA)
+  // 🚀 UPDATE BACA DATA DARI TIMELINE BARU
   Widget _buildRecentActivitySection() {
     return Obx(() => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -407,8 +357,7 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Aktivitas Terbaru',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1F36))),
+              const Text('Aktivitas Terbaru', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1F36))),
               TextButton(
                 onPressed: () {
                   if (Get.isRegistered<MainDashboardAdminController>())
@@ -426,28 +375,21 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
             const Center(child: Padding(padding: EdgeInsets.all(20), child: Text("Belum ada aktivitas terbaru", style: TextStyle(color: Colors.grey))))
           else
             ..._dashboardCtrl.recentActivities.map((act) {
-              // Parsing waktu
-              DateTime dt = DateTime.parse(act['created_at']).toLocal();
+              DateTime dt = DateTime.parse(act['tanggal']).toLocal();
               String timeStr = "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
 
-              // Ambil Judul (Kategori Masalah)
               String judulKasus = (act['pengaduan'] != null)
-                  ? act['pengaduan']['kategori_masalah']
-                  : 'Kasus Tanpa Judul';
+                  ? act['pengaduan']['judul_pengaduan'] ?? 'Kasus'
+                  : 'Update Kasus';
 
-              // Ambil Nama Paralegal (Uploader)
-              // Ambil Nama Paralegal lewat pengaduan
-              String namaParalegal = (act['pengaduan'] != null &&
-                  act['pengaduan']['paralegal'] != null)
-                  ? act['pengaduan']['paralegal']['nama_posbankum']
-                  : 'Paralegal';
+              String deskripsiSingkat = act['title'] ?? 'Terdapat progres baru';
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _buildHistoryCard(
                   icon: Icons.update_rounded,
-                  title: judulKasus, // ✅ Nama Kasusnya
-                  subtitle: namaParalegal, // ✅ Nama Paralegal yang update
+                  title: deskripsiSingkat,
+                  subtitle: judulKasus,
                   badgeText: 'UPDATE',
                   badgeColor: const Color(0xFF3B82F6),
                   badgeBg: const Color(0xFFEFF6FF),

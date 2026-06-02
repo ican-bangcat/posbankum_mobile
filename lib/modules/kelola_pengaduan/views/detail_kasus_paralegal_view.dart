@@ -47,11 +47,11 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                 Color statusColor = Colors.grey;
                 Color statusBg = Colors.grey.shade100;
 
-                if (kasus.status == 'pending') {
+                if (kasus.status == 'menunggu') {
                   statusText = 'BELUM DIPROSES';
                   statusColor = const Color(0xFFF59E0B);
                   statusBg = const Color(0xFFFEF3C7);
-                } else if (kasus.status == 'proses' || kasus.status == 'dalam proses' || kasus.status == 'diproses') {
+                } else if (kasus.status == 'diproses') {
                   statusText = 'SEDANG DIPROSES';
                   statusColor = const Color(0xFF3B82F6);
                   statusBg = const Color(0xFFEFF6FF);
@@ -59,6 +59,10 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                   statusText = 'KASUS SELESAI';
                   statusColor = const Color(0xFF10B981);
                   statusBg = const Color(0xFFECFDF5);
+                } else if (kasus.status == 'dibatalkan') {
+                  statusText = 'KASUS DITOLAK';
+                  statusColor = const Color(0xFFEF4444);
+                  statusBg = const Color(0xFFFEE2E2);
                 }
 
                 return Stack(
@@ -71,6 +75,13 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                         children: [
                           _buildTitleCard(kasus, statusText, statusColor, statusBg),
                           const SizedBox(height: 16),
+
+                          // Kalau kasus ditolak, tampilkan alert alasan tolak
+                          if (kasus.status == 'dibatalkan' && kasus.catatanAdmin != null) ...[
+                            _buildPenolakanAlert(kasus.catatanAdmin!),
+                            const SizedBox(height: 16),
+                          ],
+
                           _buildDataPelaporCard(kasus),
                           const SizedBox(height: 16),
                           _buildDetailKejadianCard(kasus, tglKejadian),
@@ -84,20 +95,39 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                       ),
                     ),
 
-                    // BUTTONS
-                    if (kasus.status == 'pending')
+                    // BUTTONS DI BAGIAN BAWAH
+                    if (kasus.status == 'menunggu')
                       Positioned(
                         bottom: 20, left: 20, right: 20,
-                        child: _buildButtonAction(
-                          text: 'Ambil Kasus',
-                          icon: Icons.assignment_turned_in,
-                          onPressed: () => controller.ambilKasus(kasus.id),
-                          color: const Color(0xFF3B4A8D),
-                          isLoading: controller.isUpdating.value,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: _buildButtonAction(
+                                text: 'Tolak',
+                                icon: Icons.cancel_outlined,
+                                onPressed: () => _showTolakDialog(context, kasus.id),
+                                color: Colors.white,
+                                textColor: const Color(0xFFEF4444),
+                                isOutline: true,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 2,
+                              child: _buildButtonAction(
+                                text: 'Ambil Kasus',
+                                icon: Icons.assignment_turned_in,
+                                onPressed: () => controller.ambilKasus(kasus.id),
+                                color: const Color(0xFF3B4A8D),
+                                isLoading: controller.isUpdating.value,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 
-                    if (kasus.status == 'proses' || kasus.status == 'dalam proses' || kasus.status == 'diproses')
+                    if (kasus.status == 'diproses')
                       Positioned(
                         bottom: 20, left: 20, right: 20,
                         child: _buildButtonAction(
@@ -108,7 +138,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                         ),
                       ),
 
-                    if (kasus.status == 'selesai')
+                    if (kasus.status == 'selesai' || kasus.status == 'dibatalkan')
                       Positioned(
                         bottom: 20, left: 20, right: 20,
                         child: _buildButtonAction(
@@ -129,6 +159,108 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
   }
 
   // ─── KOMPONEN UI ───
+
+  void _showTolakDialog(BuildContext context, String idPengaduan) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.warning_rounded, color: Color(0xFFEF4444)),
+                  SizedBox(width: 8),
+                  Text('Tolak Kasus', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E2452))),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                  'Berikan alasan mengapa kasus ini ditolak. Alasan ini akan dapat dilihat oleh pelapor.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF64748B), height: 1.5)
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller.alasanTolakC,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: 'Contoh: Kasus ini berada di luar wilayah yurisdiksi kami...',
+                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Batal', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Obx(() => ElevatedButton(
+                      onPressed: controller.isUpdating.value ? null : () => controller.tolakKasus(idPengaduan),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEF4444),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                      ),
+                      child: controller.isUpdating.value
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                          : const Text('Tolak Kasus', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    )),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  Widget _buildPenolakanAlert(String alasan) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFECACA)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, color: Color(0xFFEF4444), size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Alasan Penolakan:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF991B1B))),
+                const SizedBox(height: 4),
+                Text(alasan, style: const TextStyle(fontSize: 13, color: Color(0xFFB91C1C), height: 1.5)),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
 
   Widget _buildHeader() {
     return Stack(
@@ -196,14 +328,14 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(20)),
             child: Text(
-              'ID KASUS: #${kasus.id.toString().toUpperCase()}',
+              'ID KASUS: #${kasus.id.toString().substring(0, 8).toUpperCase()}',
               style: const TextStyle(color: Color(0xFF3B82F6), fontSize: 10, fontWeight: FontWeight.w800, fontFamily: 'Monospace'),
             ),
           ),
           const SizedBox(height: 12),
           Text(kasus.judul, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: textPrimary)),
           const SizedBox(height: 4),
-          Text(kasus.namaKlien ?? 'Bpk. Suryanto', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textSecondary)),
+          Text(kasus.namaKlien ?? '-', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textSecondary)),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -353,7 +485,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
               children: [
                 Icon(Icons.history, color: Color(0xFF1E2452)),
                 SizedBox(width: 8),
-                Text('Riwayat Update', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1E2452))),
+                Text('Riwayat Timeline', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1E2452))),
               ],
             ),
             const SizedBox(height: 24),
@@ -365,7 +497,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                     children: [
                       Icon(Icons.hourglass_empty_rounded, size: 40, color: Colors.grey.shade300),
                       const SizedBox(height: 12),
-                      const Text('Belum ada update progres\nuntuk kasus ini.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF94A3B8))),
+                      const Text('Belum ada timeline\nuntuk kasus ini.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF94A3B8))),
                     ],
                   ),
                 ),
@@ -383,11 +515,11 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                     Column(
                       children: [
                         Container(
-                          margin: const EdgeInsets.only(top: 4),
-                          width: 14, height: 14, 
-                          decoration: BoxDecoration(color: index == 0 ? const Color(0xFF1E2452) : const Color(0xFFCBD5E1), shape: BoxShape.circle)
+                            margin: const EdgeInsets.only(top: 4),
+                            width: 14, height: 14,
+                            decoration: BoxDecoration(color: index == 0 ? const Color(0xFF1E2452) : const Color(0xFFCBD5E1), shape: BoxShape.circle)
                         ),
-                        if (!isLast) Container(width: 2, height: 60, color: const Color(0xFFE2E8F0)),
+                        if (!isLast) Container(width: 2, height: 80, color: const Color(0xFFE2E8F0)),
                       ],
                     ),
                     const SizedBox(width: 16),
@@ -400,9 +532,17 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(tglStr, style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF1E2452))),
-                              const SizedBox(height: 8),
-                              Text(progres.deskripsi, style: TextStyle(color: textSecondary, height: 1.5)),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(child: Text(progres.title, style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF1E2452), fontSize: 14))),
+                                  Text(tglStr, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8))),
+                                ],
+                              ),
+                              if (progres.deskripsi.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Text(progres.deskripsi, style: TextStyle(color: textSecondary, height: 1.5, fontSize: 13)),
+                              ]
                             ],
                           ),
                         ),
@@ -428,7 +568,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
           children: [
             const Icon(Icons.insert_drive_file_outlined, color: Color(0xFF1E2452), size: 20),
             const SizedBox(width: 8),
-            const Expanded(child: Text('Lampiran Dikirim Masyarakat', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF1E2452)))),
+            const Expanded(child: Text('Lampiran Dikirim', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF1E2452)))),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(12)),
@@ -453,7 +593,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white, 
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
@@ -473,11 +613,6 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                     Text('FILE', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
                   ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(color: Color(0xFFEF4444), shape: BoxShape.circle),
-                child: const Icon(Icons.close, color: Colors.white, size: 12),
               ),
             ],
           ),
@@ -511,29 +646,33 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
     );
   }
 
-  Widget _buildButtonAction({required String text, required VoidCallback onPressed, required Color color, IconData? icon, bool isLoading = false}) {
+  Widget _buildButtonAction({required String text, required VoidCallback onPressed, required Color color, Color? textColor, IconData? icon, bool isLoading = false, bool isOutline = false}) {
     return Container(
       width: double.infinity,
       height: 50,
       decoration: BoxDecoration(
-        boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: isOutline ? null : [BoxShadow(color: color.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          foregroundColor: textColor ?? Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: isOutline ? BorderSide(color: textColor ?? Colors.black, width: 1.5) : BorderSide.none,
+          ),
           elevation: 0,
         ),
         child: isLoading
-            ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+            ? CircularProgressIndicator(color: textColor ?? Colors.white, strokeWidth: 2)
             : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (icon != null) ...[Icon(icon, color: Colors.white, size: 18), const SizedBox(width: 8)],
-                  Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-                ],
-              ),
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[Icon(icon, color: textColor ?? Colors.white, size: 18), const SizedBox(width: 8)],
+            Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: textColor ?? Colors.white)),
+          ],
+        ),
       ),
     );
   }

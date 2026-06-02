@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../app/themes/app_colors.dart';
-import '../controllers/FormPengaduanController.dart';
+import '../controllers/FormPengaduanController.dart'; // Sesuaikan jika nama file controller beda
 
 class FormPengaduanScreen extends GetView<PengaduanController> {
   const FormPengaduanScreen({super.key});
@@ -96,7 +96,10 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                             controller: controller.nikC,
                             keyboardType: TextInputType.number,
                             showDigitCount: true,
-                            inputFormatters: [LengthLimitingTextInputFormatter(16)],
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(16),
+                              FilteringTextInputFormatter.digitsOnly, // 🚀 ANTI SPASI & SIMBOL
+                            ],
                           ),
                           const SizedBox(height: 20),
 
@@ -114,7 +117,10 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                             hint: 'Contoh: 081234567890',
                             controller: controller.noHpC,
                             keyboardType: TextInputType.phone,
-                            inputFormatters: [LengthLimitingTextInputFormatter(13)],
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(13),
+                              FilteringTextInputFormatter.digitsOnly, // 🚀 ANTI SPASI & SIMBOL
+                            ],
                           ),
                           const SizedBox(height: 20),
 
@@ -524,7 +530,6 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                                   GestureDetector(
                                     behavior: HitTestBehavior.opaque,
                                     onTap: () {
-                                      // ✅ LOGIKA BARU: Image pakai Dialog, PDF pakai file launcher
                                       if (isImage) {
                                         Get.dialog(
                                           Dialog(
@@ -556,7 +561,6 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
                                           ),
                                         );
                                       } else {
-                                        // Lempar PDF ke open_filex di controller
                                         controller.bukaFileLokal(file.path);
                                       }
                                     },

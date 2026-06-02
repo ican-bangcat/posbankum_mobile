@@ -34,18 +34,8 @@ class ProfileController extends GetxController {
     try {
       final date = DateTime.parse(isoString).toLocal();
       const months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'Mei',
-        'Jun',
-        'Jul',
-        'Agt',
-        'Sep',
-        'Okt',
-        'Nov',
-        'Des'
+        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+        'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'
       ];
       return '${date.day} ${months[date.month - 1]} ${date.year}';
     } catch (e) {
@@ -78,8 +68,7 @@ class ProfileController extends GetxController {
         noHp.value = profileData['nomor_telepon'] ?? '-';
         avatarUrl.value = profileData['foto_profile'] ?? '';
 
-        String rawId =
-            profileData['id'].toString().substring(0, 8).toUpperCase();
+        String rawId = profileData['id'].toString().substring(0, 8).toUpperCase();
         displayId.value = 'ID: PB-$rawId';
       }
 
@@ -87,8 +76,7 @@ class ProfileController extends GetxController {
       debugPrint('🔵 [PROFIL] 3. Menarik data tabel masyarakat...');
       final masyarakatData = await supabase
           .from('masyarakat')
-          .select(
-              'nik, alamat, kelurahan(nama), kecamatan(nama), kabupaten(nama)')
+          .select('nik, alamat, kelurahan(nama), kecamatan(nama), kabupaten(nama)')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -114,8 +102,7 @@ class ProfileController extends GetxController {
       debugPrint('🔵 [PROFIL] 4. Menarik data tabel pengaduan...');
       final List<dynamic> pengaduanData = await supabase
           .from('pengaduan')
-          .select(
-              'id_pengaduan, judul_pengaduan, jenis_masalah, nomor_pengaduan, status, created_at')
+          .select('id_pengaduan, judul_pengaduan, jenis_masalah, nomor_pengaduan, status, created_at')
           .eq('masyarakat_id', user.id)
           .order('created_at', ascending: false);
 
@@ -126,16 +113,33 @@ class ProfileController extends GetxController {
       for (var p in pengaduanData) {
         String statusLaporan = (p['status'] ?? '').toString().toLowerCase();
 
-        if (statusLaporan == 'diproses')
+        // 1. Hitung Statistik
+        if (statusLaporan == 'diproses' || statusLaporan == 'menunggu') {
           countProses++;
-        else if (statusLaporan == 'selesai') countSelesai++;
+        } else if (statusLaporan == 'selesai') {
+          countSelesai++;
+        }
+
+        // 2. Format Teks Status untuk UI
+        String statusTampil = 'Menunggu';
+        Color warnaStatus = Colors.orange;
+
+        if (statusLaporan == 'diproses') {
+          statusTampil = 'Diproses';
+          warnaStatus = Colors.blue;
+        } else if (statusLaporan == 'selesai') {
+          statusTampil = 'Selesai';
+          warnaStatus = Colors.green;
+        } else if (statusLaporan == 'dibatalkan') {
+          statusTampil = 'Dibatalkan';
+          warnaStatus = Colors.red;
+        }
 
         riwayatTemp.add({
           'judul': p['judul_pengaduan'] ?? p['jenis_masalah'] ?? 'Pengaduan',
-          'sub':
-              '${p['nomor_pengaduan'] ?? '-'}  •  ${_formatDate(p['created_at'])}',
-          'status': statusLaporan == 'diproses' ? 'Diproses' : 'Selesai',
-          'color': statusLaporan == 'selesai' ? Colors.green : Colors.orange,
+          'sub': '${p['nomor_pengaduan'] ?? '-'}  •  ${_formatDate(p['created_at'])}',
+          'status': statusTampil,
+          'color': warnaStatus,
         });
       }
 
