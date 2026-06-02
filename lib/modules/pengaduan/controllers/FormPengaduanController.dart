@@ -231,15 +231,25 @@ class PengaduanController extends GetxController {
     }
   }
 
-  // 🚀 FUNGSI UPLOAD & INSERT KE TABEL LAMPIRAN
+  // 🚀 FUNGSI UPLOAD & INSERT KE TABEL LAMPIRAN (SUDAH DIPERBAIKI MIME TYPE-NYA)
   Future<void> _uploadAndInsertLampiran(String userId, String idPengaduan) async {
     List<Map<String, dynamic>> lampiranDataToInsert = [];
 
     for (var file in selectedFiles) {
       try {
-        final fileExt = file.path.split('.').last;
+        final fileExt = file.path.split('.').last.toLowerCase();
         final fileSize = file.lengthSync();
         final fileName = 'bukti_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}.$fileExt';
+
+        // 🚀 FIX: Konversi ekstensi ke MIME Type Standar Internasional
+        String realMimeType = 'application/octet-stream'; // Default unknown
+        if (fileExt == 'jpg' || fileExt == 'jpeg') {
+          realMimeType = 'image/jpeg';
+        } else if (fileExt == 'png') {
+          realMimeType = 'image/png';
+        } else if (fileExt == 'pdf') {
+          realMimeType = 'application/pdf';
+        }
 
         // Format Path: UUID-User/nama-file.jpg
         final filePath = '$userId/$fileName';
@@ -259,7 +269,7 @@ class PengaduanController extends GetxController {
           'id_pengaduan': idPengaduan,
           'nama_file': fileName,
           'path_file': publicUrl,
-          'mime_type': fileExt,
+          'mime_type': realMimeType, // 👈 SEKARANG YANG DISIMPAN ADALAH "image/jpeg", BUKAN LAGI "jpg"
           'size_bytes': fileSize,
         });
       } catch (e) {
