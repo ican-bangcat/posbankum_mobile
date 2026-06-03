@@ -7,9 +7,10 @@ import 'package:url_launcher/url_launcher.dart';
 class TimelineItem {
   final String title;
   final String? tanggal;
+  final String? description;
   final bool isActive;
 
-  TimelineItem({required this.title, this.tanggal, this.isActive = true});
+  TimelineItem({required this.title, this.tanggal, this.description, this.isActive = true});
 }
 
 class DetailKasus {
@@ -18,11 +19,15 @@ class DetailKasus {
   final String kategoriMasalah;
   final String idKasus;
   final String tanggalDibuat;
+  final String? tanggalSelesai;
   final String status;
   final String kronologi;
   final List<TimelineItem> timeline;
   final List<String> lampiranUrls;
   final String? catatanParalegal;
+  // ✅ Data tambahan ditarik untuk detail Selesai
+  final String lokasi;
+  final String namaPelapor;
 
   DetailKasus({
     required this.id,
@@ -30,11 +35,14 @@ class DetailKasus {
     required this.kategoriMasalah,
     required this.idKasus,
     required this.tanggalDibuat,
+    this.tanggalSelesai,
     required this.status,
     required this.kronologi,
     required this.timeline,
     required this.lampiranUrls,
     this.catatanParalegal,
+    required this.lokasi,
+    required this.namaPelapor,
   });
 
   factory DetailKasus.fromJson(Map<String, dynamic> json, List<String> lampiranUrlsDB, List<Map<String, dynamic>> timelineDB) {
@@ -44,12 +52,23 @@ class DetailKasus {
       formattedDate = DateFormat('dd MMM yyyy').format(dt);
     }
 
+    String? formattedSelesai;
+    if (json['tgl_selesai'] != null) {
+      final dtSelesai = DateTime.parse(json['tgl_selesai']).toLocal();
+      formattedSelesai = DateFormat('dd MMM yyyy').format(dtSelesai);
+    }
+
     String status = json['status']?.toString().toLowerCase() ?? 'menunggu';
 
     List<TimelineItem> generatedTimeline = [];
 
     // 1. Hardcode langkah pertama
-    generatedTimeline.add(TimelineItem(title: 'Pengaduan diajukan', tanggal: formattedDate, isActive: true));
+    generatedTimeline.add(TimelineItem(
+      title: 'Pengaduan diajukan',
+      tanggal: formattedDate,
+      description: 'Laporan Anda telah berhasil terkirim ke sistem.',
+      isActive: true,
+    ));
 
     // 2. Loop data dari tabel pengaduan_timeline
     for (var t in timelineDB) {
@@ -58,16 +77,35 @@ class DetailKasus {
         final dt = DateTime.parse(t['tanggal']).toLocal();
         tgl = DateFormat('dd MMM yyyy').format(dt);
       }
-      generatedTimeline.add(TimelineItem(title: t['title'] ?? 'Update Progres', tanggal: tgl, isActive: true));
+      generatedTimeline.add(TimelineItem(
+        title: t['title'] ?? 'Update Progres',
+        tanggal: tgl,
+        description: t['deskripsi'],
+        isActive: true,
+      ));
     }
 
     // 3. Status ujung/akhir
     if (status == 'menunggu' || status == 'pending') {
-      generatedTimeline.add(TimelineItem(title: 'Menunggu tindak lanjut', isActive: false));
+      generatedTimeline.add(TimelineItem(
+        title: 'Menunggu tindak lanjut',
+        description: 'Tim paralegal akan segera memeriksa laporan Anda.',
+        isActive: false,
+      ));
     } else if (status == 'selesai') {
-      generatedTimeline.add(TimelineItem(title: 'Kasus Selesai', isActive: true));
+      generatedTimeline.add(TimelineItem(
+        title: 'Kasus Selesai',
+        tanggal: formattedSelesai,
+        description: 'Seluruh rangkaian penanganan perkara telah selesai dilakukan.',
+        isActive: true,
+      ));
     } else if (status == 'dibatalkan') {
-      generatedTimeline.add(TimelineItem(title: 'Pengaduan Dibatalkan', isActive: true, tanggal: '-'));
+      generatedTimeline.add(TimelineItem(
+        title: 'Pengaduan Dibatalkan',
+        isActive: true,
+        tanggal: '-',
+        description: 'Pengaduan telah dibatalkan oleh pengguna.',
+      ));
     }
 
     return DetailKasus(
@@ -76,11 +114,15 @@ class DetailKasus {
       kategoriMasalah: json['jenis_masalah'] ?? 'Tanpa Kategori',
       idKasus: json['nomor_pengaduan']?.toString().toUpperCase() ?? 'TIDAK ADA TIKET',
       tanggalDibuat: formattedDate,
+      tanggalSelesai: formattedSelesai,
       status: status,
       kronologi: json['kronologi'] ?? 'Tidak ada kronologi',
       timeline: generatedTimeline,
       lampiranUrls: lampiranUrlsDB,
       catatanParalegal: json['catatan_admin'],
+      // ✅ AMBIL DATA LOKASI & NAMA DARI JSON
+      lokasi: json['lokasi_kejadian']?.toString() ?? 'Lokasi tidak diketahui',
+      namaPelapor: json['nama_pelapor']?.toString() ?? 'Nama Pelapor',
     );
   }
 }
@@ -123,33 +165,27 @@ class DetailKasusController extends GetxController {
   // 🚀 FUNGSI SAKTI BUKA LAMPIRAN (Nembus Private Bucket)
   Future<void> bukaLampiran(String urlFromDb) async {
     try {
-      // 1. Tampilkan loading agar UI tidak kaku saat nunggu balasan server
       Get.dialog(
         const Center(child: CircularProgressIndicator(color: Colors.white)),
         barrierDismissible: false,
       );
 
-      // 2. Ekstrak path asli file (Cari yang setelah nama bucket)
       String objectPath = urlFromDb;
       if (urlFromDb.contains('pengaduan-lampiran/')) {
         objectPath = urlFromDb.split('pengaduan-lampiran/').last;
         if (objectPath.contains('?')) objectPath = objectPath.split('?').first;
       }
 
-      // 3. Request Signed URL ke Supabase (Valid 1 jam / 3600 detik)
       final String signedUrl = await supabase.storage
           .from('pengaduan-lampiran')
           .createSignedUrl(objectPath, 3600);
 
-      // 4. Tutup Loading
       Get.back();
 
-      // 5. Cek tipe file berdasar path (bukan dari signedUrl karena ada token)
       final String lowerPath = objectPath.toLowerCase();
       bool isImage = lowerPath.endsWith('.jpg') || lowerPath.endsWith('.jpeg') || lowerPath.endsWith('.png');
 
       if (isImage) {
-        // --- LOGIKA GAMBAR: Pop-Up Dialog ---
         Get.dialog(
           Dialog(
             backgroundColor: Colors.transparent,
@@ -164,7 +200,7 @@ class DetailKasusController extends GetxController {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
-                      signedUrl, // 👈 Pake link yang udah ditempel tiket masuk
+                      signedUrl,
                       fit: BoxFit.contain,
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
@@ -190,7 +226,6 @@ class DetailKasusController extends GetxController {
           ),
         );
       } else {
-        // --- LOGIKA PDF: Buka via Browser Bawaan HP ---
         final Uri uri = Uri.parse(signedUrl);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -199,7 +234,7 @@ class DetailKasusController extends GetxController {
         }
       }
     } catch (e) {
-      if (Get.isDialogOpen ?? false) Get.back(); // Jaga-jaga tutup loading jika error
+      if (Get.isDialogOpen ?? false) Get.back();
       Get.snackbar("Akses Ditolak", "Gagal membuka lampiran: $e", backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
