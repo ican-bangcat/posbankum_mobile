@@ -15,6 +15,8 @@ class ProfileController extends GetxController {
   var noHp = ''.obs;
   var alamat = ''.obs;
   var kelurahanInfo = ''.obs;
+  var email = ''.obs;
+  var memberSince = ''.obs;
 
   // ── VARIABEL REAKTIF UNTUK STATS & RIWAYAT ──
   var totalPengaduan = '0'.obs;
@@ -55,11 +57,15 @@ class ProfileController extends GetxController {
         return;
       }
 
+      if (user != null) {
+        email.value = user.email ?? '-';
+      }
+
       // TAHAP 1: AMBIL DATA PROFIL UTAMA
       debugPrint('🔵 [PROFIL] 2. Menarik data tabel profiles...');
       final profileData = await supabase
           .from('profiles')
-          .select('id, full_name, nomor_telepon, foto_profile')
+          .select('id, full_name, nomor_telepon, foto_profile, created_at')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -70,6 +76,12 @@ class ProfileController extends GetxController {
 
         String rawId = profileData['id'].toString().substring(0, 8).toUpperCase();
         displayId.value = 'ID: PB-$rawId';
+
+        // Set Anggota Sejak
+        if (profileData['created_at'] != null) {
+          final dt = DateTime.parse(profileData['created_at']);
+          memberSince.value = dt.year.toString();
+        }
       }
 
       // TAHAP 2: AMBIL DATA MASYARAKAT & WILAYAH
@@ -86,15 +98,22 @@ class ProfileController extends GetxController {
 
         final kel = masyarakatData['kelurahan'];
         final kec = masyarakatData['kecamatan'];
+        final kab = masyarakatData['kabupaten'];
 
         // Parsing aman untuk mencegah error Type Cast (Map vs List)
         String namaKel = (kel != null && kel is Map) ? (kel['nama'] ?? '') : '';
         String namaKec = (kec != null && kec is Map) ? (kec['nama'] ?? '') : '';
+        String namaKab = (kab != null && kab is Map) ? (kab['nama'] ?? '') : '';
 
-        if (namaKel.isNotEmpty && namaKec.isNotEmpty) {
-          kelurahanInfo.value = '$namaKel, $namaKec';
+        List<String> regionParts = [];
+        if (namaKel.isNotEmpty) regionParts.add(namaKel);
+        if (namaKec.isNotEmpty) regionParts.add(namaKec);
+        if (namaKab.isNotEmpty) regionParts.add(namaKab);
+
+        if (regionParts.isNotEmpty) {
+          kelurahanInfo.value = regionParts.join(', ');
         } else {
-          kelurahanInfo.value = namaKel.isNotEmpty ? namaKel : '-';
+          kelurahanInfo.value = '-';
         }
       }
 

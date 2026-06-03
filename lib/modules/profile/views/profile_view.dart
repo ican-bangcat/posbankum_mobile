@@ -68,11 +68,14 @@ class ProfileView extends GetView<ProfileController> {
                   Expanded(
                     child: SingleChildScrollView(
                       padding: EdgeInsets.fromLTRB(16, 0, 16, 40 + bottomNavBarPadding),
+                      physics: const BouncingScrollPhysics(),
                       child: Column(
                         children: [
                           _buildDataDiriCard(),
                           const SizedBox(height: 20),
                           _buildRiwayatCard(),
+                          const SizedBox(height: 20),
+                          _buildSettingsAndHelpCard(),
                           const SizedBox(height: 30),
                           _buildLogoutButton(),
                         ],
@@ -133,7 +136,26 @@ class ProfileView extends GetView<ProfileController> {
                   children: [
                     Obx(() => Text(controller.namaLengkap.value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)))),
                     const SizedBox(height: 4),
-                    Obx(() => Text(controller.displayId.value, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w500))),
+                    const Text('Warga Terverifikasi', style: TextStyle(color: Color(0xFF4A61A8), fontSize: 12, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 6),
+                    Obx(() => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.workspace_premium_outlined, size: 12, color: Color(0xFF64748B)),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Anggota Sejak ${controller.memberSince.value}',
+                            style: const TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    )),
                   ],
                 ),
               ),
@@ -181,11 +203,11 @@ class ProfileView extends GetView<ProfileController> {
             children: [
               const Text('Data Diri', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
               InkWell(
-                onTap: () => Get.toNamed(AppRoutes.UPDATE_PASSWORD),
+                onTap: () => Get.toNamed(AppRoutes.EDIT_PROFILE),
                 child: const Row(
                   children: [
                     Icon(Icons.edit_document, size: 14, color: Color(0xFF2A2E5E)),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Text('Edit', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF2A2E5E))),
                   ],
                 ),
@@ -199,9 +221,11 @@ class ProfileView extends GetView<ProfileController> {
           const Divider(color: Color(0xFFF1F5F9)),
           Obx(() => _buildDataItem(Icons.phone_outlined, 'No. Telepon', controller.noHp.value)),
           const Divider(color: Color(0xFFF1F5F9)),
-          Obx(() => _buildDataItem(Icons.business_outlined, 'Kelurahan / Wilayah', controller.kelurahanInfo.value)),
+          Obx(() => _buildDataItem(Icons.business_outlined, 'Kelurahan / Kecamatan / Kabupaten', controller.kelurahanInfo.value)),
           const Divider(color: Color(0xFFF1F5F9)),
           Obx(() => _buildDataItem(Icons.location_on_outlined, 'Alamat Tinggal', controller.alamat.value)),
+          const Divider(color: Color(0xFFF1F5F9)),
+          Obx(() => _buildDataItem(Icons.email_outlined, 'Email', controller.email.value)),
         ],
       ),
     );
@@ -260,6 +284,7 @@ class ProfileView extends GetView<ProfileController> {
           )
               : ListView.separated(
             shrinkWrap: true,
+            padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: controller.riwayatPengaduan.length,
             separatorBuilder: (context, index) => const Divider(color: Color(0xFFF1F5F9)),
@@ -309,6 +334,58 @@ class ProfileView extends GetView<ProfileController> {
             ),
             child: Text(status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: statusColor)),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsAndHelpCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Pengaturan & Bantuan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+          const SizedBox(height: 20),
+          _buildSettingsItem(Icons.notifications_none_outlined, 'Notifikasi', 'Atur preferensi notifikasi', const Color(0xFFFFEDD5), const Color(0xFFF97316)),
+          const Divider(color: Color(0xFFF1F5F9)),
+          _buildSettingsItem(Icons.shield_outlined, 'Privasi & Keamanan', 'Kelola data dan keamanan', const Color(0xFFDBEAFE), const Color(0xFF3B82F6)),
+          const Divider(color: Color(0xFFF1F5F9)),
+          _buildSettingsItem(Icons.help_outline_rounded, 'Pusat Bantuan', 'FAQ dan panduan pengguna', const Color(0xFFD1FAE5), const Color(0xFF10B981)),
+          const Divider(color: Color(0xFFF1F5F9)),
+          _buildSettingsItem(Icons.description_outlined, 'Syarat & Ketentuan', 'Kebijakan layanan', const Color(0xFFF3E8FF), const Color(0xFFA855F7)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsItem(IconData icon, String title, String subtitle, Color iconBg, Color iconColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1E293B))),
+                const SizedBox(height: 4),
+                Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, color: Color(0xFFCBD5E1), size: 20),
         ],
       ),
     );
