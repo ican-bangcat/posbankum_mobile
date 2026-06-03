@@ -183,80 +183,134 @@ class ProfileController extends GetxController {
   void logout() {
     Get.dialog(
       Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-        backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 32.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/images/icons/icon_ask_logout.png',
-                width: Get.width * 0.35,
-                fit: BoxFit.contain,
-                errorBuilder: (c, e, s) => const Icon(Icons.help_outline,
-                    size: 80, color: Color(0xFF2A2E5E)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        clipBehavior: Clip.hardEdge,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header Merah
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                ),
               ),
-              const SizedBox(height: 24),
-              const Text('Apakah Anda ingin Keluar ?',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black)),
-              const SizedBox(height: 32),
-              Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Get.back(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2A2E5E),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                      ),
-                      child: const Text('Batal',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white)),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(Icons.logout_rounded, color: Colors.white, size: 32),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Keluar dari Akun?',
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Body Content
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: const TextStyle(color: Color(0xFF64748B), fontSize: 14, height: 1.5),
+                      children: [
+                        const TextSpan(text: 'Anda akan keluar dari akun '),
+                        TextSpan(
+                          text: namaLengkap.value,
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                        ),
+                        const TextSpan(text: '.\nSesi aktif dan data yang belum disimpan akan hilang.'),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        Get.back();
-                        try {
-                          await supabase.auth.signOut();
-                          Get.offAllNamed(AppRoutes.LOGIN_FORM);
-                        } catch (e) {
-                          Get.snackbar('Error', 'Gagal logout: $e');
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2A2E5E),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                      ),
-                      child: const Text('Keluar akun',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white)),
+                  const SizedBox(height: 24),
+                  
+                  // Warning Box
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFFEE2E2)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline_rounded, color: Color(0xFFEF4444), size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Pastikan semua pengaduan sudah tersimpan sebelum keluar.',
+                            style: TextStyle(color: const Color(0xFFB91C1C), fontSize: 12, fontWeight: FontWeight.w500, height: 1.4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  
+                  // Buttons
+                  ElevatedButton(
+                    onPressed: () => Get.back(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4A61A8),
+                      minimumSize: const Size(double.infinity, 56),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.chevron_left, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('Batal, Tetap di Aplikasi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: () async {
+                      Get.back();
+                      try {
+                        await supabase.auth.signOut();
+                        Get.offAllNamed(AppRoutes.LOGIN_FORM);
+                      } catch (e) {
+                        Get.snackbar('Error', 'Gagal logout: $e');
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFFEE2E2)),
+                      minimumSize: const Size(double.infinity, 56),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 20),
+                        SizedBox(width: 8),
+                        Text('Ya, Keluar Sekarang', style: TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.w700)),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-      barrierDismissible: false,
     );
   }
 }
