@@ -147,6 +147,13 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
                         physics: const AlwaysScrollableScrollPhysics(),
                         children: [
                           const SizedBox(height: 20),
+                          // ✅ Tampilkan Card Peringatan jika profil belum lengkap
+                          Obx(() => _dashboardCtrl.isProfileIncomplete.value
+                              ? _buildIncompleteProfileCard()
+                              : const SizedBox.shrink()),
+                          Obx(() => _dashboardCtrl.isProfileIncomplete.value
+                              ? const SizedBox(height: 20)
+                              : const SizedBox.shrink()),
                           _buildConsultationCard(),
                           const SizedBox(height: 24),
                           _buildCaseSummarySection(),
@@ -226,6 +233,107 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ✅ Widget Card Peringatan Profil Belum Lengkap
+  Widget _buildIncompleteProfileCard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: const Color(0xFF323669),
+          borderRadius: BorderRadius.circular(22),
+          gradient: const RadialGradient(
+            center: Alignment(0.8, 0.5),
+            radius: 1.2,
+            colors: [Color(0xFF4B53A6), Color(0xFF323669)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF323669).withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            )
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.18),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.account_circle_outlined, color: Colors.white, size: 28),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Profil Belum Lengkap',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Lengkapi data diri Anda agar pengaduan dapat diproses lebih cepat oleh paralegal.',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.85),
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 64),
+                child: InkWell(
+                  onTap: () => Get.toNamed(AppRoutes.EDIT_PROFILE),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.edit_note, color: Color(0xFF3B82F6), size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Lengkapi Sekarang',
+                          style: TextStyle(
+                            color: Color(0xFF3B82F6),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
