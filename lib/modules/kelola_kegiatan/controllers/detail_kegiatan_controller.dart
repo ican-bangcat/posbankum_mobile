@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart'; // ✅ Wajib ditambah buat manggil Colors
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-// ✅ Import WebSupabaseService
-import '../../../app/data/services/supabase_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DetailKegiatanController extends GetxController {
+  final supabase = Supabase.instance.client;
   var isLoading = true.obs;
   var kegiatanData = {}.obs;
 
@@ -24,7 +24,7 @@ class DetailKegiatanController extends GetxController {
         return;
       }
 
-      final response = await WebSupabaseService.client
+      final response = await supabase
           .from('kegiatan')
           .select()
           .eq('id_kegiatan', id)
@@ -32,7 +32,7 @@ class DetailKegiatanController extends GetxController {
 
       // ✅ Pastikan URL gambar jadi full HTTP sebelum masuk ke View
       if (response['thumbnail_path'] != null && !response['thumbnail_path'].toString().startsWith('http')) {
-        response['thumbnail_path'] = WebSupabaseService.client.storage
+        response['thumbnail_path'] = supabase.storage
             .from('kegiatan-thumbnails')
             .getPublicUrl(response['thumbnail_path']);
       }

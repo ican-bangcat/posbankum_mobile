@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import '../../../app/data/services/supabase_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class KegiatanItem {
   final String id;
@@ -32,7 +32,7 @@ class KegiatanItem {
 
     String? finalImageUrl = json['thumbnail_path'];
     if (finalImageUrl != null && finalImageUrl.isNotEmpty && !finalImageUrl.startsWith('http')) {
-      finalImageUrl = WebSupabaseService.client.storage
+      finalImageUrl = Supabase.instance.client.storage
           .from('kegiatan-thumbnails')
           .getPublicUrl(finalImageUrl);
     }
@@ -56,6 +56,7 @@ class KegiatanItem {
 }
 
 class KelolaKegiatanController extends GetxController {
+  final supabase = Supabase.instance.client;
   var searchQuery = ''.obs;
   var isLoading = true.obs;
 
@@ -73,13 +74,13 @@ class KelolaKegiatanController extends GetxController {
   Future<void> fetchKegiatan() async {
     try {
       isLoading.value = true;
-      final user = WebSupabaseService.client.auth.currentUser;
+      final user = supabase.auth.currentUser;
       if (user == null) {
         Get.snackbar('Sesi Berakhir', 'Silakan login kembali');
         return;
       }
 
-      final dataPosbankum = await WebSupabaseService.client
+      final dataPosbankum = await supabase
           .from('posbankum')
           .select('id_posbankum')
           .eq('email_akun', user.email ?? '')
@@ -89,7 +90,7 @@ class KelolaKegiatanController extends GetxController {
 
       final String idPosbankumAsli = dataPosbankum['id_posbankum'];
 
-      final response = await WebSupabaseService.client
+      final response = await supabase
           .from('kegiatan')
           .select()
           .eq('id_posbankum', idPosbankumAsli)

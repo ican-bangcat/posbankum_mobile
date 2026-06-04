@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import '../../../app/data/services/supabase_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'kelola_kegiatan_controller.dart';
 import 'detail_kegiatan_controller.dart';
 
 class EditKegiatanController extends GetxController {
+  final supabase = Supabase.instance.client;
   var kegiatanId = '';
   var existingImageUrl = ''.obs;
 
@@ -38,9 +39,9 @@ class EditKegiatanController extends GetxController {
     try {
       isLoading.value = true;
 
-      final user = WebSupabaseService.client.auth.currentUser;
+      final user = supabase.auth.currentUser;
       if (user != null) {
-        final dataPosbankum = await WebSupabaseService.client
+        final dataPosbankum = await supabase
             .from('posbankum')
             .select('id_posbankum')
             .eq('email_akun', user.email ?? '')
@@ -48,7 +49,7 @@ class EditKegiatanController extends GetxController {
 
         if (dataPosbankum != null) {
           idPosbankumAsli.value = dataPosbankum['id_posbankum'];
-          final dataParalegal = await WebSupabaseService.client
+          final dataParalegal = await supabase
               .from('paralegal_members')
               .select('nama_paralegal')
               .eq('id_posbankum', idPosbankumAsli.value)
@@ -59,7 +60,7 @@ class EditKegiatanController extends GetxController {
         }
       }
 
-      final data = await WebSupabaseService.client
+      final data = await supabase
           .from('kegiatan')
           .select()
           .eq('id_kegiatan', kegiatanId)
@@ -132,7 +133,7 @@ class EditKegiatanController extends GetxController {
         final fileName = 'kegiatan_${DateTime.now().millisecondsSinceEpoch}.png';
         final path = 'posbankum/${idPosbankumAsli.value}/$fileName';
 
-        await WebSupabaseService.client.storage
+        await supabase.storage
             .from('kegiatan-thumbnails')
             .upload(path, selectedImage.value!);
 
@@ -142,7 +143,7 @@ class EditKegiatanController extends GetxController {
 
       final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate.value!);
 
-      await WebSupabaseService.client.from('kegiatan').update({
+      await supabase.from('kegiatan').update({
         'judul': judulCtrl.text,
         'tgl_mulai': formattedDate,
         'lokasi': lokasiCtrl.text,
