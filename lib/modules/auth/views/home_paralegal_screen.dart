@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/routes/app_routes.dart';
-import 'login_screen.dart';
+import '../controllers/auth_controller.dart';
 import '../controllers/home_paralegal_controller.dart';
 import '../../main_dashboard_admin/controllers/main_dashboard_admin_controller.dart';
 
@@ -17,7 +16,7 @@ class HomeParalegalScreen extends StatefulWidget {
 class _HomeParalegalScreenState extends State<HomeParalegalScreen>
     with SingleTickerProviderStateMixin {
   final storage = GetStorage();
-  final supabase = Supabase.instance.client;
+  final authC = Get.find<AuthController>();
 
   late final HomeParalegalController _dashboardCtrl;
   late AnimationController _animationController;
@@ -43,17 +42,7 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
   }
 
   Future<void> _handleLogout() async {
-    try {
-      Get.dialog(const Center(child: CircularProgressIndicator(color: Colors.white)), barrierDismissible: false);
-      await supabase.auth.signOut();
-      await storage.erase();
-      Get.back();
-      Get.offAll(() => const LoginScreen());
-      Get.snackbar('Berhasil', 'Anda telah logout', backgroundColor: Colors.green, colorText: Colors.white);
-    } catch (e) {
-      Get.back();
-      Get.snackbar('Error', 'Gagal logout: $e', backgroundColor: Colors.red, colorText: Colors.white);
-    }
+    _confirmLogout();
   }
 
   void _showProfileOptions() {
@@ -73,7 +62,7 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
               title: const Text('Lihat Profil'),
               onTap: () {
                 Get.back();
-                Get.snackbar('Info', 'Halaman Profil akan segera tersedia');
+                Get.toNamed(AppRoutes.PROFILE);
               },
             ),
             const Divider(),
@@ -102,7 +91,7 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
           ElevatedButton(
             onPressed: () {
               Get.back();
-              _handleLogout();
+              authC.logout();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Logout', style: TextStyle(color: Colors.white)),
@@ -374,23 +363,20 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
           else if (_dashboardCtrl.recentActivities.isEmpty)
             const Center(child: Padding(padding: EdgeInsets.all(20), child: Text("Belum ada aktivitas terbaru", style: TextStyle(color: Colors.grey))))
           else
-            ..._dashboardCtrl.recentActivities.map((act) {
-              DateTime dt = DateTime.parse(act['tanggal']).toLocal();
+            ..._dashboardCtrl.recentActivities.map((kasus) {
+              DateTime dt = DateTime.parse(kasus['created_at']).toLocal();
               String timeStr = "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
 
-              String judulKasus = (act['pengaduan'] != null)
-                  ? act['pengaduan']['judul_pengaduan'] ?? 'Kasus'
-                  : 'Update Kasus';
-
-              String deskripsiSingkat = act['title'] ?? 'Terdapat progres baru';
-
+              String judulKasus = kasus['judul_pengaduan'] ?? 'Update Kasus';
+              String statusRaw = (kasus['status']?.toString() ?? 'diproses').toLowerCase();
+              
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _buildHistoryCard(
                   icon: Icons.update_rounded,
-                  title: deskripsiSingkat,
-                  subtitle: judulKasus,
-                  badgeText: 'UPDATE',
+                  title: judulKasus,
+                  subtitle: "Nomor: ${kasus['nomor_pengaduan'] ?? '-'}",
+                  badgeText: statusRaw.toUpperCase(),
                   badgeColor: const Color(0xFF3B82F6),
                   badgeBg: const Color(0xFFEFF6FF),
                   timeText: timeStr,

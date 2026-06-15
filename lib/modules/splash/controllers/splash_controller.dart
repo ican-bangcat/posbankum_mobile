@@ -59,20 +59,31 @@ class SplashController extends GetxController {
     // Cek status onboarding
     final hasSeenOnboarding = storage.read('onboarding_completed') ?? false;
     
-    // Cek status login (nanti akan diimplementasi)
+    // Cek status login
     final isLoggedIn = storage.read('is_logged_in') ?? false;
+    final role = storage.read('role') ?? '';
     
     // Logic navigation:
     if (isLoggedIn) {
-      // Jika sudah login → ke Home
-      // TODO: Implement Home route nanti
-      Get.offAllNamed(AppRoutes.LOGIN); // Sementara ke login dulu
+      // Redirect berdasarkan role jika sudah login
+      _redirectBasedOnRole(role);
     } else if (hasSeenOnboarding) {
       // Jika sudah pernah onboarding tapi belum login → ke Login
       Get.offAllNamed(AppRoutes.LOGIN);
     } else {
       // Jika belum pernah onboarding → ke Onboarding
       Get.offAllNamed(AppRoutes.ONBOARDING);
+    }
+  }
+
+  void _redirectBasedOnRole(String role) {
+    final String userRole = role.toLowerCase().trim();
+    if (userRole == 'warga' || userRole == 'pelapor' || userRole == 'masyarakat') {
+      Get.offAllNamed(AppRoutes.MAIN_DASHBOARD);
+    } else if (userRole == 'paralegal' || userRole == 'admin' || userRole == 'posbankum') {
+      Get.offAllNamed(AppRoutes.MAIN_DASHBOARD_ADMIN);
+    } else {
+      Get.offAllNamed(AppRoutes.LOGIN);
     }
   }
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'app/routes/app_pages.dart';
 import 'app/themes/app_colors.dart';
@@ -20,12 +19,6 @@ void main() async {
 
   // Memuat variabel lingkungan dari berkas .env
   await dotenv.load(fileName: ".env");
-
-  // Menginisialisasi koneksi tunggal ke layanan Supabase
-    await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_KEY']!,
-  );
 
   // Membatasi orientasi perangkat hanya pada mode potret
   await SystemChrome.setPreferredOrientations([
@@ -67,6 +60,23 @@ class PosbankumApp extends StatelessWidget {
           secondary: AppColors.secondary,
         ),
         fontFamily: 'Poppins',
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(fontFamily: 'Poppins'),
+          displayMedium: TextStyle(fontFamily: 'Poppins'),
+          displaySmall: TextStyle(fontFamily: 'Poppins'),
+          headlineLarge: TextStyle(fontFamily: 'Poppins'),
+          headlineMedium: TextStyle(fontFamily: 'Poppins'),
+          headlineSmall: TextStyle(fontFamily: 'Poppins'),
+          titleLarge: TextStyle(fontFamily: 'Poppins'),
+          titleMedium: TextStyle(fontFamily: 'Poppins'),
+          titleSmall: TextStyle(fontFamily: 'Poppins'),
+          bodyLarge: TextStyle(fontFamily: 'Poppins'),
+          bodyMedium: TextStyle(fontFamily: 'Poppins'),
+          bodySmall: TextStyle(fontFamily: 'Poppins'),
+          labelLarge: TextStyle(fontFamily: 'Poppins'),
+          labelMedium: TextStyle(fontFamily: 'Poppins'),
+          labelSmall: TextStyle(fontFamily: 'Poppins'),
+        ),
         useMaterial3: true,
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
@@ -77,6 +87,7 @@ class PosbankumApp extends StatelessWidget {
             color: AppColors.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w600,
+            fontFamily: 'Poppins',
           ),
           systemOverlayStyle: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,

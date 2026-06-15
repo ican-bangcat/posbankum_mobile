@@ -18,9 +18,6 @@ class MainDashboardAdminView extends GetView<MainDashboardAdminController> {
   @override
   Widget build(BuildContext context) {
 
-    // ✅ 2. BINDING MANUAL: Bangunin Controller Chat pas Dashboard dibuka!
-    Get.put(DaftarChatParalegalController());
-
     // ── HALAMAN KHUSUS ADMIN / PARALEGAL ──
     final List<Widget> pages = [
       const KelolaKegiatanView(),      // Index 0 (Kegiatan)

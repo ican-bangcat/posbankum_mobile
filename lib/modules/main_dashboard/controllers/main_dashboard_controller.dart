@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:get_storage/get_storage.dart';
+import '../../../app/data/services/api_service.dart';
 
 class MainDashboardController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
+  final _storage = GetStorage();
 
   // Bikin index default 2 (Home)
   var selectedIndex = 2.obs;
@@ -27,37 +30,42 @@ class MainDashboardController extends GetxController {
   Future<void> checkProfileCompleteness() async {
     try {
       isProfileChecking.value = true;
-      final userId = supabase.auth.currentUser?.id;
-      if (userId == null) return;
+      
+      // Ambil data profile terbaru dari Laravel API
+      final response = await _apiService.dio.get('/profile');
 
-      // 1. Cek di tabel profiles
-      final profileRes = await supabase
-          .from('profiles')
-          .select('full_name, nomor_telepon')
-          .eq('id', userId)
-          .maybeSingle();
+      if (response.data['status'] == true) {
+        final userData = response.data['data'];
+        
+        // Cek Nama & Telepon (dari tabel users)
+        isNamaComplete.value = (userData['nama_lengkap'] != null && userData['nama_lengkap'].toString().trim().isNotEmpty);
+        isTeleponComplete.value = (userData['nomor_telepon'] != null && userData['nomor_telepon'].toString().trim().isNotEmpty);
 
-      if (profileRes != null) {
-        isNamaComplete.value = profileRes['full_name'] != null;
-        isTeleponComplete.value = profileRes['nomor_telepon'] != null;
+        // Cek Data Masyarakat (NIK, Alamat, Wilayah)
+        if (userData['role'] == 'warga' && userData['masyarakat'] != null) {
+          final msk = userData['masyarakat'];
+          isNikComplete.value = (msk['nik'] != null && msk['nik'].toString().trim().isNotEmpty);
+          
+          bool hasAlamat = (msk['alamat'] != null && msk['alamat'].toString().trim().isNotEmpty);
+          bool hasRegion = (msk['id_kabupaten'] != null &&
+              msk['id_kecamatan'] != null &&
+              msk['id_kelurahan'] != null);
+              
+          isAlamatComplete.value = hasAlamat && hasRegion;
+        } else {
+          // Jika bukan warga (misal admin/paralegal), anggap data kependudukan beres
+          isNikComplete.value = true;
+          isAlamatComplete.value = true;
+        }
+        
+        // Simpan update user ke storage lokal juga
+        await _storage.write('user', userData);
       }
-
-      // 2. Cek di tabel masyarakat
-      final masyarakatRes = await supabase
-          .from('masyarakat')
-          .select('nik, alamat, id_kabupaten, id_kecamatan, id_kelurahan')
-          .eq('id', userId)
-          .maybeSingle();
-
-      if (masyarakatRes != null) {
-        isNikComplete.value = masyarakatRes['nik'] != null;
-        isAlamatComplete.value = (masyarakatRes['alamat'] != null &&
-            masyarakatRes['id_kabupaten'] != null &&
-            masyarakatRes['id_kecamatan'] != null &&
-            masyarakatRes['id_kelurahan'] != null);
-      }
+      
+      debugPrint('📊 [CHECK PROFILE] Result: Nama=${isNamaComplete.value}, NIK=${isNikComplete.value}, Telp=${isTeleponComplete.value}, Alamat=${isAlamatComplete.value}');
+      
     } catch (e) {
-      print('Error checking profile completeness: $e');
+      debugPrint('❌ [CHECK PROFILE] Error: $e');
     } finally {
       isProfileChecking.value = false;
     }

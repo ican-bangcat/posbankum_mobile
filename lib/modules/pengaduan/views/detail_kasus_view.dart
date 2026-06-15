@@ -19,7 +19,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
       }
 
       final kasus = controller.kasus.value;
-      if (kasus == null) return const Scaffold(backgroundColor: whiteBgColor, body: Center(child: Text('Data tidak ditemukan')));
+      if (kasus == null) return const Scaffold(backgroundColor: whiteBgColor, body: Center(child: Text('Data tidak ditemukan', style: TextStyle(fontFamily: 'Poppins'))));
 
       final String statusKasus = (kasus.status).toLowerCase().trim();
       bool isSelesai = statusKasus == 'selesai';
@@ -51,7 +51,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
                     children: [
                       Material(color: Colors.transparent, child: InkWell(borderRadius: BorderRadius.circular(12), onTap: () => Get.back(), child: Container(width: 40, height: 40, decoration: BoxDecoration(color: Colors.white.withOpacity(0.01), border: Border.all(color: Colors.white.withOpacity(0.3)), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18)))),
                       const SizedBox(width: 16),
-                      const Text('Detail Kasus', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                      const Text('Detail Kasus', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 0.5, fontFamily: 'Poppins')),
                     ],
                   ),
                 ),
@@ -99,10 +99,10 @@ class DetailKasusView extends GetView<DetailKasusController> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                           decoration: BoxDecoration(color: const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(20)),
-                          child: const Text('PERKARA SELESAI', style: TextStyle(color: Color(0xFF166534), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+                          child: const Text('PERKARA SELESAI', style: TextStyle(color: Color(0xFF166534), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.5, fontFamily: 'Poppins')),
                         ),
                         const SizedBox(height: 16),
-                        Text(kasus.judulLaporan, textAlign: TextAlign.center, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: textPrimary, height: 1.3)),
+                        Text(kasus.judulLaporan, textAlign: TextAlign.center, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: textPrimary, height: 1.3, fontFamily: 'Poppins')),
                         const SizedBox(height: 24),
                         const Divider(color: Color(0xFFF1F5F9), thickness: 1.5, height: 0),
                         const SizedBox(height: 20),
@@ -134,11 +134,11 @@ class DetailKasusView extends GetView<DetailKasusController> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Alur Penanganan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary)),
+                            const Text('Alur Penanganan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(color: const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(8)),
-                              child: const Text('100% Tuntas', style: TextStyle(color: Color(0xFF166534), fontSize: 11, fontWeight: FontWeight.w700)),
+                              child: const Text('100% Tuntas', style: TextStyle(color: Color(0xFF166534), fontSize: 11, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
                             )
                           ],
                         ),
@@ -161,7 +161,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Detail Kejadian', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary)),
+                        const Text('Detail Kejadian', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
                         const SizedBox(height: 20),
                         _buildDetailItem(Icons.calendar_today_outlined, 'Tanggal', kasus.tanggalDibuat),
                         const SizedBox(height: 16),
@@ -189,21 +189,21 @@ class DetailKasusView extends GetView<DetailKasusController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Kronologi Kejadian', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary)),
+                        const Text('Kronologi Kejadian', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
                         const SizedBox(height: 16),
                         Row(
                           children: [
                             Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFFF59E0B), shape: BoxShape.circle)),
                             const SizedBox(width: 8),
-                            const Text('PENGADUAN RESMI', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFF59E0B), letterSpacing: 0.5)),
+                            const Text('PENGADUAN RESMI', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFF59E0B), letterSpacing: 0.5, fontFamily: 'Poppins')),
                             const SizedBox(width: 8),
-                            Text('•  ${kasus.tanggalDibuat}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: textSecondary)),
+                            Text('•  ${kasus.tanggalDibuat}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: textSecondary, fontFamily: 'Poppins')),
                           ],
                         ),
                         const SizedBox(height: 12),
                         Text(
                           kasus.kronologi,
-                          style: const TextStyle(fontSize: 13, color: Color(0xFF475569), height: 1.6, fontWeight: FontWeight.w400),
+                          style: const TextStyle(fontSize: 13, color: Color(0xFF475569), height: 1.6, fontWeight: FontWeight.w400, fontFamily: 'Poppins'),
                         ),
                       ],
                     ),
@@ -225,13 +225,13 @@ class DetailKasusView extends GetView<DetailKasusController> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Berkas & Dokumen', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary)),
-                            Text('${kasus.lampiranUrls.length} File', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textSecondary)),
+                            const Text('Berkas & Dokumen', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
+                            Text('${kasus.lampiranUrls.length} File', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textSecondary, fontFamily: 'Poppins')),
                           ],
                         ),
                         const SizedBox(height: 20),
                         if (kasus.lampiranUrls.isEmpty)
-                          const Text('Tidak ada dokumen terlampir.', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontSize: 13))
+                          const Text('Tidak ada dokumen terlampir.', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontSize: 13, fontFamily: 'Poppins'))
                         else
                           _buildDokumenGrid(kasus.lampiranUrls),
                       ],
@@ -292,12 +292,12 @@ class DetailKasusView extends GetView<DetailKasusController> {
                           children: [
                             const Icon(Icons.insert_drive_file_outlined, color: Color(0xFF166534), size: 16),
                             const SizedBox(width: 8),
-                            Text(item.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF166534))),
+                            Text(item.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF166534), fontFamily: 'Poppins')),
                           ],
                         ),
                         if (item.description != null && item.description!.isNotEmpty) ...[
                           const SizedBox(height: 8),
-                          Text(item.description!, style: const TextStyle(fontSize: 12, color: Color(0xFF15803D), height: 1.5)),
+                          Text(item.description!, style: const TextStyle(fontSize: 12, color: Color(0xFF15803D), height: 1.5, fontFamily: 'Poppins')),
                         ],
                       ],
                     ),
@@ -305,11 +305,11 @@ class DetailKasusView extends GetView<DetailKasusController> {
                       : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: textPrimary)),
+                      Text(item.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
                       const SizedBox(height: 4),
                       Text(
                           "${item.tanggal ?? ''} ${item.description != null && item.description!.isNotEmpty ? '• ${item.description}' : ''}",
-                          style: const TextStyle(fontSize: 12, color: textSecondary, height: 1.4)
+                          style: const TextStyle(fontSize: 12, color: textSecondary, height: 1.4, fontFamily: 'Poppins')
                       ),
                     ],
                   ),
@@ -332,9 +332,9 @@ class DetailKasusView extends GetView<DetailKasusController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontSize: 11, color: textSecondary, fontWeight: FontWeight.w500)),
+              Text(label, style: const TextStyle(fontSize: 11, color: textSecondary, fontWeight: FontWeight.w500, fontFamily: 'Poppins')),
               const SizedBox(height: 2),
-              Text(value, style: const TextStyle(fontSize: 13, color: textPrimary, fontWeight: FontWeight.w600, height: 1.4)),
+              Text(value, style: const TextStyle(fontSize: 13, color: textPrimary, fontWeight: FontWeight.w600, height: 1.4, fontFamily: 'Poppins')),
             ],
           ),
         ),
@@ -345,9 +345,9 @@ class DetailKasusView extends GetView<DetailKasusController> {
   Widget _buildInfoCol(String label, String value, {Color? color, bool isBold = false}) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: textSecondary, letterSpacing: 0.5)),
+        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: textSecondary, letterSpacing: 0.5, fontFamily: 'Poppins')),
         const SizedBox(height: 6),
-        Text(value, style: TextStyle(fontSize: 14, fontWeight: isBold ? FontWeight.w700 : FontWeight.w600, color: color ?? textPrimary)),
+        Text(value, style: TextStyle(fontSize: 14, fontWeight: isBold ? FontWeight.w700 : FontWeight.w600, color: color ?? textPrimary, fontFamily: 'Poppins')),
       ],
     );
   }
@@ -380,30 +380,30 @@ class DetailKasusView extends GetView<DetailKasusController> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(20)),
-                                  child: Text(kasus.idKasus, style: const TextStyle(color: Color(0xFF2563EB), fontSize: 11, fontWeight: FontWeight.w700)),
+                                  child: Text(kasus.idKasus, style: const TextStyle(color: Color(0xFF2563EB), fontSize: 11, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
                                 ),
                                 const SizedBox(width: 12),
-                                Text(kasus.tanggalDibuat, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w500)),
+                                Text(kasus.tanggalDibuat, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w500, fontFamily: 'Poppins')),
                               ],
                             ),
                             if (statusKasus == 'dibatalkan')
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
-                                child: const Text('Dibatalkan', style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold)),
+                                child: const Text('Dibatalkan', style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                               )
                           ],
                         ),
                         const SizedBox(height: 16),
 
-                        Text(kasus.judulLaporan, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: textPrimary, height: 1.3)),
+                        Text(kasus.judulLaporan, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: textPrimary, height: 1.3, fontFamily: 'Poppins')),
                         const SizedBox(height: 8),
-                        Text(kasus.kategoriMasalah, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: darkBlueColor)),
+                        Text(kasus.kategoriMasalah, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: darkBlueColor, fontFamily: 'Poppins')),
                         const SizedBox(height: 12),
-                        Text(kasus.kronologi, style: const TextStyle(fontSize: 13, color: textSecondary, height: 1.6, fontWeight: FontWeight.w400)),
+                        Text(kasus.kronologi, style: const TextStyle(fontSize: 13, color: textSecondary, height: 1.6, fontWeight: FontWeight.w400, fontFamily: 'Poppins')),
 
                         const SizedBox(height: 32),
-                        const Text('Perjalanan Kasus', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary)),
+                        const Text('Perjalanan Kasus', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
                         const SizedBox(height: 20),
                         _buildTimelineSection(kasus),
 
@@ -411,14 +411,14 @@ class DetailKasusView extends GetView<DetailKasusController> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Berkas & Dokumen', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary)),
-                            Text('${kasus.lampiranUrls.length} File', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: textSecondary)),
+                            const Text('Berkas & Dokumen', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
+                            Text('${kasus.lampiranUrls.length} File', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: textSecondary, fontFamily: 'Poppins')),
                           ],
                         ),
                         const SizedBox(height: 16),
 
                         if (kasus.lampiranUrls.isEmpty)
-                          const Text('Tidak ada dokumen terlampir.', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontSize: 13))
+                          const Text('Tidak ada dokumen terlampir.', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontSize: 13, fontFamily: 'Poppins'))
                         else
                           _buildDokumenGrid(kasus.lampiranUrls),
                       ],
@@ -476,7 +476,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(color: const Color(0xFF475569).withOpacity(0.9), borderRadius: BorderRadius.circular(6)),
-                          child: Text(isPdf ? 'PDF' : 'IMAGE', style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                          child: Text(isPdf ? 'PDF' : 'IMAGE', style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                         ),
                       ),
                     ],
@@ -490,7 +490,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(fileName, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textPrimary), maxLines: 2, overflow: TextOverflow.ellipsis),
+                        Text(fileName, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins'), maxLines: 2, overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),
@@ -532,13 +532,13 @@ class DetailKasusView extends GetView<DetailKasusController> {
                       const Text(
                         'Batalkan Pengaduan?',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black, fontFamily: 'Poppins'),
                       ),
                       const SizedBox(height: 12),
                       const Text(
                         'Pengaduan yang dibatalkan tidak akan diproses oleh tim paralegal. Anda yakin ingin melanjutkan?',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.5),
+                        style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.5, fontFamily: 'Poppins'),
                       ),
                       const SizedBox(height: 32),
                       Row(
@@ -552,7 +552,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 elevation: 0,
                               ),
-                              child: const Text('Kembali', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+                              child: const Text('Kembali', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF475569), fontFamily: 'Poppins')),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -568,7 +568,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 elevation: 0,
                               ),
-                              child: const Text('Ya, Batalkan', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+                              child: const Text('Ya, Batalkan', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white, fontFamily: 'Poppins')),
                             ),
                           ),
                         ],
@@ -584,7 +584,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
           ),
-          child: const Text('Batalkan Pengaduan', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w700, fontSize: 14)),
+          child: const Text('Batalkan Pengaduan', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w700, fontSize: 14, fontFamily: 'Poppins')),
         ),
       ),
     );
@@ -601,7 +601,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
           style: ElevatedButton.styleFrom(backgroundColor: darkBlueColor, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 18), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
           child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20), SizedBox(width: 8), Text('Chat Paralegal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14))]
+              children: [Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20), SizedBox(width: 8), Text('Chat Paralegal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14, fontFamily: 'Poppins'))]
           ),
         ),
       ),
@@ -630,12 +630,12 @@ class DetailKasusView extends GetView<DetailKasusController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isCurrent ? darkBlueColor : (isDone ? textPrimary : const Color(0xFF94A3B8)))),
+                      Text(item.title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isCurrent ? darkBlueColor : (isDone ? textPrimary : const Color(0xFF94A3B8)), fontFamily: 'Poppins')),
                       const SizedBox(height: 4),
-                      Text(item.tanggal ?? (isCurrent ? 'Tim paralegal sedang memproses pengaduan.' : 'Menunggu proses selanjutnya'), style: TextStyle(fontSize: 12, color: isDone ? textSecondary : const Color(0xFF94A3B8), height: 1.5)),
+                      Text(item.tanggal ?? (isCurrent ? 'Tim paralegal sedang memproses pengaduan.' : 'Menunggu proses selanjutnya'), style: TextStyle(fontSize: 12, color: isDone ? textSecondary : const Color(0xFF94A3B8), height: 1.5, fontFamily: 'Poppins')),
                       if (item.description != null && item.description!.isNotEmpty) ...[
                         const SizedBox(height: 4),
-                        Text(item.description!, style: const TextStyle(fontSize: 12, color: textSecondary, height: 1.5)),
+                        Text(item.description!, style: const TextStyle(fontSize: 12, color: textSecondary, height: 1.5, fontFamily: 'Poppins')),
                       ],
                     ],
                   ),

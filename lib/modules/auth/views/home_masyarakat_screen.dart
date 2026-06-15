@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/routes/app_routes.dart';
-import 'login_screen.dart';
+import '../controllers/auth_controller.dart';
 
-// ✅ Import Controller Dashboard Masyarakat
+// Import Controller Dashboard Masyarakat
 import '../controllers/home_masyarakat_controller.dart';
-import '../../main_dashboard/controllers/main_dashboard_controller.dart';
 
 class HomeMasyarakatScreen extends StatefulWidget {
   const HomeMasyarakatScreen({super.key});
@@ -19,7 +17,7 @@ class HomeMasyarakatScreen extends StatefulWidget {
 class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
     with SingleTickerProviderStateMixin {
   final storage = GetStorage();
-  final supabase = Supabase.instance.client;
+  final authC = Get.find<AuthController>();
 
   late final HomeMasyarakatController _dashboardCtrl;
   late AnimationController _animationController;
@@ -48,17 +46,7 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
   }
 
   Future<void> _handleLogout() async {
-    try {
-      Get.dialog(const Center(child: CircularProgressIndicator(color: Colors.white)), barrierDismissible: false);
-      await supabase.auth.signOut();
-      await storage.erase();
-      Get.back();
-      Get.offAll(() => const LoginScreen());
-      Get.snackbar('Berhasil', 'Anda telah logout', backgroundColor: Colors.green, colorText: Colors.white);
-    } catch (e) {
-      Get.back();
-      Get.snackbar('Error', 'Gagal logout: $e', backgroundColor: Colors.red, colorText: Colors.white);
-    }
+    _confirmLogout();
   }
 
   void _showProfileOptions() {
@@ -79,7 +67,7 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () {
                 Get.back();
-                Get.snackbar('Info', 'Halaman Profil akan segera tersedia');
+                Get.toNamed(AppRoutes.PROFILE);
               },
             ),
             const Divider(),
@@ -106,7 +94,10 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
         actions: [
           TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           ElevatedButton(
-            onPressed: () { Get.back(); _handleLogout(); },
+            onPressed: () { 
+              Get.back(); 
+              authC.logout(); 
+            },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Logout', style: TextStyle(color: Colors.white)),
           ),

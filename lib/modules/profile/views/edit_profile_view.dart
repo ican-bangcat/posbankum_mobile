@@ -5,24 +5,24 @@ import '../controllers/edit_profile_controller.dart';
 class EditProfileView extends GetView<EditProfileController> {
   const EditProfileView({super.key});
 
-  // --- Palet Warna ---
-  static const Color darkBlue = Color(0xFF1A1F4E);
-  static const Color midBlue = Color(0xFF2A2E5E);
-  static const Color accentBlue = Color(0xFF1152D4);
-  static const Color accentLight = Color(0xFF4F8EF7);
-  static const Color bgPage = Color(0xFFF0F4FF);
-  static const Color bgCard = Color(0xFFFFFFFF);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color textHint = Color(0xFFB0BFDA);
-  static const Color dividerColor = Color(0xFFEEF2FB);
-  static const Color successGreen = Color(0xFF22C55E);
+  // --- Palette Warna sesuai Design ---
+  static const Color primaryBlue = Color(0xFF1A1F4E);
+  static const Color accentBlue = Color(0xFF4A61AD);
+  static const Color bgLight = Color(0xFFF8FAFF);
+  static const Color textDark = Color(0xFF1E293B);
+  static const Color textGray = Color(0xFF64748B);
+  static const Color borderLight = Color(0xFFE2E8F0);
+  static const Color errorRed = Color(0xFFEF4444);
 
   @override
   Widget build(BuildContext context) {
-    Get.put(EditProfileController());
+    // Inisialisasi controller jika belum ada
+    if (!Get.isRegistered<EditProfileController>()) {
+      Get.put(EditProfileController());
+    }
+
     return Scaffold(
-      backgroundColor: darkBlue,
+      backgroundColor: primaryBlue,
       resizeToAvoidBottomInset: true,
       body: Column(
         children: [
@@ -31,30 +31,129 @@ class EditProfileView extends GetView<EditProfileController> {
             child: Container(
               width: double.infinity,
               decoration: const BoxDecoration(
-                color: bgPage,
+                color: Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(28),
-                  topRight: Radius.circular(28),
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
                 ),
               ),
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 28, 20, 40),
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildPhotoSection(),
-                    const SizedBox(height: 28),
-                    _buildSectionLabel('INFORMASI PRIBADI'),
-                    const SizedBox(height: 10),
-                    _buildInfoCard(),
-                    const SizedBox(height: 24),
-                    _buildSectionLabel('LOKASI DOMISILI'),
-                    const SizedBox(height: 10),
-                    _buildLocationCard(),
                     const SizedBox(height: 32),
-                    _buildSaveButton(),
+                    _buildSectionLabel('INFORMASI PRIBADI'),
+                    const SizedBox(height: 20),
+                    _buildLabelWithStar('Nama Lengkap', Icons.person_outline_rounded),
+                    const SizedBox(height: 8),
+                    _buildInputField(controller.namaC, hint: 'Masukkan nama lengkap'),
+                    
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildLabelWithStar('NIK', Icons.badge_outlined),
+                        // Gunakan ValueListenableBuilder untuk memantau perubahan teks tanpa Obx error
+                        ValueListenableBuilder(
+                          valueListenable: controller.nikC,
+                          builder: (context, value, child) {
+                            return Text(
+                              '${value.text.length}/16',
+                              style: const TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.bold),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _buildInputField(
+                      controller.nikC, 
+                      hint: '1234567890123456', 
+                      keyboardType: TextInputType.number,
+                      maxLength: 16,
+                    ),
+
+                    const SizedBox(height: 20),
+                    _buildLabelWithStar('Nomor Telepon', Icons.phone_outlined),
+                    const SizedBox(height: 8),
+                    _buildInputField(
+                      controller.noHpC, 
+                      hint: '08xxxxxxxxxx', 
+                      keyboardType: TextInputType.phone,
+                      maxLength: 15,
+                    ),
+
+                    const SizedBox(height: 20),
+                    _buildLabelWithStar('Email Aktif', Icons.email_outlined),
+                    const SizedBox(height: 8),
+                    _buildInputField(controller.emailC, readOnly: true),
+
+                    const SizedBox(height: 32),
+                    _buildSectionLabel('LOKASI'),
+                    const SizedBox(height: 20),
+                    
+                    _buildLabelWithStar('Kabupaten / Kota', Icons.location_city_outlined, isRequired: false),
+                    const SizedBox(height: 8),
+                    Obx(() => _buildDropdownField(
+                      hint: 'Pilih Kabupaten / Kota',
+                      selectedId: controller.selectedKabupatenId.value,
+                      items: controller.listKabupaten,
+                      idKey: 'id_kabupaten',
+                      isEnabled: true,
+                      onSelected: (id) {
+                        controller.selectedKabupatenId.value = id;
+                        controller.fetchKecamatan(id);
+                      },
+                    )),
+
+                    const SizedBox(height: 20),
+                    _buildLabelWithStar('Kecamatan', Icons.map_outlined, isRequired: false),
+                    const SizedBox(height: 8),
+                    Obx(() => _buildDropdownField(
+                      hint: controller.selectedKabupatenId.value == null ? 'Pilih kabupaten dahulu' : 'Pilih Kecamatan',
+                      selectedId: controller.selectedKecamatanId.value,
+                      items: controller.listKecamatan,
+                      idKey: 'id_kecamatan',
+                      isEnabled: controller.selectedKabupatenId.value != null,
+                      onSelected: (id) {
+                        controller.selectedKecamatanId.value = id;
+                        controller.fetchKelurahan(id);
+                      },
+                    )),
+
+                    const SizedBox(height: 20),
+                    _buildLabelWithStar('Kelurahan / Desa', Icons.corporate_fare_outlined, isRequired: false),
+                    const SizedBox(height: 8),
+                    Obx(() => _buildDropdownField(
+                      hint: controller.selectedKecamatanId.value == null ? 'Pilih kecamatan dahulu' : 'Pilih Kelurahan / Desa',
+                      selectedId: controller.selectedKelurahanId.value,
+                      items: controller.listKelurahan,
+                      idKey: 'id_kelurahan',
+                      isEnabled: controller.selectedKecamatanId.value != null,
+                      onSelected: (id) {
+                        controller.selectedKelurahanId.value = id;
+                      },
+                    )),
+
+                    const SizedBox(height: 20),
+                    _buildLabelWithStar('Alamat Lengkap', Icons.home_outlined, isRequired: false),
+                    const SizedBox(height: 8),
+                    _buildInputField(
+                      controller.alamatDetailC,
+                      hint: 'Jalan, nomor rumah, RT/RW...',
+                      maxLines: 3,
+                    ),
+
+                    const SizedBox(height: 32),
+                    _buildSectionLabel('KEAMANAN'),
                     const SizedBox(height: 16),
+                    _buildSecurityCard(),
+                    const SizedBox(height: 40),
+                    
+                    _buildBigSaveButton(),
                   ],
                 ),
               ),
@@ -65,69 +164,42 @@ class EditProfileView extends GetView<EditProfileController> {
     );
   }
 
-  // ══════════════════════════════
-  // HEADER
-  // ══════════════════════════════
   Widget _buildHeader() {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 22),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildIconBtn(Icons.arrow_back_ios_new_rounded, () => Get.back()),
-            const Spacer(),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Edit Profil',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.3,
-                  ),
+            GestureDetector(
+              onTap: () => Get.back(),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  shape: BoxShape.circle,
                 ),
-                SizedBox(height: 2),
-                Text(
-                  'Perbarui data dirimu',
-                  style: TextStyle(
-                    color: Color(0x99FFFFFF),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
+                child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+              ),
             ),
-            const Spacer(),
-            // placeholder to balance the back button
-            const SizedBox(width: 44),
+            const Text(
+              'Edit Profil',
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Obx(() => GestureDetector(
+              onTap: controller.isSaving.value ? null : () => controller.simpanProfil(),
+              child: Text(
+                controller.isSaving.value ? '...' : 'Simpan',
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            )),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildIconBtn(IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withOpacity(0.18)),
-        ),
-        child: Icon(icon, color: Colors.white, size: 18),
-      ),
-    );
-  }
-
-  // ══════════════════════════════
-  // PHOTO SECTION
-  // ══════════════════════════════
   Widget _buildPhotoSection() {
     return Center(
       child: Column(
@@ -135,258 +207,89 @@ class EditProfileView extends GetView<EditProfileController> {
           Stack(
             alignment: Alignment.bottomRight,
             children: [
-              // Glow ring
-              Container(
-                width: 108,
-                height: 108,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [accentLight, accentBlue],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+              Obx(() {
+                final hasLocal = controller.selectedImageBytes.value != null;
+                final hasNetwork = controller.avatarUrl.value.isNotEmpty;
+                return Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFFD1D5DB),
+                    border: Border.all(color: Colors.white, width: 2),
+                    image: hasLocal
+                        ? DecorationImage(image: MemoryImage(controller.selectedImageBytes.value!), fit: BoxFit.cover)
+                        : (hasNetwork ? DecorationImage(image: NetworkImage(controller.avatarUrl.value), fit: BoxFit.cover) : null),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: accentBlue.withOpacity(0.35),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(3),
-                  child: Obx(() {
-                    final hasLocal = controller.selectedImageBytes.value != null;
-                    final hasNetwork = controller.avatarUrl.value.isNotEmpty;
-                    return Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: bgCard,
-                        image: hasLocal
-                            ? DecorationImage(
-                            image: MemoryImage(controller.selectedImageBytes.value!),
-                            fit: BoxFit.cover)
-                            : (hasNetwork
-                            ? DecorationImage(
-                            image: NetworkImage(controller.avatarUrl.value),
-                            fit: BoxFit.cover)
-                            : null),
-                      ),
-                      child: (!hasLocal && !hasNetwork)
-                          ? const Icon(Icons.person_rounded, size: 52, color: textHint)
-                          : null,
-                    );
-                  }),
-                ),
-              ),
-              // Camera button
+                  child: (!hasLocal && !hasNetwork)
+                      ? const Center(child: Text('S', style: TextStyle(fontSize: 32, color: Colors.white, fontWeight: FontWeight.bold)))
+                      : null,
+                );
+              }),
               GestureDetector(
                 onTap: () => controller.pickFoto(),
                 child: Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: accentBlue,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2.5),
-                    boxShadow: [
-                      BoxShadow(
-                        color: accentBlue.withOpacity(0.4),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 16),
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)]),
+                  child: const Icon(Icons.camera_alt_rounded, size: 18, color: primaryBlue),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () => controller.pickFoto(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                color: accentBlue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: accentBlue.withOpacity(0.25)),
-              ),
-              child: const Text(
-                'Ganti Foto Profil',
-                style: TextStyle(
-                  color: accentBlue,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
+          const SizedBox(height: 8),
+          const Text('Ganti Foto', style: TextStyle(color: Colors.white70, fontSize: 12)),
         ],
       ),
     );
   }
 
-  // ══════════════════════════════
-  // SECTION LABEL
-  // ══════════════════════════════
   Widget _buildSectionLabel(String title) {
     return Row(
       children: [
-        Container(
-          width: 4,
-          height: 16,
-          decoration: BoxDecoration(
-            color: accentBlue,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
+        Container(width: 4, height: 16, decoration: BoxDecoration(color: accentBlue, borderRadius: BorderRadius.circular(2))),
         const SizedBox(width: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            color: textSecondary,
-            letterSpacing: 1.4,
-          ),
-        ),
+        Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: textGray, letterSpacing: 0.5)),
       ],
     );
   }
 
-  // ══════════════════════════════
-  // INFO CARD
-  // ══════════════════════════════
-  Widget _buildInfoCard() {
-    return _cardWrap([
-      _buildField(
-        label: 'Nama Lengkap',
-        icon: Icons.person_outline_rounded,
-        child: _textInput(controller.namaC, hint: 'Masukkan nama lengkap'),
-      ),
-      _divider(),
-      _buildField(
-        label: 'NIK (16 Digit)',
-        icon: Icons.badge_outlined,
-        child: _textInput(
-          controller.nikC,
-          hint: '1234567890123456',
-          keyboardType: TextInputType.number,
-          maxLength: 16,
-        ),
-      ),
-      _divider(),
-      _buildField(
-        label: 'Nomor Telepon',
-        icon: Icons.phone_outlined,
-        child: _textInput(
-          controller.noHpC,
-          hint: '08xxxxxxxxxx',
-          keyboardType: TextInputType.phone,
-        ),
-      ),
-      _divider(),
-      _buildField(
-        label: 'Email',
-        icon: Icons.email_outlined,
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: successGreen.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: const Text(
-            'Terverifikasi',
-            style: TextStyle(fontSize: 10, color: successGreen, fontWeight: FontWeight.w600),
-          ),
-        ),
-        child: _textInput(controller.emailC, readOnly: true),
-      ),
-    ]);
+  Widget _buildLabelWithStar(String label, IconData icon, {bool isRequired = true}) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: accentBlue),
+        const SizedBox(width: 8),
+        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textGray)),
+        if (isRequired) const Text(' *', style: TextStyle(color: errorRed, fontWeight: FontWeight.bold)),
+      ],
+    );
   }
 
-  // ══════════════════════════════
-  // LOCATION CARD (with searchable dropdown)
-  // ══════════════════════════════
-  Widget _buildLocationCard() {
-    return _cardWrap([
-      Obx(() => _buildField(
-        label: 'Kabupaten / Kota',
-        icon: Icons.location_city_outlined,
-        child: _searchableDropdownTile(
-          hint: 'Pilih Kabupaten / Kota',
-          selectedId: controller.selectedKabupatenId.value,
-          items: controller.listKabupaten,
-          idKey: 'id_kabupaten',
-          isEnabled: true,
-          onSelected: (id) {
-            controller.selectedKabupatenId.value = id;
-            controller.fetchKecamatan(id);
-          },
-        ),
-      )),
-      _divider(),
-      Obx(() => _buildField(
-        label: 'Kecamatan',
-        icon: Icons.map_outlined,
-        child: _searchableDropdownTile(
-          hint: controller.selectedKabupatenId.value == null
-              ? 'Pilih kabupaten dahulu'
-              : 'Pilih Kecamatan',
-          selectedId: controller.selectedKecamatanId.value,
-          items: controller.listKecamatan,
-          idKey: 'id_kecamatan',
-          isEnabled: controller.selectedKabupatenId.value != null,
-          onSelected: (id) {
-            controller.selectedKecamatanId.value = id;
-            controller.fetchKelurahan(id);
-          },
-        ),
-      )),
-      _divider(),
-      Obx(() => _buildField(
-        label: 'Kelurahan / Desa',
-        icon: Icons.corporate_fare_outlined,
-        child: _searchableDropdownTile(
-          hint: controller.selectedKecamatanId.value == null
-              ? 'Pilih kecamatan dahulu'
-              : 'Pilih Kelurahan / Desa',
-          selectedId: controller.selectedKelurahanId.value,
-          items: controller.listKelurahan,
-          idKey: 'id_kelurahan',
-          isEnabled: controller.selectedKecamatanId.value != null,
-          onSelected: (id) {
-            controller.selectedKelurahanId.value = id;
-          },
-        ),
-      )),
-      _divider(),
-      _buildField(
-        label: 'Alamat Lengkap',
-        icon: Icons.home_outlined,
-        child: _textInput(
-          controller.alamatDetailC,
-          hint: 'Jalan, RT/RW, Nomor Rumah',
-          maxLines: 2,
+  Widget _buildInputField(TextEditingController ctrl, {String? hint, TextInputType? keyboardType, int maxLines = 1, bool readOnly = false, int? maxLength}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: bgLight,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderLight),
+      ),
+      child: TextField(
+        controller: ctrl,
+        readOnly: readOnly,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        maxLength: maxLength,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: textDark),
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          hintText: hint,
+          hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+          border: InputBorder.none,
+          counterText: '',
         ),
       ),
-    ]);
+    );
   }
 
-  // ══════════════════════════════
-  // SEARCHABLE DROPDOWN TILE
-  // ══════════════════════════════
-  Widget _searchableDropdownTile({
-    required String hint,
-    required String? selectedId,
-    required List items,
-    required String idKey,
-    required bool isEnabled,
-    required void Function(String) onSelected,
-  }) {
-    // Find selected item name
+  Widget _buildDropdownField({required String hint, required String? selectedId, required List items, required String idKey, required bool isEnabled, required void Function(String) onSelected}) {
     String? selectedName;
     if (selectedId != null) {
       try {
@@ -396,149 +299,121 @@ class EditProfileView extends GetView<EditProfileController> {
     }
 
     return GestureDetector(
-      onTap: isEnabled
-          ? () => _showSearchSheet(
-        items: items,
-        idKey: idKey,
-        onSelected: onSelected,
-      )
-          : null,
+      onTap: isEnabled ? () => _showSearchSheet(items: items, idKey: idKey, onSelected: onSelected) : null,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: bgLight,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderLight),
+        ),
         child: Row(
           children: [
             Expanded(
               child: Text(
                 selectedName ?? hint,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: selectedName != null
-                      ? textPrimary
-                      : (isEnabled ? textHint : const Color(0xFFCDD5E0)),
-                ),
+                style: TextStyle(fontSize: 14, color: selectedName != null ? textDark : Colors.black26, fontWeight: selectedName != null ? FontWeight.w500 : FontWeight.normal),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: isEnabled ? textSecondary : textHint,
-              size: 22,
-            ),
+            const Icon(Icons.keyboard_arrow_down_rounded, color: textGray, size: 20),
           ],
         ),
       ),
     );
   }
 
-  // ══════════════════════════════
-  // BOTTOM SHEET SEARCH
-  // ══════════════════════════════
-  void _showSearchSheet({
-    required List items,
-    required String idKey,
-    required void Function(String) onSelected,
-  }) {
+  Widget _buildSecurityCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: borderLight),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.key_rounded, color: accentBlue, size: 20),
+          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Ubah Password', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textDark)),
+                Text('Ganti kata sandi akun Anda', style: TextStyle(color: textGray, fontSize: 11)),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right_rounded, color: textGray),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBigSaveButton() {
+    return Obx(() => GestureDetector(
+      onTap: controller.isSaving.value ? null : () => controller.simpanProfil(),
+      child: Container(
+        height: 54,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: primaryBlue,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [BoxShadow(color: primaryBlue.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
+        ),
+        child: Center(
+          child: controller.isSaving.value
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.save_outlined, color: Colors.white, size: 18),
+                    SizedBox(width: 8),
+                    Text('Simpan Perubahan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  ],
+                ),
+        ),
+      ),
+    ));
+  }
+
+  void _showSearchSheet({required List items, required String idKey, required void Function(String) onSelected}) {
     final searchCtrl = TextEditingController();
     final filteredItems = RxList<dynamic>.from(items);
 
     Get.bottomSheet(
       Container(
-        height: Get.height * 0.72,
-        decoration: const BoxDecoration(
-          color: bgCard,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
+        height: Get.height * 0.7,
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
         child: Column(
           children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: textHint,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Title
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Cari & Pilih',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: textPrimary,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Search bar
+            Container(margin: const EdgeInsets.only(top: 12), width: 40, height: 4, decoration: BoxDecoration(color: borderLight, borderRadius: BorderRadius.circular(2))),
+            const Padding(padding: EdgeInsets.all(20), child: Text('Pilih Lokasi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textDark))),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
-                decoration: BoxDecoration(
-                  color: bgPage,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: dividerColor),
-                ),
+                decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(16), border: Border.all(color: borderLight)),
                 child: TextField(
                   controller: searchCtrl,
-                  autofocus: true,
-                  onChanged: (q) {
-                    filteredItems.value = q.isEmpty
-                        ? items
-                        : items
-                        .where((e) => (e['nama'] as String)
-                        .toLowerCase()
-                        .contains(q.toLowerCase()))
-                        .toList();
-                  },
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: textPrimary,
-                  ),
-                  decoration: const InputDecoration(
-                    hintText: 'Ketik untuk mencari...',
-                    hintStyle: TextStyle(color: textHint, fontSize: 14),
-                    prefixIcon: Icon(Icons.search_rounded, color: textSecondary, size: 22),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  ),
+                  onChanged: (q) => filteredItems.value = q.isEmpty ? items : items.where((e) => (e['nama'] as String).toLowerCase().contains(q.toLowerCase())).toList(),
+                  decoration: const InputDecoration(hintText: 'Cari...', prefixIcon: Icon(Icons.search, size: 20), border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 14)),
                 ),
               ),
             ),
             const SizedBox(height: 12),
-            // List
             Expanded(
-              child: Obx(() => filteredItems.isEmpty
-                  ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.search_off_rounded, size: 48, color: textHint),
-                    SizedBox(height: 8),
-                    Text(
-                      'Tidak ditemukan',
-                      style: TextStyle(color: textSecondary, fontSize: 14),
-                    ),
-                  ],
-                ),
-              )
-                  : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Obx(() => ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 itemCount: filteredItems.length,
                 itemBuilder: (ctx, i) {
                   final item = filteredItems[i];
-                  return _sheetItem(
-                    label: item['nama'],
+                  return ListTile(
+                    title: Text(item['nama'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                    trailing: const Icon(Icons.chevron_right, size: 18),
                     onTap: () {
                       onSelected(item[idKey].toString());
                       Get.back();
@@ -551,209 +426,6 @@ class EditProfileView extends GetView<EditProfileController> {
         ),
       ),
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-    );
-  }
-
-  Widget _sheetItem({required String label, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: bgPage,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: dividerColor),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: textPrimary,
-                ),
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: textHint, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ══════════════════════════════
-  // SAVE BUTTON
-  // ══════════════════════════════
-  Widget _buildSaveButton() {
-    return Obx(() => GestureDetector(
-      onTap: controller.isSaving.value ? null : () => controller.simpanProfil(),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        height: 56,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: controller.isSaving.value
-              ? const LinearGradient(colors: [Color(0xFFB0BFDA), Color(0xFFB0BFDA)])
-              : const LinearGradient(
-            colors: [accentLight, accentBlue],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: controller.isSaving.value
-              ? []
-              : [
-            BoxShadow(
-              color: accentBlue.withOpacity(0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Center(
-          child: controller.isSaving.value
-              ? const SizedBox(
-            width: 22,
-            height: 22,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.5,
-              color: Colors.white,
-            ),
-          )
-              : const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.save_rounded, color: Colors.white, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Simpan Perubahan',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ));
-  }
-
-  // ══════════════════════════════
-  // SHARED HELPERS
-  // ══════════════════════════════
-
-  Widget _cardWrap(List<Widget> children) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: bgCard,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(children: children),
-    );
-  }
-
-  Widget _buildField({
-    required String label,
-    required IconData icon,
-    required Widget child,
-    Widget? trailing,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: accentBlue.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: accentBlue, size: 20),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: textSecondary,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    if (trailing != null) ...[
-                      const SizedBox(width: 8),
-                      trailing,
-                    ]
-                  ],
-                ),
-                const SizedBox(height: 2),
-                child,
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _divider() => const Divider(
-    height: 1,
-    thickness: 1,
-    color: dividerColor,
-    indent: 70,
-    endIndent: 16,
-  );
-
-  Widget _textInput(
-      TextEditingController ctrl, {
-        String? hint,
-        TextInputType? keyboardType,
-        int maxLines = 1,
-        bool readOnly = false,
-        int? maxLength,
-      }) {
-    return TextField(
-      controller: ctrl,
-      readOnly: readOnly,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      maxLength: maxLength,
-      style: TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-        color: readOnly ? textSecondary : textPrimary,
-      ),
-      decoration: InputDecoration(
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 4),
-        hintText: hint,
-        hintStyle: const TextStyle(color: textHint, fontSize: 14, fontWeight: FontWeight.w400),
-        border: InputBorder.none,
-        counterText: '',
-      ),
     );
   }
 }

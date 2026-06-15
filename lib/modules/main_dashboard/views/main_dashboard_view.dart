@@ -16,10 +16,6 @@ class MainDashboardView extends GetView<MainDashboardController> {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(DaftarPengaduanController());
-    Get.put(NotifikasiMasyarakatController());
-    Get.put(DaftarChatMasyarakatController());
-
     final List<Widget> pages = [
       const NotifikasiMasyarakatView(),
       const DaftarPengaduanView(),
