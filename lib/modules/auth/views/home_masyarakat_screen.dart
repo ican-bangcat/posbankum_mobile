@@ -6,6 +6,7 @@ import '../controllers/auth_controller.dart';
 
 // Import Controller Dashboard Masyarakat
 import '../controllers/home_masyarakat_controller.dart';
+import '../../main_dashboard/controllers/main_dashboard_controller.dart';
 
 class HomeMasyarakatScreen extends StatefulWidget {
   const HomeMasyarakatScreen({super.key});
