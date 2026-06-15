@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../app/routes/app_routes.dart'; // Sesuaikan path routes-mu
+import '../../../app/routes/app_routes.dart';
+import '../../../app/data/services/api_service.dart';
 
 class DaftarChatMasyarakatController extends GetxController {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
+  Timer? _timer;
 
   // Tampungan data pengaduan yang sudah diterima (siap dichat)
   var acceptedComplaints = <Map<String, dynamic>>[].obs;
@@ -13,48 +15,53 @@ class DaftarChatMasyarakatController extends GetxController {
   void onInit() {
     super.onInit();
     fetchDaftarChatBerjalan();
-    listenToPengaduanChanges(); // Aktifkan real-time status pengaduan
+    // Jalankan timer refresh setiap 10 detik untuk menggantikan stream Supabase
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) => fetchDaftarChatBerjalan());
   }
 
-  // 1. Ambil data pengaduan yang statusnya 'Diterima'
+  @override
+  void onClose() {
+    _timer?.cancel();
+    super.onClose();
+  }
+
+  // 1. Ambil data pengaduan yang statusnya 'diproses' (diterima)
   Future<void> fetchDaftarChatBerjalan() async {
     try {
-      isLoading.value = true;
-      final userId = _supabase.auth.currentUser?.id;
+      if (acceptedComplaints.isEmpty) isLoading.value = true;
 
-      if (userId == null) return;
+      // Ambil pengaduan milik sendiri dari Laravel REST API
+      final response = await _apiService.dio.get('/pengaduan');
 
-      // Ambil pengaduan milik sendiri yang statusnya sudah 'Diterima'
-      final response = await _supabase
-          .from('pengaduan')
-          .select('id, judul_laporan, kategori_masalah, status, nama_paralegal_ditugaskan')
-          .eq('masyarakat_id', userId)
-          .eq('status', 'Diterima') // KUNCI UTAMA: Hanya yang diterima
-          .order('tgl_lapor', ascending: false);
+      if (response.data['status'] == true) {
+        final List<dynamic> list = response.data['data'];
+        
+        // Filter pengaduan yang statusnya 'diproses'
+        final filtered = list.where((item) {
+          final status = (item['status'] ?? '').toString().toLowerCase();
+          return status == 'diproses';
+        }).toList();
 
-      acceptedComplaints.assignAll(List<Map<String, dynamic>>.from(response));
+        // Map data agar sesuai dengan kunci yang dibaca oleh view
+        final mapped = filtered.map((item) {
+          return {
+            'id': item['id_pengaduan']?.toString() ?? '',
+            'judul_laporan': item['judul_pengaduan'] ?? item['jenis_masalah'] ?? 'Tanpa Judul',
+            'kategori_masalah': item['jenis_masalah'] ?? 'Lain-lain',
+            'nama_paralegal_ditugaskan': item['paralegal']?['nama_lengkap'] ?? item['nama_paralegal'] ?? 'Paralegal Posbankum',
+            'status': item['status'] ?? 'diproses',
+          };
+        }).toList();
+
+        acceptedComplaints.assignAll(mapped);
+      } else {
+        throw response.data['message'] ?? 'Gagal memuat daftar chat';
+      }
     } catch (e) {
-      Get.snackbar('Error', 'Gagal memuat daftar chat: $e');
+      print("❌ Error fetch daftar chat: $e");
     } finally {
       isLoading.value = false;
     }
-  }
-
-  // 2. Real-time Listener: Kalau tim web mengubah status pengaduan jadi 'Diterima',
-  // otomatis langsung muncul di halaman chat mobile tanpa perlu restart app!
-  void listenToPengaduanChanges() {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return;
-
-    _supabase
-        .from('pengaduan')
-        .stream(primaryKey: ['id'])
-        .eq('masyarakat_id', userId)
-        .listen((data) {
-      // Filter manual dari stream untuk mengambil yang statusnya 'Diterima'
-      final filtered = data.where((item) => item['status'] == 'Diterima').toList();
-      acceptedComplaints.assignAll(filtered);
-    });
   }
 
   // Fungsi navigasi ke ruang chat dengan membawa ID Pengaduan

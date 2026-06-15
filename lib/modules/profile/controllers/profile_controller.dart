@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:get_storage/get_storage.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../app/data/services/api_service.dart';
 
 class ProfileController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
+  final _storage = GetStorage();
 
   // ── VARIABEL REAKTIF UNTUK DATA DIRI ──
   var isLoading = true.obs;
+  var role = 'warga'.obs;
   var namaLengkap = ''.obs;
   var displayId = ''.obs;
   var avatarUrl = ''.obs;
@@ -45,127 +48,109 @@ class ProfileController extends GetxController {
     }
   }
 
-  // ── FUNGSI AMBIL DATA PROFIL (PECAH 3 TAHAP AMAN) ──
+  // ── FUNGSI AMBIL DATA PROFIL ──
   Future<void> fetchUserData() async {
     try {
       isLoading.value = true;
-      debugPrint('🔵 [PROFIL] 1. Mengecek sesi user...');
-      final user = supabase.auth.currentUser;
+      debugPrint('🔵 [PROFIL] 1. Menarik data profil dari Laravel API...');
+      final response = await _apiService.dio.get('/profile');
 
-      if (user == null) {
-        debugPrint('🟡 [PROFIL] User tidak ditemukan / belum login.');
-        return;
-      }
+      if (response.data['status'] == true) {
+        final userData = response.data['data'];
+        
+        email.value = userData['email'] ?? '-';
+        namaLengkap.value = userData['nama_lengkap'] ?? 'Pengguna Baru';
+        noHp.value = userData['nomor_telepon'] ?? '-';
+        avatarUrl.value = userData['foto_profile'] ?? '';
+        role.value = userData['role'] ?? 'warga';
 
-      if (user != null) {
-        email.value = user.email ?? '-';
-      }
-
-      // TAHAP 1: AMBIL DATA PROFIL UTAMA
-      debugPrint('🔵 [PROFIL] 2. Menarik data tabel profiles...');
-      final profileData = await supabase
-          .from('profiles')
-          .select('id, full_name, nomor_telepon, foto_profile, created_at')
-          .eq('id', user.id)
-          .maybeSingle();
-
-      if (profileData != null) {
-        namaLengkap.value = profileData['full_name'] ?? 'Pengguna Baru';
-        noHp.value = profileData['nomor_telepon'] ?? '-';
-        avatarUrl.value = profileData['foto_profile'] ?? '';
-
-        String rawId = profileData['id'].toString().substring(0, 8).toUpperCase();
+        String rawId = (userData['id_user'] ?? 'UNKNOWN').toString();
+        if (rawId.length >= 8) {
+          rawId = rawId.substring(0, 8).toUpperCase();
+        }
         displayId.value = 'ID: PB-$rawId';
 
-        // Set Anggota Sejak
-        if (profileData['created_at'] != null) {
-          final dt = DateTime.parse(profileData['created_at']);
+        if (userData['created_at'] != null) {
+          final dt = DateTime.parse(userData['created_at']);
           memberSince.value = dt.year.toString();
         }
-      }
 
-      // TAHAP 2: AMBIL DATA MASYARAKAT & WILAYAH
-      debugPrint('🔵 [PROFIL] 3. Menarik data tabel masyarakat...');
-      final masyarakatData = await supabase
-          .from('masyarakat')
-          .select('nik, alamat, kelurahan(nama), kecamatan(nama), kabupaten(nama)')
-          .eq('id', user.id)
-          .maybeSingle();
+        // TAHAP 2: BACA DATA MASYARAKAT & WILAYAH (Jika role warga)
+        if (role.value.toLowerCase() == 'warga' && userData['masyarakat'] != null) {
+          final msk = userData['masyarakat'];
+          nik.value = msk['nik'] ?? '-';
+          alamat.value = msk['alamat'] ?? '-';
 
-      if (masyarakatData != null) {
-        nik.value = masyarakatData['nik'] ?? '-';
-        alamat.value = masyarakatData['alamat'] ?? '-';
+          final kel = msk['kelurahan'];
+          final kec = msk['kecamatan'];
+          final kab = msk['kabupaten'];
 
-        final kel = masyarakatData['kelurahan'];
-        final kec = masyarakatData['kecamatan'];
-        final kab = masyarakatData['kabupaten'];
+          String namaKel = (kel != null && kel is Map) ? (kel['nama'] ?? '') : '';
+          String namaKec = (kec != null && kec is Map) ? (kec['nama'] ?? '') : '';
+          String namaKab = (kab != null && kab is Map) ? (kab['nama'] ?? '') : '';
 
-        // Parsing aman untuk mencegah error Type Cast (Map vs List)
-        String namaKel = (kel != null && kel is Map) ? (kel['nama'] ?? '') : '';
-        String namaKec = (kec != null && kec is Map) ? (kec['nama'] ?? '') : '';
-        String namaKab = (kab != null && kab is Map) ? (kab['nama'] ?? '') : '';
+          List<String> regionParts = [];
+          if (namaKel.isNotEmpty) regionParts.add(namaKel);
+          if (namaKec.isNotEmpty) regionParts.add(namaKec);
+          if (namaKab.isNotEmpty) regionParts.add(namaKab);
 
-        List<String> regionParts = [];
-        if (namaKel.isNotEmpty) regionParts.add(namaKel);
-        if (namaKec.isNotEmpty) regionParts.add(namaKec);
-        if (namaKab.isNotEmpty) regionParts.add(namaKab);
-
-        if (regionParts.isNotEmpty) {
-          kelurahanInfo.value = regionParts.join(', ');
-        } else {
-          kelurahanInfo.value = '-';
+          if (regionParts.isNotEmpty) {
+            kelurahanInfo.value = regionParts.join(', ');
+          } else {
+            kelurahanInfo.value = '-';
+          }
         }
       }
 
       // TAHAP 3: AMBIL STATISTIK PENGADUAN
-      debugPrint('🔵 [PROFIL] 4. Menarik data tabel pengaduan...');
-      final List<dynamic> pengaduanData = await supabase
-          .from('pengaduan')
-          .select('id_pengaduan, judul_pengaduan, jenis_masalah, nomor_pengaduan, status, created_at')
-          .eq('masyarakat_id', user.id)
-          .order('created_at', ascending: false);
+      debugPrint('🔵 [PROFIL] 2. Menarik statistik pengaduan...');
+      final statsResponse = await _apiService.dio.get('/pengaduan/statistik');
+      if (statsResponse.data['status'] == true) {
+        final stats = statsResponse.data['data'];
+        // Backend return: { menunggu: X, diproses: Y, selesai: Z, dibatalkan: W }
+        int countProses = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0);
+        int countSelesai = stats['selesai'] ?? 0;
+        int countTotal = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0) + 
+                         (stats['selesai'] ?? 0) + (stats['dibatalkan'] ?? 0);
 
-      int countProses = 0;
-      int countSelesai = 0;
-      List<Map<String, dynamic>> riwayatTemp = [];
-
-      for (var p in pengaduanData) {
-        String statusLaporan = (p['status'] ?? '').toString().toLowerCase();
-
-        // 1. Hitung Statistik
-        if (statusLaporan == 'diproses' || statusLaporan == 'menunggu') {
-          countProses++;
-        } else if (statusLaporan == 'selesai') {
-          countSelesai++;
-        }
-
-        // 2. Format Teks Status untuk UI
-        String statusTampil = 'Menunggu';
-        Color warnaStatus = Colors.orange;
-
-        if (statusLaporan == 'diproses') {
-          statusTampil = 'Diproses';
-          warnaStatus = Colors.blue;
-        } else if (statusLaporan == 'selesai') {
-          statusTampil = 'Selesai';
-          warnaStatus = Colors.green;
-        } else if (statusLaporan == 'dibatalkan') {
-          statusTampil = 'Dibatalkan';
-          warnaStatus = Colors.red;
-        }
-
-        riwayatTemp.add({
-          'judul': p['judul_pengaduan'] ?? p['jenis_masalah'] ?? 'Pengaduan',
-          'sub': '${p['nomor_pengaduan'] ?? '-'}  •  ${_formatDate(p['created_at'])}',
-          'status': statusTampil,
-          'color': warnaStatus,
-        });
+        totalPengaduan.value = countTotal.toString();
+        totalDiproses.value = countProses.toString();
+        totalSelesai.value = countSelesai.toString();
       }
 
-      totalPengaduan.value = pengaduanData.length.toString();
-      totalDiproses.value = countProses.toString();
-      totalSelesai.value = countSelesai.toString();
-      riwayatPengaduan.assignAll(riwayatTemp.take(3).toList());
+      // TAHAP 4: AMBIL RIWAYAT PENGADUAN
+      debugPrint('🔵 [PROFIL] 3. Menarik riwayat pengaduan...');
+      final pengaduanResponse = await _apiService.dio.get('/pengaduan');
+      if (pengaduanResponse.data['status'] == true) {
+        final List<dynamic> list = pengaduanResponse.data['data'];
+        List<Map<String, dynamic>> riwayatTemp = [];
+
+        for (var p in list) {
+          String statusLaporan = (p['status'] ?? '').toString().toLowerCase();
+
+          String statusTampil = 'Menunggu';
+          Color warnaStatus = Colors.orange;
+
+          if (statusLaporan == 'diproses') {
+            statusTampil = 'Diproses';
+            warnaStatus = Colors.blue;
+          } else if (statusLaporan == 'selesai') {
+            statusTampil = 'Selesai';
+            warnaStatus = Colors.green;
+          } else if (statusLaporan == 'dibatalkan') {
+            statusTampil = 'Dibatalkan';
+            warnaStatus = Colors.red;
+          }
+
+          riwayatTemp.add({
+            'judul': p['judul_pengaduan'] ?? p['jenis_masalah'] ?? 'Pengaduan',
+            'sub': '${p['nomor_pengaduan'] ?? '-'}  •  ${_formatDate(p['created_at'])}',
+            'status': statusTampil,
+            'color': warnaStatus,
+          });
+        }
+        riwayatPengaduan.assignAll(riwayatTemp.take(3).toList());
+      }
 
       debugPrint('✅ [PROFIL] Semua data sukses dimuat!');
     } catch (e, stackTrace) {
@@ -175,7 +160,6 @@ class ProfileController extends GetxController {
           'Beberapa data profil mungkin belum lengkap. Silakan coba lagi nanti.',
           backgroundColor: Colors.orange, colorText: Colors.white);
     } finally {
-      // Apapun yang terjadi (sukses/error), matikan loading!
       isLoading.value = false;
     }
   }
@@ -285,10 +269,15 @@ class ProfileController extends GetxController {
                     onPressed: () async {
                       Get.back();
                       try {
-                        await supabase.auth.signOut();
+                        await _apiService.dio.post('/logout');
+                        await _storage.remove('token');
+                        await _storage.remove('user');
+                        await _storage.remove('role');
+                        await _storage.write('is_logged_in', false);
                         Get.offAllNamed(AppRoutes.LOGIN_FORM);
                       } catch (e) {
-                        Get.snackbar('Error', 'Gagal logout: $e');
+                        await _storage.erase();
+                        Get.offAllNamed(AppRoutes.LOGIN_FORM);
                       }
                     },
                     style: OutlinedButton.styleFrom(

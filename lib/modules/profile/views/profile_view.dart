@@ -136,7 +136,11 @@ class ProfileView extends GetView<ProfileController> {
                   children: [
                     Obx(() => Text(controller.namaLengkap.value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)))),
                     const SizedBox(height: 4),
-                    const Text('Warga Terverifikasi', style: TextStyle(color: Color(0xFF4A61A8), fontSize: 12, fontWeight: FontWeight.w600)),
+                    Obx(() {
+                      String roleText = controller.role.value.toLowerCase() == 'paralegal'
+                          ? 'Paralegal Posbankum' : 'Warga Terverifikasi';
+                      return Text(roleText, style: const TextStyle(color: Color(0xFF4A61A8), fontSize: 12, fontWeight: FontWeight.w600));
+                    }),
                     const SizedBox(height: 6),
                     Obx(() => Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -188,6 +192,7 @@ class ProfileView extends GetView<ProfileController> {
   }
 
   Widget _buildDataDiriCard() {
+    final bool isWarga = controller.role.value.toLowerCase() == 'warga';
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -202,29 +207,34 @@ class ProfileView extends GetView<ProfileController> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Data Diri', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
-              InkWell(
-                onTap: () => Get.toNamed(AppRoutes.EDIT_PROFILE),
-                child: const Row(
-                  children: [
-                    Icon(Icons.edit_document, size: 14, color: Color(0xFF2A2E5E)),
-                    const SizedBox(width: 4),
-                    Text('Edit', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF2A2E5E))),
-                  ],
+              if (isWarga)
+                InkWell(
+                  onTap: () => Get.toNamed(AppRoutes.EDIT_PROFILE),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.edit_document, size: 14, color: Color(0xFF2A2E5E)),
+                      const SizedBox(width: 4),
+                      Text('Edit', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF2A2E5E))),
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 20),
           Obx(() => _buildDataItem(Icons.person_outline, 'Nama Lengkap', controller.namaLengkap.value)),
           const Divider(color: Color(0xFFF1F5F9)),
-          Obx(() => _buildDataItem(Icons.shield_outlined, 'NIK', controller.nik.value)),
-          const Divider(color: Color(0xFFF1F5F9)),
+          if (isWarga) ...[
+            Obx(() => _buildDataItem(Icons.shield_outlined, 'NIK', controller.nik.value)),
+            const Divider(color: Color(0xFFF1F5F9)),
+          ],
           Obx(() => _buildDataItem(Icons.phone_outlined, 'No. Telepon', controller.noHp.value)),
           const Divider(color: Color(0xFFF1F5F9)),
-          Obx(() => _buildDataItem(Icons.business_outlined, 'Kelurahan / Kecamatan / Kabupaten', controller.kelurahanInfo.value)),
-          const Divider(color: Color(0xFFF1F5F9)),
-          Obx(() => _buildDataItem(Icons.location_on_outlined, 'Alamat Tinggal', controller.alamat.value)),
-          const Divider(color: Color(0xFFF1F5F9)),
+          if (isWarga) ...[
+            Obx(() => _buildDataItem(Icons.business_outlined, 'Kelurahan / Kecamatan / Kabupaten', controller.kelurahanInfo.value)),
+            const Divider(color: Color(0xFFF1F5F9)),
+            Obx(() => _buildDataItem(Icons.location_on_outlined, 'Alamat Tinggal', controller.alamat.value)),
+            const Divider(color: Color(0xFFF1F5F9)),
+          ],
           Obx(() => _buildDataItem(Icons.email_outlined, 'Email', controller.email.value)),
         ],
       ),

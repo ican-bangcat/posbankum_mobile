@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../app/data/services/api_service.dart';
 
 class TimelineItem {
   final String title;
@@ -128,7 +128,7 @@ class DetailKasus {
 }
 
 class DetailKasusController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
   final kasus = Rx<DetailKasus?>(null);
   final isLoading = true.obs;
 
@@ -146,15 +146,27 @@ class DetailKasusController extends GetxController {
 
       final pengaduanId = rawId.toString();
 
-      final response = await supabase.from('pengaduan').select().eq('id_pengaduan', pengaduanId).single();
+      final response = await _apiService.dio.get('/pengaduan/$pengaduanId');
+      final lampiranResponse = await _apiService.dio.get('/pengaduan/$pengaduanId/lampiran');
+      final timelineResponse = await _apiService.dio.get('/pengaduan/$pengaduanId/timeline');
 
-      final lampiranResponse = await supabase.from('pengaduan_lampiran').select('path_file').eq('id_pengaduan', pengaduanId);
-      List<String> urls = (lampiranResponse as List).map((e) => e['path_file'].toString()).toList();
+      if (response.data['status'] == true) {
+        final detailData = response.data['data'];
 
-      final timelineResponse = await supabase.from('pengaduan_timeline').select().eq('id_pengaduan', pengaduanId).order('tanggal', ascending: true);
-      List<Map<String, dynamic>> timelineData = List<Map<String, dynamic>>.from(timelineResponse);
+        List<String> urls = [];
+        if (lampiranResponse.data['status'] == true) {
+          urls = (lampiranResponse.data['data'] as List)
+              .map((e) => e['path_file'].toString())
+              .toList();
+        }
 
-      kasus.value = DetailKasus.fromJson(response, urls, timelineData);
+        List<Map<String, dynamic>> timelineData = [];
+        if (timelineResponse.data['status'] == true) {
+          timelineData = List<Map<String, dynamic>>.from(timelineResponse.data['data']);
+        }
+
+        kasus.value = DetailKasus.fromJson(detailData, urls, timelineData);
+      }
     } catch (e) {
       print("❌ Error Fetch Detail: $e");
     } finally {
@@ -162,28 +174,11 @@ class DetailKasusController extends GetxController {
     }
   }
 
-  // 🚀 FUNGSI SAKTI BUKA LAMPIRAN (Nembus Private Bucket)
+  // 🚀 FUNGSI SAKTI BUKA LAMPIRAN (Langsung buka URL)
   Future<void> bukaLampiran(String urlFromDb) async {
     try {
-      Get.dialog(
-        const Center(child: CircularProgressIndicator(color: Colors.white)),
-        barrierDismissible: false,
-      );
-
-      String objectPath = urlFromDb;
-      if (urlFromDb.contains('pengaduan-lampiran/')) {
-        objectPath = urlFromDb.split('pengaduan-lampiran/').last;
-        if (objectPath.contains('?')) objectPath = objectPath.split('?').first;
-      }
-
-      final String signedUrl = await supabase.storage
-          .from('pengaduan-lampiran')
-          .createSignedUrl(objectPath, 3600);
-
-      Get.back();
-
-      final String lowerPath = objectPath.toLowerCase();
-      bool isImage = lowerPath.endsWith('.jpg') || lowerPath.endsWith('.jpeg') || lowerPath.endsWith('.png');
+      final String lowerPath = urlFromDb.toLowerCase();
+      bool isImage = lowerPath.contains('.jpg') || lowerPath.contains('.jpeg') || lowerPath.contains('.png') || lowerPath.contains('image');
 
       if (isImage) {
         Get.dialog(
@@ -200,7 +195,7 @@ class DetailKasusController extends GetxController {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
-                      signedUrl,
+                      urlFromDb,
                       fit: BoxFit.contain,
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
@@ -226,7 +221,7 @@ class DetailKasusController extends GetxController {
           ),
         );
       } else {
-        final Uri uri = Uri.parse(signedUrl);
+        final Uri uri = Uri.parse(urlFromDb);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         } else {
@@ -234,8 +229,7 @@ class DetailKasusController extends GetxController {
         }
       }
     } catch (e) {
-      if (Get.isDialogOpen ?? false) Get.back();
-      Get.snackbar("Akses Ditolak", "Gagal membuka lampiran: $e", backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar("Error", "Gagal membuka lampiran: $e", backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
 
@@ -244,13 +238,21 @@ class DetailKasusController extends GetxController {
     try {
       Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
 
-      await supabase.from('pengaduan').update({
-        'status': 'dibatalkan'
-      }).eq('id_pengaduan', kasus.value!.id);
+      final response = await _apiService.dio.patch(
+        '/pengaduan/${kasus.value!.id}/status',
+        data: {
+          'status': 'dibatalkan',
+          'catatan_internal': 'Dibatalkan oleh Pelapor',
+        },
+      );
 
       Get.back();
-      fetchDetailKasus();
-      Get.snackbar("Berhasil", "Pengaduan telah dibatalkan.", backgroundColor: Colors.green, colorText: Colors.white);
+      if (response.data['status'] == true) {
+        fetchDetailKasus();
+        Get.snackbar("Berhasil", "Pengaduan telah dibatalkan.", backgroundColor: Colors.green, colorText: Colors.white);
+      } else {
+        throw response.data['message'] ?? 'Gagal membatalkan pengaduan';
+      }
     } catch (e) {
       Get.back();
       print("❌ Error Batal Pengaduan: $e");

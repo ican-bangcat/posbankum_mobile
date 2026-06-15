@@ -3,11 +3,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:dio/dio.dart' as dio_pkg;
+import '../../../app/data/services/api_service.dart';
 
 class PengaduanController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
   var isLoading = false.obs;
 
   var progressCount = 0.obs;
@@ -125,6 +126,7 @@ class PengaduanController extends GetxController {
     }
   }
 
+
   Future<void> submitPengaduan() async {
     // 🚀 VALIDASI 1: Bersihkan spasi gaib dan pastikan tepat 16 digit!
     String nikBersih = nikC.text.trim();
@@ -147,33 +149,43 @@ class PengaduanController extends GetxController {
 
     try {
       isLoading.value = true;
-      final user = supabase.auth.currentUser;
-      if (user == null) {
-        Get.snackbar("Error", "Sesi habis, silakan login ulang");
-        return;
+
+      // Ambil data profil & kependudukan pelapor dari Laravel
+      final profileRes = await _apiService.dio.get('/profile');
+      if (profileRes.data['status'] != true) {
+        throw profileRes.data['message'] ?? 'Gagal memuat profil pelapor';
       }
 
-      // Ambil nama dari tabel profil
-      final dataPelapor = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', user.id)
-          .maybeSingle();
-      String namaOtomatis = dataPelapor?['full_name'] ?? 'Tanpa Nama';
+      final userData = profileRes.data['data'];
+      String namaOtomatis = userData['nama_lengkap'] ?? 'Tanpa Nama';
 
-      // 🚀 LOGIKA POSBANKUM: Cari id_kelurahan milik pelapor
-      final dataMasyarakat = await supabase.from('masyarakat').select('id_kelurahan').eq('id', user.id).maybeSingle();
-      if (dataMasyarakat == null || dataMasyarakat['id_kelurahan'] == null) {
-        Get.snackbar("Profil Belum Lengkap", "Data kelurahan Anda tidak ditemukan. Silakan lengkapi profil terlebih dahulu.", backgroundColor: Colors.orange.shade700, colorText: Colors.white);
-        return;
+      if (userData['role'] != 'warga' || userData['masyarakat'] == null) {
+        throw 'Data kependudukan Anda tidak ditemukan. Harap hubungi admin.';
       }
-      String idKelurahanUser = dataMasyarakat['id_kelurahan'];
+
+      final msk = userData['masyarakat'];
+      String? idKelurahanUser = msk['id_kelurahan'];
+      String? idKabupaten = msk['id_kabupaten'];
+      String? idKecamatan = msk['id_kecamatan'];
+
+      if (idKelurahanUser == null) {
+        throw 'Data kelurahan Anda tidak ditemukan. Silakan lengkapi profil terlebih dahulu.';
+      }
 
       // 🚀 LOGIKA POSBANKUM: Cari id_posbankum yang melayani kelurahan pelapor
-      final posbankumTujuan = await supabase.from('posbankum').select('id_posbankum').eq('id_kelurahan', idKelurahanUser).maybeSingle();
+      final posbankumRes = await _apiService.dio.get('/posbankum');
+      if (posbankumRes.data['status'] != true) {
+        throw posbankumRes.data['message'] ?? 'Gagal memuat data Posbankum';
+      }
+
+      final List<dynamic> posbankumList = posbankumRes.data['data'];
+      var posbankumTujuan = posbankumList.firstWhere(
+        (element) => element['id_kelurahan'] == idKelurahanUser,
+        orElse: () => null,
+      );
+
       if (posbankumTujuan == null) {
-        Get.snackbar("Peringatan", "Tidak ada Posbankum yang melayani kelurahan Anda saat ini.", backgroundColor: Colors.red, colorText: Colors.white);
-        return;
+        throw 'Tidak ada Posbankum yang melayani kelurahan Anda saat ini.';
       }
       String idPosbankum = posbankumTujuan['id_posbankum'];
 
@@ -181,12 +193,13 @@ class PengaduanController extends GetxController {
       String customId = _generatePengaduanId();
       String gabunganKronologi = 'Lurah/Kelurahan: ${namaLurahC.text.trim()}\n\nKronologi:\n${kronologiC.text.trim()}';
 
-      // 🔵 TAHAP 1: SIMPAN DATA UTAMA KE TABEL `pengaduan`
-      final insertedData = await supabase.from('pengaduan').insert({
-        'id_posbankum': idPosbankum, // 🚀 WAJIB DIISI!
+      // 🔵 TAHAP 1: SIMPAN DATA UTAMA KE TABEL `pengaduan` Laravel REST API
+      final response = await _apiService.dio.post('/pengaduan', data: {
+        'id_posbankum': idPosbankum,
+        'id_kabupaten': idKabupaten,
+        'id_kecamatan': idKecamatan,
+        'id_kelurahan': idKelurahanUser,
         'nomor_pengaduan': customId,
-        'masyarakat_id': user.id,
-        'created_by': user.id,
         'nama_pelapor': namaOtomatis,
         'nik': nikBersih,
         'nomor_telepon': noHpC.text.trim(),
@@ -197,15 +210,19 @@ class PengaduanController extends GetxController {
         'tanggal_kejadian': tglKejadianC.text,
         'waktu_kejadian': waktuKejadianC.text,
         'prioritas': prioritasOtomatis,
-        'status': 'menunggu', // 🚀 SESUAI ATURAN BARU
-      }).select('id_pengaduan').single();
+        'status': 'menunggu',
+      });
+
+      if (response.data['status'] != true) {
+        throw response.data['message'] ?? 'Gagal menyimpan data pengaduan ke server';
+      }
 
       // Tangkap UUID pengaduan yang baru dibuat
-      String generatedUuid = insertedData['id_pengaduan'];
+      String generatedUuid = response.data['data']['id_pengaduan'].toString();
 
       // 🔵 TAHAP 2: JIKA ADA FILE, UPLOAD & SIMPAN KE TABEL `pengaduan_lampiran`
       if (selectedFiles.isNotEmpty) {
-        await _uploadAndInsertLampiran(user.id, generatedUuid);
+        await _uploadAndInsertLampiran(generatedUuid);
       }
 
       // 🔵 TAHAP 3: LEMPAR KE HALAMAN SUKSES
@@ -231,18 +248,14 @@ class PengaduanController extends GetxController {
     }
   }
 
-  // 🚀 FUNGSI UPLOAD & INSERT KE TABEL LAMPIRAN (SUDAH DIPERBAIKI MIME TYPE-NYA)
-  Future<void> _uploadAndInsertLampiran(String userId, String idPengaduan) async {
-    List<Map<String, dynamic>> lampiranDataToInsert = [];
-
+  // 🚀 FUNGSI UPLOAD & INSERT KE TABEL LAMPIRAN VIA LARAVEL REST API
+  Future<void> _uploadAndInsertLampiran(String idPengaduan) async {
     for (var file in selectedFiles) {
       try {
         final fileExt = file.path.split('.').last.toLowerCase();
-        final fileSize = file.lengthSync();
         final fileName = 'bukti_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}.$fileExt';
 
-        // 🚀 FIX: Konversi ekstensi ke MIME Type Standar Internasional
-        String realMimeType = 'application/octet-stream'; // Default unknown
+        String realMimeType = 'application/octet-stream';
         if (fileExt == 'jpg' || fileExt == 'jpeg') {
           realMimeType = 'image/jpeg';
         } else if (fileExt == 'png') {
@@ -251,35 +264,25 @@ class PengaduanController extends GetxController {
           realMimeType = 'application/pdf';
         }
 
-        // Format Path: UUID-User/nama-file.jpg
-        final filePath = '$userId/$fileName';
+        dio_pkg.FormData formData = dio_pkg.FormData.fromMap({
+          'file': await dio_pkg.MultipartFile.fromFile(
+            file.path,
+            filename: fileName,
+          ),
+          'jenis_lampiran': 'bukti_awal',
+        });
 
-        // 1. Upload ke Storage Bucket "pengaduan-lampiran"
-        await supabase.storage.from('pengaduan-lampiran').upload(
-            filePath,
-            file,
-            fileOptions: const FileOptions(cacheControl: '3600', upsert: false)
+        final uploadRes = await _apiService.dio.post(
+          '/pengaduan/$idPengaduan/lampiran',
+          data: formData,
         );
 
-        // 2. Dapatkan URL Publik
-        final publicUrl = supabase.storage.from('pengaduan-lampiran').getPublicUrl(filePath);
-
-        // 3. Siapkan data untuk dimasukkan ke tabel `pengaduan_lampiran`
-        lampiranDataToInsert.add({
-          'id_pengaduan': idPengaduan,
-          'nama_file': fileName,
-          'path_file': publicUrl,
-          'mime_type': realMimeType, // 👈 SEKARANG YANG DISIMPAN ADALAH "image/jpeg", BUKAN LAGI "jpg"
-          'size_bytes': fileSize,
-        });
+        if (uploadRes.data['status'] != true) {
+          print("❌ Gagal upload file: ${uploadRes.data['message']}");
+        }
       } catch (e) {
         print("❌ Gagal upload file: $e");
       }
-    }
-
-    // 4. Lakukan Insert Massal (Batch Insert) ke Database
-    if (lampiranDataToInsert.isNotEmpty) {
-      await supabase.from('pengaduan_lampiran').insert(lampiranDataToInsert);
     }
   }
 

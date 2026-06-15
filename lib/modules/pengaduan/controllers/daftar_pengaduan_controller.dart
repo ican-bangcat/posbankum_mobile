@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import '../../../app/data/services/api_service.dart';
 
 enum StatusPengaduan { semua, dalamProses, selesai }
 
@@ -41,7 +41,7 @@ class PengaduanItem {
 }
 
 class DaftarPengaduanController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
 
   var isLoading = true.obs;
   var selectedTab = StatusPengaduan.semua.obs;
@@ -62,21 +62,18 @@ class DaftarPengaduanController extends GetxController {
   Future<void> fetchDaftarPengaduan() async {
     try {
       isLoading.value = true;
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
 
-      // ✅ FIX: Ambil kolom spesifik yang benar & order by created_at
-      final List<dynamic> resultData = await supabase
-          .from('pengaduan')
-          .select('id_pengaduan, nomor_pengaduan, judul_pengaduan, jenis_masalah, status, created_at')
-          .eq('masyarakat_id', user.id)
-          .order('created_at', ascending: false);
+      final response = await _apiService.dio.get('/pengaduan');
 
-      List<PengaduanItem> rawList = resultData.map((e) => PengaduanItem.fromJson(e)).toList();
+      if (response.data['status'] == true) {
+        final List<dynamic> resultData = response.data['data'];
+        List<PengaduanItem> rawList = resultData.map((e) => PengaduanItem.fromJson(e)).toList();
 
-      allItems.value = rawList;
-      applyFilterAndSearch();
-
+        allItems.value = rawList;
+        applyFilterAndSearch();
+      } else {
+        throw response.data['message'] ?? 'Gagal memuat daftar pengaduan';
+      }
     } catch (e) {
       print("❌ Error fetch daftar pengaduan: $e");
       Get.snackbar('Error', 'Gagal memuat daftar pengaduan');
