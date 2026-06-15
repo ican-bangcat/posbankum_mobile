@@ -100,12 +100,12 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                       SizedBox(
                         width: double.infinity,
                         height: 48,
-                        child: ElevatedButton.icon(
-                          onPressed: () => authC.loginWithGoogle(),
+                        child: Obx(() => ElevatedButton.icon(
+                          onPressed: authC.isLoading.value ? null : () => authC.loginWithGoogle(),
                           icon: Image.asset('assets/images/icons/google.png', height: 20, errorBuilder: (c,e,s) => const Icon(Icons.g_mobiledata)),
                           label: const Text('Masuk dengan Google', style: TextStyle(color: textLight)),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                        ),
+                        )),
                       ),
                       const SizedBox(height: 24),
                       Center(
