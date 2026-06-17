@@ -184,174 +184,179 @@ class MainDashboardView extends GetView<MainDashboardController> {
 
   void _showIncompleteProfilePopup() {
     Get.bottomSheet(
-      Container(
-        height: Get.height * 0.85,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: Stack(
-          children: [
-            // Header Gradient Section
-            Container(
-              height: 250,
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF2A2E5E), Color(0xFF4B53A6)],
-                ),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 20),
-                  // Icon Profile with Warning
-                  Stack(
-                    alignment: Alignment.bottomRight,
+      Builder(
+        builder: (sheetContext) {
+          final double sheetBottomPadding = MediaQuery.of(sheetContext).padding.bottom;
+          return Container(
+            height: Get.height * 0.85,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+            ),
+            child: Stack(
+              children: [
+                // Header Gradient Section
+                Container(
+                  height: 250,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFF2A2E5E), Color(0xFF4B53A6)],
+                    ),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: const Icon(Icons.account_circle_outlined, color: Colors.white, size: 50),
+                      const SizedBox(height: 20),
+                      // Icon Profile with Warning
+                      Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: const Icon(Icons.account_circle_outlined, color: Colors.white, size: 50),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(color: Color(0xFFE2C842), shape: BoxShape.circle),
+                            child: const Icon(Icons.priority_high, color: Colors.white, size: 14),
+                          ),
+                        ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(color: Color(0xFFE2C842), shape: BoxShape.circle),
-                        child: const Icon(Icons.priority_high, color: Colors.white, size: 14),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Profil Belum Lengkap!',
+                        style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: Text(
+                          'Untuk membuat pengaduan, Anda perlu melengkapi data diri terlebih dahulu.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Profil Belum Lengkap!',
-                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Text(
-                      'Untuk membuat pengaduan, Anda perlu melengkapi data diri terlebih dahulu.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13),
+                ),
+
+                // Progress Bar Indicator
+                Positioned(
+                  top: 235,
+                  left: 0,
+                  right: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: Row(
+                      children: [
+                        _buildStepBar(controller.isNamaComplete.value),
+                        const SizedBox(width: 8),
+                        _buildStepBar(controller.isNikComplete.value),
+                        const SizedBox(width: 8),
+                        _buildStepBar(controller.isTeleponComplete.value),
+                        const SizedBox(width: 8),
+                        _buildStepBar(controller.isAlamatComplete.value),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            // Progress Bar Indicator
-            Positioned(
-              top: 235,
-              left: 0,
-              right: 0,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30),
-                child: Row(
-                  children: [
-                    _buildStepBar(controller.isNamaComplete.value),
-                    const SizedBox(width: 8),
-                    _buildStepBar(controller.isNikComplete.value),
-                    const SizedBox(width: 8),
-                    _buildStepBar(controller.isTeleponComplete.value),
-                    const SizedBox(width: 8),
-                    _buildStepBar(controller.isAlamatComplete.value),
-                  ],
                 ),
-              ),
-            ),
 
-            // Close Button
-            Positioned(
-              top: 20,
-              right: 20,
-              child: GestureDetector(
-                onTap: () => Get.back(),
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                  child: const Icon(Icons.close, color: Colors.white, size: 20),
-                ),
-              ),
-            ),
-
-            // Content Section
-            Positioned.fill(
-              top: 260,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      _buildStatusItem(
-                        icon: Icons.person_outline,
-                        label: 'Nama Lengkap',
-                        isComplete: controller.isNamaComplete.value,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildStatusItem(
-                        icon: Icons.badge_outlined,
-                        label: 'NIK (16 Digit)',
-                        isComplete: controller.isNikComplete.value,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildStatusItem(
-                        icon: Icons.phone_outlined,
-                        label: 'No. Telepon',
-                        isComplete: controller.isTeleponComplete.value,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildStatusItem(
-                        icon: Icons.location_on_outlined,
-                        label: 'Alamat & Wilayah',
-                        isComplete: controller.isAlamatComplete.value,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () {
-                          Get.back();
-                          Get.toNamed(AppRoutes.EDIT_PROFILE);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2A2E5E),
-                          minimumSize: const Size(double.infinity, 56),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.edit_note, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text('Lengkapi Profil Sekarang', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                          ],
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () => Get.back(),
-                        child: const Text(
-                          'Lewati, isi nanti',
-                          style: TextStyle(
-                            color: Color(0xFF64748B), // Slate 600 - lebih kontras dan mudah dibaca
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            decoration: TextDecoration.underline, // Tambahkan underline agar lebih jelas bahwa ini tombol
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
+                // Close Button
+                Positioned(
+                  top: 20,
+                  right: 20,
+                  child: GestureDetector(
+                    onTap: () => Get.back(),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                      child: const Icon(Icons.close, color: Colors.white, size: 20),
+                    ),
                   ),
                 ),
-              ),
+
+                // Content Section
+                Positioned.fill(
+                  top: 260,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 20),
+                          _buildStatusItem(
+                            icon: Icons.person_outline,
+                            label: 'Nama Lengkap',
+                            isComplete: controller.isNamaComplete.value,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildStatusItem(
+                            icon: Icons.badge_outlined,
+                            label: 'NIK (16 Digit)',
+                            isComplete: controller.isNikComplete.value,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildStatusItem(
+                            icon: Icons.phone_outlined,
+                            label: 'No. Telepon',
+                            isComplete: controller.isTeleponComplete.value,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildStatusItem(
+                            icon: Icons.location_on_outlined,
+                            label: 'Alamat & Wilayah',
+                            isComplete: controller.isAlamatComplete.value,
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton(
+                            onPressed: () {
+                              Get.back();
+                              Get.toNamed(AppRoutes.EDIT_PROFILE);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2A2E5E),
+                              minimumSize: const Size(double.infinity, 56),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.edit_note, color: Colors.white),
+                                SizedBox(width: 8),
+                                Text('Lengkapi Profil Sekarang', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                              ],
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Get.back(),
+                            child: const Text(
+                              'Lewati, isi nanti',
+                              style: TextStyle(
+                                color: Color(0xFF64748B), // Slate 600 - lebih kontras dan mudah dibaca
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                decoration: TextDecoration.underline, // Tambahkan underline agar lebih jelas bahwa ini tombol
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 20 + sheetBottomPadding),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        }
       ),
       isScrollControlled: true,
       enableDrag: true,

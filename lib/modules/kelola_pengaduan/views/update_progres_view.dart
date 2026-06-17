@@ -12,6 +12,8 @@ class UpdateProgresView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: darkBlue,
       body: Column(
@@ -25,7 +27,7 @@ class UpdateProgresView extends StatelessWidget {
                 borderRadius: const BorderRadius.only(topRight: Radius.circular(28)),
               ),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomPadding),
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

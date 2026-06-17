@@ -24,9 +24,13 @@ class DetailKasusView extends GetView<DetailKasusController> {
       final String statusKasus = (kasus.status).toLowerCase().trim();
       bool isSelesai = statusKasus == 'selesai';
 
+      final double bottomPadding = MediaQuery.of(context).padding.bottom;
+
       return Scaffold(
         backgroundColor: darkBlueColor,
-        body: isSelesai ? _buildSelesaiLayout(kasus, isSelesai) : _buildProsesLayout(kasus, isSelesai, statusKasus),
+        body: isSelesai
+            ? _buildSelesaiLayout(kasus, isSelesai, bottomPadding)
+            : _buildProsesLayout(kasus, isSelesai, statusKasus, bottomPadding),
       );
     });
   }
@@ -66,7 +70,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
   // ===========================================================================
   // 🟢 LAYOUT SELESAI (SESUAI FIGMA + LAMPIRAN & DATA ASLI)
   // ===========================================================================
-  Widget _buildSelesaiLayout(DetailKasus kasus, bool isSelesai) {
+  Widget _buildSelesaiLayout(DetailKasus kasus, bool isSelesai, double bottomPadding) {
     return Column(
       children: [
         _buildHeader(isSelesai),
@@ -76,7 +80,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
             decoration: const BoxDecoration(color: bgSelesai, borderRadius: BorderRadius.only(topRight: Radius.circular(28), topLeft: Radius.zero)),
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+              padding: EdgeInsets.fromLTRB(20, 24, 20, 40 + bottomPadding),
               child: Column(
                 children: [
                   // --- CARD 1: HEADER INFO SELESAI ---
@@ -355,7 +359,9 @@ class DetailKasusView extends GetView<DetailKasusController> {
   // ===========================================================================
   // 🔵 LAYOUT PROSES / PENDING (Aman, Tipografi Rapih)
   // ===========================================================================
-  Widget _buildProsesLayout(DetailKasus kasus, bool isSelesai, String statusKasus) {
+  Widget _buildProsesLayout(DetailKasus kasus, bool isSelesai, String statusKasus, double bottomPadding) {
+    final bool hasBottomButton = statusKasus == 'diproses' || statusKasus == 'pending' || statusKasus == 'menunggu';
+
     return Column(
       children: [
         _buildHeader(isSelesai),
@@ -368,7 +374,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                    padding: EdgeInsets.fromLTRB(24, 32, 24, hasBottomButton ? 24 : 24 + bottomPadding),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -427,9 +433,9 @@ class DetailKasusView extends GetView<DetailKasusController> {
                 ),
 
                 if (statusKasus == 'diproses')
-                  _buildChatButton()
+                  _buildChatButton(bottomPadding)
                 else if (statusKasus == 'pending' || statusKasus == 'menunggu')
-                  _buildBatalkanButton(),
+                  _buildBatalkanButton(bottomPadding),
               ],
             ),
           ),
@@ -503,9 +509,9 @@ class DetailKasusView extends GetView<DetailKasusController> {
     );
   }
 
-  Widget _buildBatalkanButton() {
+  Widget _buildBatalkanButton(double bottomPadding) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPadding),
       decoration: BoxDecoration(
           color: whiteBgColor,
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, -5))]
@@ -590,9 +596,9 @@ class DetailKasusView extends GetView<DetailKasusController> {
     );
   }
 
-  Widget _buildChatButton() {
+  Widget _buildChatButton(double bottomPadding) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPadding),
       decoration: BoxDecoration(color: whiteBgColor, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, -5))]),
       child: SizedBox(
         width: double.infinity,

@@ -1,12 +1,13 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import '../controllers/profile_controller.dart';
+import 'package:dio/dio.dart' as dio_pkg;
+import '../../../app/data/services/api_service.dart';
+import 'profile_controller.dart';
 
 class EditProfileController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
 
   // --- CONTROLLER UNTUK TEKS ---
   final namaC = TextEditingController();
@@ -46,37 +47,34 @@ class EditProfileController extends GetxController {
   Future<void> fetchUserData() async {
     try {
       isLoadingData.value = true;
-      final user = supabase.auth.currentUser;
 
-      if (user != null) {
-        emailC.text = user.email ?? '';
+      final response = await _apiService.dio.get('/profile');
+      if (response.data['status'] == true) {
+        final userData = response.data['data'];
 
-        // ✅ 1. Ambil data dari tabel profiles (Nama, No HP, Foto)
-        final profileData = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
-        if (profileData != null) {
-          namaC.text = profileData['full_name'] ?? '';
-          noHpC.text = profileData['nomor_telepon'] ?? '';
-          avatarUrl.value = profileData['foto_profile'] ?? '';
-          displayNama.value = profileData['full_name'] ?? 'Pengguna';
-        }
+        emailC.text = userData['email'] ?? '';
+        namaC.text = userData['nama_lengkap'] ?? '';
+        noHpC.text = userData['nomor_telepon'] ?? '';
+        avatarUrl.value = userData['foto_profile'] ?? '';
+        displayNama.value = userData['nama_lengkap'] ?? 'Pengguna';
 
-        // ✅ 2. Ambil data dari tabel masyarakat (NIK, Alamat, Wilayah)
-        final masyarakatData = await supabase.from('masyarakat').select('*').eq('id', user.id).maybeSingle();
-        if (masyarakatData != null) {
-          nikC.text = masyarakatData['nik'] ?? '';
-          alamatDetailC.text = masyarakatData['alamat'] ?? '';
+        // Ambil data kependudukan masyarakat jika role-nya warga
+        if (userData['masyarakat'] != null) {
+          final msk = userData['masyarakat'];
+          nikC.text = msk['nik'] ?? '';
+          alamatDetailC.text = msk['alamat'] ?? '';
 
-          // Handle Dropdowns (UUID)
-          if (masyarakatData['id_kabupaten'] != null) {
-            selectedKabupatenId.value = masyarakatData['id_kabupaten'].toString();
+          // Handle Dropdowns (UUID/String dari Laravel)
+          if (msk['id_kabupaten'] != null) {
+            selectedKabupatenId.value = msk['id_kabupaten'].toString();
             await fetchKecamatan(selectedKabupatenId.value!);
 
-            if (masyarakatData['id_kecamatan'] != null) {
-              selectedKecamatanId.value = masyarakatData['id_kecamatan'].toString();
+            if (msk['id_kecamatan'] != null) {
+              selectedKecamatanId.value = msk['id_kecamatan'].toString();
               await fetchKelurahan(selectedKecamatanId.value!);
 
-              if (masyarakatData['id_kelurahan'] != null) {
-                selectedKelurahanId.value = masyarakatData['id_kelurahan'].toString();
+              if (msk['id_kelurahan'] != null) {
+                selectedKelurahanId.value = msk['id_kelurahan'].toString();
               }
             }
           }
@@ -92,9 +90,13 @@ class EditProfileController extends GetxController {
   // 1. AMBIL KABUPATEN
   Future<void> fetchKabupaten() async {
     try {
-      final response = await supabase.from('kabupaten').select('id_kabupaten, nama').order('nama');
-      listKabupaten.value = response;
-    } catch (e) {}
+      final response = await _apiService.dio.get('/wilayah/kabupaten');
+      if (response.data['status'] == true) {
+        listKabupaten.value = response.data['data'] ?? [];
+      }
+    } catch (e) {
+      debugPrint('Error fetchKabupaten: $e');
+    }
   }
 
   // 2. AMBIL KECAMATAN
@@ -105,13 +107,16 @@ class EditProfileController extends GetxController {
         selectedKelurahanId.value = null;
         listKelurahan.clear();
       }
-      final response = await supabase
-          .from('kecamatan')
-          .select('id_kecamatan, nama')
-          .eq('id_kabupaten', kabId)
-          .order('nama');
-      listKecamatan.value = response;
-    } catch (e) {}
+      final response = await _apiService.dio.get(
+        '/wilayah/kecamatan',
+        queryParameters: {'id_kabupaten': kabId},
+      );
+      if (response.data['status'] == true) {
+        listKecamatan.value = response.data['data'] ?? [];
+      }
+    } catch (e) {
+      debugPrint('Error fetchKecamatan: $e');
+    }
   }
 
   // 3. AMBIL KELURAHAN
@@ -120,13 +125,16 @@ class EditProfileController extends GetxController {
       if (selectedKelurahanId.value != null && !isLoadingData.value) {
         selectedKelurahanId.value = null;
       }
-      final response = await supabase
-          .from('kelurahan')
-          .select('id_kelurahan, nama')
-          .eq('id_kecamatan', kecId)
-          .order('nama');
-      listKelurahan.value = response;
-    } catch (e) {}
+      final response = await _apiService.dio.get(
+        '/wilayah/kelurahan',
+        queryParameters: {'id_kecamatan': kecId},
+      );
+      if (response.data['status'] == true) {
+        listKelurahan.value = response.data['data'] ?? [];
+      }
+    } catch (e) {
+      debugPrint('Error fetchKelurahan: $e');
+    }
   }
 
   // 4. PILIH FOTO
@@ -146,52 +154,75 @@ class EditProfileController extends GetxController {
   // 5. SIMPAN PROFIL
   Future<void> simpanProfil() async {
     if (namaC.text.trim().isEmpty) {
-      Get.snackbar('Peringatan', 'Nama lengkap tidak boleh kosong!', backgroundColor: Colors.orange, colorText: Colors.white);
+      Get.snackbar(
+        'Peringatan',
+        'Nama lengkap tidak boleh kosong!',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
       return;
     }
 
     try {
       isSaving.value = true;
-      final user = supabase.auth.currentUser;
-      if (user == null) throw 'Sesi login tidak ditemukan';
-
       String? finalAvatarUrl = avatarUrl.value;
 
-      // ✅ LOGIKA UPLOAD FOTO KE BUCKET profile-photos & FOLDER pelapor/
+      // 1. Upload Foto Profil Terlebih Dahulu (Jika Ada)
       if (selectedImageBytes.value != null && selectedImageExt != null) {
-        final fileName = 'pelapor/${user.id}/profile_${DateTime.now().millisecondsSinceEpoch}.$selectedImageExt';
+        final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.$selectedImageExt';
+        
+        final dio_pkg.FormData formData = dio_pkg.FormData.fromMap({
+          'foto': dio_pkg.MultipartFile.fromBytes(
+            selectedImageBytes.value!,
+            filename: fileName,
+          ),
+        });
 
-        await supabase.storage.from('profile-photos').uploadBinary(
-          fileName,
-          selectedImageBytes.value!,
-          fileOptions: const FileOptions(upsert: true),
+        final uploadRes = await _apiService.dio.post(
+          '/upload/foto-profil',
+          data: formData,
         );
-        finalAvatarUrl = supabase.storage.from('profile-photos').getPublicUrl(fileName);
+
+        if (uploadRes.data['status'] == true) {
+          // Tangkap URL foto baru yang dikembalikan Laravel
+          finalAvatarUrl = uploadRes.data['data']['foto_profile'] ?? uploadRes.data['data']['url'];
+          avatarUrl.value = finalAvatarUrl ?? '';
+        } else {
+          throw uploadRes.data['message'] ?? 'Gagal mengunggah foto profil ke server';
+        }
       }
 
-      // ✅ Update data khusus di tabel masyarakat
-      final updateDataMasyarakat = {
+      // 2. Kirim Request Update Profil ke Laravel API
+      final response = await _apiService.dio.put('/profile', data: {
+        'nama_lengkap': namaC.text.trim(),
+        'nomor_telepon': noHpC.text.trim(),
+        'foto_profile': finalAvatarUrl,
         'nik': nikC.text.trim(),
         'alamat': alamatDetailC.text.trim(),
         'id_kabupaten': selectedKabupatenId.value,
         'id_kecamatan': selectedKecamatanId.value,
         'id_kelurahan': selectedKelurahanId.value,
-      };
-      await supabase.from('masyarakat').update(updateDataMasyarakat).eq('id', user.id);
+      });
 
-      // ✅ Update data khusus di tabel profiles
-      final updateDataProfiles = {
-        'full_name': namaC.text.trim(),
-        'nomor_telepon': noHpC.text.trim(),
-        'foto_profile': finalAvatarUrl,
-      };
-      await supabase.from('profiles').update(updateDataProfiles).eq('id', user.id);
-
-      refreshProfileData();
-      Get.back();
-      Get.snackbar('Sukses', 'Profil berhasil diperbarui!', backgroundColor: Colors.green, colorText: Colors.white);
+      if (response.data['status'] == true) {
+        refreshProfileData();
+        Get.back();
+        Get.snackbar(
+          'Sukses',
+          'Profil berhasil diperbarui!',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        throw response.data['message'] ?? 'Gagal memperbarui data profil';
+      }
     } catch (e) {
-      Get.snackbar('Error', 'Gagal menyimpan profil: $e', backgroundColor: const Color(0xFFE53E3E), colorText: Colors.white);
+      Get.snackbar(
+        'Error',
+        'Gagal menyimpan profil: $e',
+        backgroundColor: const Color(0xFFE53E3E),
+        colorText: Colors.white,
+      );
     } finally {
       isSaving.value = false;
     }

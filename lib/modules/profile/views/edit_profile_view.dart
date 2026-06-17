@@ -21,6 +21,8 @@ class EditProfileView extends GetView<EditProfileController> {
       Get.put(EditProfileController());
     }
 
+    final double bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: primaryBlue,
       resizeToAvoidBottomInset: true,
@@ -39,7 +41,7 @@ class EditProfileView extends GetView<EditProfileController> {
               ),
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
+                padding: EdgeInsets.fromLTRB(24, 32, 24, 40 + bottomPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -98,6 +100,7 @@ class EditProfileView extends GetView<EditProfileController> {
                     _buildLabelWithStar('Kabupaten / Kota', Icons.location_city_outlined, isRequired: false),
                     const SizedBox(height: 8),
                     Obx(() => _buildDropdownField(
+                      context,
                       hint: 'Pilih Kabupaten / Kota',
                       selectedId: controller.selectedKabupatenId.value,
                       items: controller.listKabupaten,
@@ -113,6 +116,7 @@ class EditProfileView extends GetView<EditProfileController> {
                     _buildLabelWithStar('Kecamatan', Icons.map_outlined, isRequired: false),
                     const SizedBox(height: 8),
                     Obx(() => _buildDropdownField(
+                      context,
                       hint: controller.selectedKabupatenId.value == null ? 'Pilih kabupaten dahulu' : 'Pilih Kecamatan',
                       selectedId: controller.selectedKecamatanId.value,
                       items: controller.listKecamatan,
@@ -128,6 +132,7 @@ class EditProfileView extends GetView<EditProfileController> {
                     _buildLabelWithStar('Kelurahan / Desa', Icons.corporate_fare_outlined, isRequired: false),
                     const SizedBox(height: 8),
                     Obx(() => _buildDropdownField(
+                      context,
                       hint: controller.selectedKecamatanId.value == null ? 'Pilih kecamatan dahulu' : 'Pilih Kelurahan / Desa',
                       selectedId: controller.selectedKelurahanId.value,
                       items: controller.listKelurahan,
@@ -289,7 +294,7 @@ class EditProfileView extends GetView<EditProfileController> {
     );
   }
 
-  Widget _buildDropdownField({required String hint, required String? selectedId, required List items, required String idKey, required bool isEnabled, required void Function(String) onSelected}) {
+  Widget _buildDropdownField(BuildContext context, {required String hint, required String? selectedId, required List items, required String idKey, required bool isEnabled, required void Function(String) onSelected}) {
     String? selectedName;
     if (selectedId != null) {
       try {
@@ -299,7 +304,7 @@ class EditProfileView extends GetView<EditProfileController> {
     }
 
     return GestureDetector(
-      onTap: isEnabled ? () => _showSearchSheet(items: items, idKey: idKey, onSelected: onSelected) : null,
+      onTap: isEnabled ? () => _showSearchSheet(context, items: items, idKey: idKey, onSelected: onSelected) : null,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
@@ -381,49 +386,54 @@ class EditProfileView extends GetView<EditProfileController> {
     ));
   }
 
-  void _showSearchSheet({required List items, required String idKey, required void Function(String) onSelected}) {
+  void _showSearchSheet(BuildContext context, {required List items, required String idKey, required void Function(String) onSelected}) {
     final searchCtrl = TextEditingController();
     final filteredItems = RxList<dynamic>.from(items);
 
     Get.bottomSheet(
-      Container(
-        height: Get.height * 0.7,
-        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-        child: Column(
-          children: [
-            Container(margin: const EdgeInsets.only(top: 12), width: 40, height: 4, decoration: BoxDecoration(color: borderLight, borderRadius: BorderRadius.circular(2))),
-            const Padding(padding: EdgeInsets.all(20), child: Text('Pilih Lokasi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textDark))),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(16), border: Border.all(color: borderLight)),
-                child: TextField(
-                  controller: searchCtrl,
-                  onChanged: (q) => filteredItems.value = q.isEmpty ? items : items.where((e) => (e['nama'] as String).toLowerCase().contains(q.toLowerCase())).toList(),
-                  decoration: const InputDecoration(hintText: 'Cari...', prefixIcon: Icon(Icons.search, size: 20), border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 14)),
+      Builder(
+        builder: (sheetContext) {
+          final double sheetBottomPadding = MediaQuery.of(sheetContext).padding.bottom;
+          return Container(
+            height: Get.height * 0.7,
+            decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+            child: Column(
+              children: [
+                Container(margin: const EdgeInsets.only(top: 12), width: 40, height: 4, decoration: BoxDecoration(color: borderLight, borderRadius: BorderRadius.circular(2))),
+                const Padding(padding: EdgeInsets.all(20), child: Text('Pilih Lokasi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textDark))),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(16), border: Border.all(color: borderLight)),
+                    child: TextField(
+                      controller: searchCtrl,
+                      onChanged: (q) => filteredItems.value = q.isEmpty ? items : items.where((e) => (e['nama'] as String).toLowerCase().contains(q.toLowerCase())).toList(),
+                      decoration: const InputDecoration(hintText: 'Cari...', prefixIcon: Icon(Icons.search, size: 20), border: InputBorder.none, contentPadding: EdgeInsets.symmetric(vertical: 14)),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: Obx(() => ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: filteredItems.length,
-                itemBuilder: (ctx, i) {
-                  final item = filteredItems[i];
-                  return ListTile(
-                    title: Text(item['nama'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                    trailing: const Icon(Icons.chevron_right, size: 18),
-                    onTap: () {
-                      onSelected(item[idKey].toString());
-                      Get.back();
+                const SizedBox(height: 12),
+                Expanded(
+                  child: Obx(() => ListView.builder(
+                    padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + sheetBottomPadding),
+                    itemCount: filteredItems.length,
+                    itemBuilder: (ctx, i) {
+                      final item = filteredItems[i];
+                      return ListTile(
+                        title: Text(item['nama'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                        trailing: const Icon(Icons.chevron_right, size: 18),
+                        onTap: () {
+                          onSelected(item[idKey].toString());
+                          Get.back();
+                        },
+                      );
                     },
-                  );
-                },
-              )),
+                  )),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        }
       ),
       isScrollControlled: true,
     );

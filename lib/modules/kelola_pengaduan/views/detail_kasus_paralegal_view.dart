@@ -14,6 +14,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
   @override
   Widget build(BuildContext context) {
     Get.put(DetailKasusParalegalController());
+    final double bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: darkBlue,
@@ -69,7 +70,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                   children: [
                     SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+                      padding: EdgeInsets.fromLTRB(20, 24, 20, 100 + bottomPadding),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -97,7 +98,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                     // BUTTONS DI BAGIAN BAWAH
                     if (kasus.status == 'menunggu')
                       Positioned(
-                        bottom: 20, left: 20, right: 20,
+                        bottom: 20 + bottomPadding, left: 20, right: 20,
                         child: Row(
                           children: [
                             Expanded(
@@ -128,7 +129,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
 
                     if (kasus.status == 'diproses')
                       Positioned(
-                        bottom: 20, left: 20, right: 20,
+                        bottom: 20 + bottomPadding, left: 20, right: 20,
                         child: _buildButtonAction(
                           text: 'Update Kasus',
                           icon: Icons.assignment_outlined,
@@ -139,7 +140,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
 
                     if (kasus.status == 'selesai' || kasus.status == 'dibatalkan')
                       Positioned(
-                        bottom: 20, left: 20, right: 20,
+                        bottom: 20 + bottomPadding, left: 20, right: 20,
                         child: _buildButtonAction(
                           text: 'Kembali ke Beranda',
                           icon: Icons.home_outlined,
