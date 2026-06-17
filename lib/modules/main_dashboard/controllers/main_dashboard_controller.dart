@@ -27,6 +27,12 @@ class MainDashboardController extends GetxController {
     selectedIndex.value = index;
   }
 
+  @override
+  void onInit() {
+    super.onInit();
+    checkProfileCompleteness();
+  }
+
   Future<void> checkProfileCompleteness() async {
     try {
       isProfileChecking.value = true;

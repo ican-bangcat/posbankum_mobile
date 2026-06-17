@@ -156,9 +156,6 @@ class ProfileController extends GetxController {
     } catch (e, stackTrace) {
       debugPrint('❌ [ERROR PROFIL] Terjadi kesalahan: $e');
       debugPrint(stackTrace.toString());
-      Get.snackbar('Informasi',
-          'Beberapa data profil mungkin belum lengkap. Silakan coba lagi nanti.',
-          backgroundColor: Colors.orange, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }

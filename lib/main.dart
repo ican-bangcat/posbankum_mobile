@@ -6,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'app/routes/app_pages.dart';
 import 'app/themes/app_colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'modules/auth/controllers/auth_controller.dart';
 
 void main() async {
   // Memastikan inisialisasi binding Flutter selesai sebelum menjalankan asinkronus
@@ -49,6 +50,9 @@ class PosbankumApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Posbankum Mobile',
       debugShowCheckedModeBanner: false, // Menyembunyikan indikator mode debug
+      initialBinding: BindingsBuilder(() {
+        Get.put(AuthController(), permanent: true);
+      }),
 
       // Konfigurasi tema global aplikasi untuk menjaga konsistensi antarmuka
       theme: ThemeData(

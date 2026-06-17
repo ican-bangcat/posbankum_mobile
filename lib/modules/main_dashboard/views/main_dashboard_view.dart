@@ -99,10 +99,38 @@ class MainDashboardView extends GetView<MainDashboardController> {
         behavior: HitTestBehavior.opaque,
         onTap: () async {
           if (index == 1) {
-            // Cek kelengkapan profil dulu
-            await controller.checkProfileCompleteness();
+            // If the local cache indicates the profile is already complete, transition instantly!
+            if (controller.isAllComplete) {
+              controller.changeTab(index);
+              // Silently refresh profile completeness in the background to ensure it stays in sync
+              controller.checkProfileCompleteness();
+              return;
+            }
+
+            if (controller.isProfileChecking.value) return; // Prevent double-clicks / spamming
+
+            // Show a simple non-dismissible loading overlay
+            Get.dialog(
+              const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              barrierDismissible: false,
+            );
+
+            try {
+              await controller.checkProfileCompleteness();
+            } finally {
+              if (Get.isDialogOpen == true) {
+                Get.back(); // Dismiss loading dialog
+              }
+            }
+
             if (!controller.isAllComplete) {
-              _showIncompleteProfilePopup();
+              if (Get.isBottomSheetOpen != true) {
+                _showIncompleteProfilePopup();
+              }
               return;
             }
           }
@@ -257,66 +285,68 @@ class MainDashboardView extends GetView<MainDashboardController> {
               top: 260,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    _buildStatusItem(
-                      icon: Icons.person_outline,
-                      label: 'Nama Lengkap',
-                      isComplete: controller.isNamaComplete.value,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildStatusItem(
-                      icon: Icons.badge_outlined,
-                      label: 'NIK (16 Digit)',
-                      isComplete: controller.isNikComplete.value,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildStatusItem(
-                      icon: Icons.phone_outlined,
-                      label: 'No. Telepon',
-                      isComplete: controller.isTeleponComplete.value,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildStatusItem(
-                      icon: Icons.location_on_outlined,
-                      label: 'Alamat & Wilayah',
-                      isComplete: controller.isAlamatComplete.value,
-                    ),
-                    const Spacer(),
-                    ElevatedButton(
-                      onPressed: () {
-                        Get.back();
-                        Get.toNamed(AppRoutes.EDIT_PROFILE);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2A2E5E),
-                        minimumSize: const Size(double.infinity, 56),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      _buildStatusItem(
+                        icon: Icons.person_outline,
+                        label: 'Nama Lengkap',
+                        isComplete: controller.isNamaComplete.value,
                       ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.edit_note, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text('Lengkapi Profil Sekarang', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                        ],
+                      const SizedBox(height: 12),
+                      _buildStatusItem(
+                        icon: Icons.badge_outlined,
+                        label: 'NIK (16 Digit)',
+                        isComplete: controller.isNikComplete.value,
                       ),
-                    ),
-                    TextButton(
-                      onPressed: () => Get.back(),
-                      child: const Text(
-                        'Lewati, isi nanti',
-                        style: TextStyle(
-                          color: Color(0xFF64748B), // Slate 600 - lebih kontras dan mudah dibaca
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          decoration: TextDecoration.underline, // Tambahkan underline agar lebih jelas bahwa ini tombol
+                      const SizedBox(height: 12),
+                      _buildStatusItem(
+                        icon: Icons.phone_outlined,
+                        label: 'No. Telepon',
+                        isComplete: controller.isTeleponComplete.value,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildStatusItem(
+                        icon: Icons.location_on_outlined,
+                        label: 'Alamat & Wilayah',
+                        isComplete: controller.isAlamatComplete.value,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () {
+                          Get.back();
+                          Get.toNamed(AppRoutes.EDIT_PROFILE);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2A2E5E),
+                          minimumSize: const Size(double.infinity, 56),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.edit_note, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text('Lengkapi Profil Sekarang', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                          ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+                      TextButton(
+                        onPressed: () => Get.back(),
+                        child: const Text(
+                          'Lewati, isi nanti',
+                          style: TextStyle(
+                            color: Color(0xFF64748B), // Slate 600 - lebih kontras dan mudah dibaca
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            decoration: TextDecoration.underline, // Tambahkan underline agar lebih jelas bahwa ini tombol
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
             ),
