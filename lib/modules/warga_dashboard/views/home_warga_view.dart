@@ -2,25 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../app/routes/app_routes.dart';
-import '../controllers/auth_controller.dart';
+import '../../auth/controllers/auth_controller.dart';
 
 // Import Controller Dashboard Masyarakat
-import '../controllers/home_masyarakat_controller.dart';
-import '../../main_dashboard/controllers/main_dashboard_controller.dart';
+import '../controllers/home_warga_controller.dart';
+import '../controllers/warga_dashboard_controller.dart';
 
-class HomeMasyarakatScreen extends StatefulWidget {
-  const HomeMasyarakatScreen({super.key});
+class HomeWargaView extends StatefulWidget {
+  const HomeWargaView({super.key});
 
   @override
-  State<HomeMasyarakatScreen> createState() => _HomeMasyarakatScreenState();
+  State<HomeWargaView> createState() => _HomeWargaViewState();
 }
 
-class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
+class _HomeWargaViewState extends State<HomeWargaView>
     with SingleTickerProviderStateMixin {
   final storage = GetStorage();
   final authC = Get.find<AuthController>();
 
-  late final HomeMasyarakatController _dashboardCtrl;
+  late final HomeWargaController _dashboardCtrl;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -28,7 +28,7 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
   @override
   void initState() {
     super.initState();
-    _dashboardCtrl = Get.put(HomeMasyarakatController());
+    _dashboardCtrl = Get.put(HomeWargaController());
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -449,8 +449,8 @@ class _HomeMasyarakatScreenState extends State<HomeMasyarakatScreen>
               const Text('Riwayat Terbaru', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1A202C))),
               TextButton(
                 onPressed: () {
-                  if (Get.isRegistered<MainDashboardController>()) {
-                    Get.find<MainDashboardController>().changeTab(1);
+                  if (Get.isRegistered<WargaDashboardController>()) {
+                    Get.find<WargaDashboardController>().changeTab(1);
                   } else {
                     Get.toNamed(AppRoutes.RIWAYAT_PENGADUAN);
                   }

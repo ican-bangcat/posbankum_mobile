@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../main_dashboard/controllers/main_dashboard_controller.dart';
+import '../../../app/routes/app_routes.dart';
+import '../../warga_dashboard/controllers/warga_dashboard_controller.dart';
 
 class PengaduanSuccessScreen extends StatelessWidget {
   final String pengaduanId;
@@ -100,10 +101,10 @@ class PengaduanSuccessScreen extends StatelessWidget {
       children: [
         ElevatedButton(
           onPressed: () {
-            Get.offAllNamed('/main-dashboard');
+            Get.offAllNamed(AppRoutes.WARGA_DASHBOARD);
             Future.delayed(const Duration(milliseconds: 100), () {
-              if (Get.isRegistered<MainDashboardController>()) {
-                Get.find<MainDashboardController>().changeTab(2);
+              if (Get.isRegistered<WargaDashboardController>()) {
+                Get.find<WargaDashboardController>().changeTab(2);
               }
             });
           },
@@ -113,10 +114,10 @@ class PengaduanSuccessScreen extends StatelessWidget {
         const SizedBox(height: 12),
         OutlinedButton(
           onPressed: () {
-            Get.offAllNamed('/main-dashboard');
+            Get.offAllNamed(AppRoutes.WARGA_DASHBOARD);
             Future.delayed(const Duration(milliseconds: 100), () {
               // 🚀 BUG FIX: Gunakan variabel uuidDb untuk masuk ke Detail Kasus, bukan PGN-xxx
-              Get.toNamed('/detail-kasus', arguments: uuidDb);
+              Get.toNamed(AppRoutes.DETAIL_KASUS, arguments: uuidDb);
             });
           },
           style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5), minimumSize: const Size(double.infinity, 56), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),

@@ -79,9 +79,9 @@ class SplashController extends GetxController {
   void _redirectBasedOnRole(String role) {
     final String userRole = role.toLowerCase().trim();
     if (userRole == 'warga' || userRole == 'pelapor' || userRole == 'masyarakat') {
-      Get.offAllNamed(AppRoutes.MAIN_DASHBOARD);
+      Get.offAllNamed(AppRoutes.WARGA_DASHBOARD);
     } else if (userRole == 'paralegal' || userRole == 'admin' || userRole == 'posbankum') {
-      Get.offAllNamed(AppRoutes.MAIN_DASHBOARD_ADMIN);
+      Get.offAllNamed(AppRoutes.PARALEGAL_DASHBOARD);
     } else {
       Get.offAllNamed(AppRoutes.LOGIN);
     }

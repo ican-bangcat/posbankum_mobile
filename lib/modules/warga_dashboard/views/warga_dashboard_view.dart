@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/main_dashboard_controller.dart';
+import '../controllers/warga_dashboard_controller.dart';
 import '../../pengaduan/controllers/daftar_pengaduan_controller.dart';
 import '../../pengaduan/views/daftar_pengaduan_view.dart';
-import '../../auth/views/home_masyarakat_screen.dart';
+import 'home_warga_view.dart';
 import '../../profile/views/profile_view.dart';
 import '../../notifikasi_masyarakat/views/notifikasi_masyarakat_view.dart';
 import '../../notifikasi_masyarakat/controllers/notifikasi_masyarakat_controller.dart';
@@ -11,15 +11,15 @@ import '../../daftar_chat_masyarakat/controllers/daftar_chat_masyarakat_controll
 import '../../daftar_chat_masyarakat/views/daftar_chat_masyarakat_view.dart';
 import '../../../app/routes/app_routes.dart';
 
-class MainDashboardView extends GetView<MainDashboardController> {
-  const MainDashboardView({super.key});
+class WargaDashboardView extends GetView<WargaDashboardController> {
+  const WargaDashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
       const NotifikasiMasyarakatView(),
       const DaftarPengaduanView(),
-      const HomeMasyarakatScreen(),
+      const HomeWargaView(),
       const DaftarChatMasyarakatView(),
       const ProfileView(),
     ];

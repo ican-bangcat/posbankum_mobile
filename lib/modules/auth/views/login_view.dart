@@ -3,14 +3,14 @@ import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
 
-class LoginFormScreen extends StatefulWidget {
-  const LoginFormScreen({super.key});
+class LoginView extends StatefulWidget {
+  const LoginView({super.key});
 
   @override
-  State<LoginFormScreen> createState() => _LoginFormScreenState();
+  State<LoginView> createState() => _LoginViewState();
 }
 
-class _LoginFormScreenState extends State<LoginFormScreen> {
+class _LoginViewState extends State<LoginView> {
   final authC = Get.find<AuthController>();
 
   static const Color darkBlueColor = Color(0xFF2A2E5E);
@@ -69,22 +69,46 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
                   SizedBox(
                     width: double.infinity,
                     height: 54,
-                    child: Obx(() => ElevatedButton.icon(
-                      onPressed: authC.isLoading.value ? null : () => authC.loginWithGoogle(),
-                      icon: Image.asset('assets/images/icons/google.png', height: 22, errorBuilder: (c,e,s) => const Icon(Icons.g_mobiledata, color: Colors.blue)),
-                      label: authC.isLoading.value 
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(color: darkBlueColor, strokeWidth: 2.5),
-                            )
-                          : const Text('Masuk dengan Google', style: TextStyle(color: darkBlueColor, fontSize: 16, fontWeight: FontWeight.w600)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        elevation: 0,
-                      ),
-                    )),
+                    child: Obx(() {
+                      final isLoading = authC.isLoading.value;
+                      return ElevatedButton(
+                        onPressed: isLoading ? null : () => authC.loginWithGoogle(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          disabledBackgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: darkBlueColor,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/images/icons/google.png',
+                                    height: 22,
+                                    errorBuilder: (c, e, s) => const Icon(Icons.g_mobiledata, color: Colors.blue),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Masuk dengan Google',
+                                    style: TextStyle(
+                                      color: darkBlueColor,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      );
+                    }),
                   ),
                   const SizedBox(height: 24),
                   const Text(

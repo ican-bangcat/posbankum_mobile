@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../app/data/services/api_service.dart';
 
-class MainDashboardController extends GetxController {
+class WargaDashboardController extends GetxController {
   final ApiService _apiService = ApiService();
   final _storage = GetStorage();
 

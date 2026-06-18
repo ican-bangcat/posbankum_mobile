@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/update_password_controller.dart';
 
-class UpdatePasswordScreen extends StatelessWidget {
-  const UpdatePasswordScreen({Key? key}) : super(key: key);
+class UpdatePasswordView extends StatelessWidget {
+  const UpdatePasswordView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

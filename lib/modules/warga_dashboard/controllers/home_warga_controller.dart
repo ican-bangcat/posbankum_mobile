@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../app/data/services/api_service.dart';
 
-class HomeMasyarakatController extends GetxController {
+class HomeWargaController extends GetxController {
   final ApiService _apiService = ApiService();
   final _storage = GetStorage();
 

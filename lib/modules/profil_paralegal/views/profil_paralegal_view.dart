@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/profil_posbankum_controller.dart';
+import '../controllers/profil_paralegal_controller.dart';
 
-class ProfilPosbankumView extends GetView<ProfilPosbankumController> {
-  const ProfilPosbankumView({super.key});
+class ProfilParalegalView extends GetView<ProfilParalegalController> {
+  const ProfilParalegalView({super.key});
 
   // --- PALET WARNA ---
   static const Color navy = Color(0xFF2A2E5E);
@@ -16,7 +16,7 @@ class ProfilPosbankumView extends GetView<ProfilPosbankumController> {
   @override
   Widget build(BuildContext context) {
     // Inisialisasi controller di luar Obx agar tidak terjadi infinite loop loading
-    Get.put(ProfilPosbankumController());
+    Get.put(ProfilParalegalController());
 
     return Scaffold(
       backgroundColor: bgLight,

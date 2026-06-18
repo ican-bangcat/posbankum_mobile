@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/main_dashboard_admin_controller.dart';
+import '../controllers/paralegal_dashboard_controller.dart';
 
 // ✅ IMPORT HALAMAN ADMIN / PARALEGAL KAMU DI SINI
-import '../../auth/views/home_paralegal_screen.dart';
+import 'home_paralegal_view.dart';
 import '../../kelola_pengaduan/views/kelola_pengaduan_view.dart';
 import '../../kelola_kegiatan/views/kelola_kegiatan_view.dart';
-import '../../profil_posbankum/views/profil_posbankum_view.dart';
+import '../../profil_paralegal/views/profil_paralegal_view.dart';
 import '../../daftar_chat_paralegal/views/daftar_chat_paralegal_view.dart';
 
 // ✅ 1. TAMBAHKAN IMPORT CONTROLLER CHAT DI SINI
 import '../../daftar_chat_paralegal/controllers/daftar_chat_paralegal_controller.dart';
 
-class MainDashboardAdminView extends GetView<MainDashboardAdminController> {
-  const MainDashboardAdminView({super.key});
+class ParalegalDashboardView extends GetView<ParalegalDashboardController> {
+  const ParalegalDashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,9 +22,9 @@ class MainDashboardAdminView extends GetView<MainDashboardAdminController> {
     final List<Widget> pages = [
       const KelolaKegiatanView(),      // Index 0 (Kegiatan)
       const KelolaPengaduanView(),     // Index 1 (Pengaduan Admin)
-      const HomeParalegalScreen(),     // Index 2 (Home Admin Asli!)
+      const HomeParalegalView(),     // Index 2 (Home Admin Asli!)
       const DaftarChatParalegalView(), // ✅ 3. PASANG VIEW CHAT DI SINI (Index 3)
-      const ProfilPosbankumView(),     // Index 4 (Profile)
+      const ProfilParalegalView(),     // Index 4 (Profile)
     ];
 
     return Scaffold(

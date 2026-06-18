@@ -15,7 +15,7 @@ class AppRoutes {
   static const String VERIFY_OTP = '/verify-otp';
   static const String RESET_PASSWORD = '/reset-password';
   static const UPDATE_PASSWORD = '/update-password';
-  static const MAIN_DASHBOARD_ADMIN = '/main-dashboard-admin';
+  static const String PARALEGAL_DASHBOARD = '/paralegal-dashboard';
 
   // Main
   static const String HOME = '/home';
@@ -50,7 +50,7 @@ class AppRoutes {
   static const String TERMS = '/terms';
   static const String PRIVACY = '/privacy';
 
-  static const MAIN_DASHBOARD = '/main-dashboard';
+  static const String WARGA_DASHBOARD = '/warga-dashboard';
 
   static const TAMBAH_KEGIATAN = '/tambah-kegiatan';
   static const KONFIRMASI_KEGIATAN = '/konfirmasi-kegiatan';
@@ -60,7 +60,7 @@ class AppRoutes {
   static const  PROFILE = '/profile';
   static const EDIT_PROFILE = '/edit-profile';
 
-  static const PROFIL_POSBANKUM = '/profil-posbankum';
+  static const String PROFIL_PARALEGAL = '/profil-paralegal';
 //Fitur chat pov paralegal
   static const DAFTAR_CHAT_PARALEGAL = '/daftar-chat-paralegal';
   static const DETAIL_CHAT_PARALEGAL = '/detail-chat-paralegal';

@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../app/routes/app_routes.dart';
-import '../controllers/auth_controller.dart';
+import '../../auth/controllers/auth_controller.dart';
 import '../controllers/home_paralegal_controller.dart';
-import '../../main_dashboard_admin/controllers/main_dashboard_admin_controller.dart';
+import '../controllers/paralegal_dashboard_controller.dart';
 
-class HomeParalegalScreen extends StatefulWidget {
-  const HomeParalegalScreen({super.key});
+class HomeParalegalView extends StatefulWidget {
+  const HomeParalegalView({super.key});
 
   @override
-  State<HomeParalegalScreen> createState() => _HomeParalegalScreenState();
+  State<HomeParalegalView> createState() => _HomeParalegalViewState();
 }
 
-class _HomeParalegalScreenState extends State<HomeParalegalScreen>
+class _HomeParalegalViewState extends State<HomeParalegalView>
     with SingleTickerProviderStateMixin {
   final storage = GetStorage();
   final authC = Get.find<AuthController>();
@@ -251,8 +251,8 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
               Center(
                 child: InkWell(
                   onTap: () {
-                    if (Get.isRegistered<MainDashboardAdminController>()) {
-                      Get.find<MainDashboardAdminController>().changeTab(0);
+                    if (Get.isRegistered<ParalegalDashboardController>()) {
+                      Get.find<ParalegalDashboardController>().changeTab(0);
                     }
                   },
                   borderRadius: BorderRadius.circular(50),
@@ -349,8 +349,8 @@ class _HomeParalegalScreenState extends State<HomeParalegalScreen>
               const Text('Aktivitas Terbaru', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1F36))),
               TextButton(
                 onPressed: () {
-                  if (Get.isRegistered<MainDashboardAdminController>())
-                    Get.find<MainDashboardAdminController>().changeTab(1);
+                  if (Get.isRegistered<ParalegalDashboardController>())
+                    Get.find<ParalegalDashboardController>().changeTab(1);
                 },
                 child: const Text('Lihat Semua', style: TextStyle(color: Color(0xFF1E2154), fontWeight: FontWeight.w700, fontSize: 13)),
               ),

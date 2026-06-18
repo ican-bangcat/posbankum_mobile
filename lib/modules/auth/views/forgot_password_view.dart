@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/forgot_password_controller.dart';
 
-class ForgotPasswordScreen extends StatelessWidget {
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
+class ForgotPasswordView extends StatelessWidget {
+  const ForgotPasswordView({Key? key}) : super(key: key);
 
   static const Color darkBlueColor = Color(0xFF2A2E5E);
   static const Color textDark = Color(0xFF1E1E1E);

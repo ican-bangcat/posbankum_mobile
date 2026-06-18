@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/routes/app_routes.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class WelcomeView extends StatelessWidget {
+  const WelcomeView({super.key});
 
   // Warna-warna sesuai request
   static const Color bgColor = Color(0xFFFFFFFF);
@@ -175,17 +175,17 @@ class _AnimatedButtonState extends State<_AnimatedButton> with SingleTickerProvi
           width: double.infinity,
           height: 52,
           decoration: BoxDecoration(
-            color: widget.isPrimary ? LoginScreen.primaryBlue : Colors.white,
+            color: widget.isPrimary ? WelcomeView.primaryBlue : Colors.white,
             borderRadius: BorderRadius.circular(10),
-            border: widget.isPrimary ? null : Border.all(color: LoginScreen.primaryBlue, width: 1.5),
+            border: widget.isPrimary ? null : Border.all(color: WelcomeView.primaryBlue, width: 1.5),
             boxShadow: widget.isPrimary ? [
-              BoxShadow(color: LoginScreen.primaryBlue.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))
+              BoxShadow(color: WelcomeView.primaryBlue.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))
             ] : null,
           ),
           child: Center(
             child: DefaultTextStyle(
               style: TextStyle(
-                color: widget.isPrimary ? Colors.white : LoginScreen.textDarkGray,
+                color: widget.isPrimary ? Colors.white : WelcomeView.textDarkGray,
               ),
               child: widget.child,
             ),

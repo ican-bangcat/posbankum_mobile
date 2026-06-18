@@ -5,26 +5,26 @@ import '../../modules/splash/controllers/splash_controller.dart';
 import '../../modules/onboarding/views/onboarding_screen.dart';
 import '../../modules/onboarding/controllers/onboarding_controller.dart';
 import '../../modules/auth/views/register_view.dart';
-import '../../modules/auth/views/login_screen.dart';
-import '../../modules/auth/views/login_form_screen.dart';
-import '../../modules/auth/views/home_masyarakat_screen.dart';
-import '../../modules/auth/views/home_paralegal_screen.dart';
+import '../../modules/auth/views/welcome_view.dart';
+import '../../modules/auth/views/login_view.dart';
+import '../../modules/warga_dashboard/views/home_warga_view.dart';
+import '../../modules/paralegal_dashboard/views/home_paralegal_view.dart';
 import '../../modules/pengaduan/views/form_pengaduan_view.dart';
 import '../../modules/pengaduan/views/pengaduan_success_screen.dart';
 import '../../modules/pengaduan/controllers/FormPengaduanController.dart';
-import '../../modules/auth/views/forgot_password_screen.dart';
+import '../../modules/auth/views/forgot_password_view.dart';
 import '../../modules/auth/controllers/forgot_password_controller.dart';
-import '../../modules/auth/views/update_password_screen.dart';
+import '../../modules/auth/views/update_password_view.dart';
 import '../../modules/auth/controllers/update_password_controller.dart';
 import '../../modules/pengaduan/views/daftar_pengaduan_view.dart';
 import '../../modules/pengaduan/controllers/riwayat_pengaduan_controller.dart';
 import '../../modules/pengaduan/views/detail_kasus_view.dart';
 import '../../modules/pengaduan/bindings/detail_kasus_binding.dart';
 import 'app_routes.dart';
-import '../../modules/main_dashboard/views/main_dashboard_view.dart';
-import '../../modules/main_dashboard/bindings/main_dashboard_binding.dart';
-import '../../modules/main_dashboard_admin/views/main_dashboard_admin_view.dart';
-import '../../modules/main_dashboard_admin/bindings/main_dashboard_admin_binding.dart';
+import '../../modules/warga_dashboard/views/warga_dashboard_view.dart';
+import '../../modules/warga_dashboard/bindings/warga_dashboard_binding.dart';
+import '../../modules/paralegal_dashboard/views/paralegal_dashboard_view.dart';
+import '../../modules/paralegal_dashboard/bindings/paralegal_dashboard_binding.dart';
 import '../../modules/kelola_pengaduan/views/detail_kasus_paralegal_view.dart';
 import '../../modules/kelola_pengaduan/controllers/detail_kasus_paralegal_controller.dart';
 import '../../modules/kelola_pengaduan/views/update_progres_view.dart';
@@ -41,8 +41,8 @@ import '../../modules/profile/views/profile_view.dart';
 import '../../modules/profile/bindings/profile_binding.dart';
 import '../../modules/profile/views/edit_profile_view.dart';
 import '../../modules/profile/bindings/edit_profile_binding.dart';
-import '../../modules/profil_posbankum/bindings/profil_posbankum_binding.dart';
-import '../../modules/profil_posbankum/views/profil_posbankum_view.dart';
+import '../../modules/profil_paralegal/bindings/profil_paralegal_binding.dart';
+import '../../modules/profil_paralegal/views/profil_paralegal_view.dart';
 import '../../modules/notifikasi_masyarakat/views/notifikasi_masyarakat_view.dart';
 import '../../modules/notifikasi_masyarakat/bindings/notifikasi_masyarakat_binding.dart';
 import '../../modules/daftar_chat_paralegal/controllers/daftar_chat_paralegal_controller.dart';
@@ -86,14 +86,14 @@ class AppPages {
 
     GetPage(
       name: AppRoutes.LOGIN,
-      page: () => const LoginScreen(),
+      page: () => const WelcomeView(),
       transition: Transition.fadeIn,
       transitionDuration: const Duration(milliseconds: 400),
     ),
 
     GetPage(
       name: AppRoutes.LOGIN_FORM,
-      page: () => const LoginFormScreen(),
+      page: () => const LoginView(),
       transition: Transition.rightToLeft,
       transitionDuration: const Duration(milliseconds: 300),
     ),
@@ -101,7 +101,7 @@ class AppPages {
     // Home Masyarakat
     GetPage(
       name: AppRoutes.HOME,
-      page: () => const HomeMasyarakatScreen(),
+      page: () => const HomeWargaView(),
       transition: Transition.fadeIn,
       transitionDuration: const Duration(milliseconds: 400),
     ),
@@ -109,7 +109,7 @@ class AppPages {
     // ✅ FORGOT PASSWORD (BARU)
     GetPage(
       name: AppRoutes.FORGOT_PASSWORD,
-      page: () => const ForgotPasswordScreen(),
+      page: () => const ForgotPasswordView(),
       binding: BindingsBuilder(() {
         // LazyPut: Controller hanya dibuat saat halaman dibuka
         Get.lazyPut<ForgotPasswordController>(() => ForgotPasswordController());
@@ -121,7 +121,7 @@ class AppPages {
     // ✅ UPDATE PASSWORD (BARU)
     GetPage(
       name: AppRoutes.UPDATE_PASSWORD,
-      page: () => const UpdatePasswordScreen(),
+      page: () => const UpdatePasswordView(),
       binding: BindingsBuilder(() {
         Get.lazyPut<UpdatePasswordController>(() => UpdatePasswordController());
       }),
@@ -172,14 +172,14 @@ class AppPages {
       transition: Transition.rightToLeft, // Animasi geser yang smooth
     ),
     GetPage(
-      name: AppRoutes.MAIN_DASHBOARD,
-      page: () => const MainDashboardView(),
-      binding: MainDashboardBinding(),
+      name: AppRoutes.WARGA_DASHBOARD,
+      page: () => const WargaDashboardView(),
+      binding: WargaDashboardBinding(),
     ),
     GetPage(
-      name: AppRoutes.MAIN_DASHBOARD_ADMIN,
-      page: () => const MainDashboardAdminView(),
-      binding: MainDashboardAdminBinding(),
+      name: AppRoutes.PARALEGAL_DASHBOARD,
+      page: () => const ParalegalDashboardView(),
+      binding: ParalegalDashboardBinding(),
     ),
 
     // ✅ DETAIL KASUS KHUSUS PARALEGAL
@@ -230,11 +230,6 @@ class AppPages {
     GetPage(
       name: AppRoutes.PROFILE,
       page: () => const ProfileView(),
-      // Kalau kamu bikin binding, masukin binding-nya di sini
-    ),
-    GetPage(
-      name: AppRoutes.PROFILE,
-      page: () => const ProfileView(),
       binding: ProfileBinding(), // ✅ Tambahkan baris ini
     ),
     GetPage(
@@ -243,9 +238,9 @@ class AppPages {
       binding: EditProfileBinding(),
     ),
     GetPage(
-      name: AppRoutes.PROFIL_POSBANKUM,
-      page: () => const ProfilPosbankumView(),
-      binding: ProfilPosbankumBinding(),
+      name: AppRoutes.PROFIL_PARALEGAL,
+      page: () => const ProfilParalegalView(),
+      binding: ProfilParalegalBinding(),
     ),
     GetPage(
       name: AppRoutes.NOTIFICATION,

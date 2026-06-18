@@ -5,7 +5,7 @@ import '../../../app/routes/app_routes.dart';
 import '../../../app/data/services/api_service.dart';
 import '../../auth/controllers/auth_controller.dart';
 
-class ProfilPosbankumController extends GetxController {
+class ProfilParalegalController extends GetxController {
   final ApiService _apiService = ApiService();
   final _storage = GetStorage();
 

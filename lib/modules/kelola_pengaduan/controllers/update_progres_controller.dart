@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../../app/data/services/api_service.dart';
 import 'kelola_pengaduan_controller.dart';
 import 'detail_kasus_paralegal_controller.dart';
-import '../../auth/controllers/home_paralegal_controller.dart';
+import '../../paralegal_dashboard/controllers/home_paralegal_controller.dart';
 
 class UpdateProgresController extends GetxController {
   final ApiService _apiService = ApiService();

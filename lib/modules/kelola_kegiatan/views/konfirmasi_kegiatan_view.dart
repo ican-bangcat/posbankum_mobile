@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../app/routes/app_routes.dart';
-import '../../main_dashboard_admin/controllers/main_dashboard_admin_controller.dart';
+import '../../paralegal_dashboard/controllers/paralegal_dashboard_controller.dart';
 import '../controllers/kelola_kegiatan_controller.dart';
 
 class KonfirmasiKegiatanView extends StatelessWidget {
@@ -125,12 +125,12 @@ class KonfirmasiKegiatanView extends StatelessWidget {
         ElevatedButton(
           onPressed: () {
             // 1. Balik ke halaman Dashboard (Reset tumpukan layar)
-            Get.offAllNamed(AppRoutes.MAIN_DASHBOARD_ADMIN);
+            Get.offAllNamed(AppRoutes.PARALEGAL_DASHBOARD);
 
             // 2. Kasih jeda dikit biar controllernya siap, baru ubah tab ke Home (Index 2)
             Future.delayed(const Duration(milliseconds: 100), () {
-              if (Get.isRegistered<MainDashboardAdminController>()) {
-                Get.find<MainDashboardAdminController>().selectedIndex.value = 2;
+              if (Get.isRegistered<ParalegalDashboardController>()) {
+                Get.find<ParalegalDashboardController>().selectedIndex.value = 2;
               }
             });
           },
@@ -156,12 +156,12 @@ class KonfirmasiKegiatanView extends StatelessWidget {
         OutlinedButton(
           onPressed: () {
             // 1. Balik ke halaman Dashboard
-            Get.offAllNamed(AppRoutes.MAIN_DASHBOARD_ADMIN);
+            Get.offAllNamed(AppRoutes.PARALEGAL_DASHBOARD);
 
             // 2. Kasih jeda, lalu pindah tab ke Kegiatan (Index 0) & Refresh Data
             Future.delayed(const Duration(milliseconds: 100), () {
-              if (Get.isRegistered<MainDashboardAdminController>()) {
-                Get.find<MainDashboardAdminController>().selectedIndex.value = 0;
+              if (Get.isRegistered<ParalegalDashboardController>()) {
+                Get.find<ParalegalDashboardController>().selectedIndex.value = 0;
               }
               // Tarik data terbaru dari database
               if (Get.isRegistered<KelolaKegiatanController>()) {
