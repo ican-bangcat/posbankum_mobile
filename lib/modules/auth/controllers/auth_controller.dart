@@ -114,8 +114,19 @@ class AuthController extends GetxController {
   Future<void> logout() async {
     try {
       isLoading.value = true;
+      
+      // Post logout to Laravel backend
       await _apiService.dio.post('/logout');
-      await GoogleSignIn().signOut();
+      
+      // Disconnect from Google Sign-In to force the account chooser next time
+      try {
+        await GoogleSignIn().disconnect();
+      } catch (_) {
+        try {
+          await GoogleSignIn().signOut();
+        } catch (_) {}
+      }
+
       await _storage.remove('token');
       await _storage.remove('user');
       await _storage.remove('role');

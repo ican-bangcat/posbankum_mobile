@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart'; // ✅ Wajib ditambah buat manggil Colors
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../app/data/services/api_service.dart';
 
 class DetailKegiatanController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
   var isLoading = true.obs;
   var kegiatanData = {}.obs;
 
@@ -24,20 +24,25 @@ class DetailKegiatanController extends GetxController {
         return;
       }
 
-      final response = await supabase
-          .from('kegiatan')
-          .select()
-          .eq('id_kegiatan', id)
-          .single();
+      final response = await _apiService.dio.get('/kegiatan/$id');
 
-      // ✅ Pastikan URL gambar jadi full HTTP sebelum masuk ke View
-      if (response['thumbnail_path'] != null && !response['thumbnail_path'].toString().startsWith('http')) {
-        response['thumbnail_path'] = supabase.storage
-            .from('kegiatan-thumbnails')
-            .getPublicUrl(response['thumbnail_path']);
+      if (response.data['status'] == true) {
+        final Map<String, dynamic> data = Map<String, dynamic>.from(response.data['data']);
+
+        // ✅ Pastikan URL gambar jadi full HTTP sebelum masuk ke View
+        String? finalImageUrl = data['thumbnail_path'];
+        if (finalImageUrl != null && finalImageUrl.isNotEmpty && !finalImageUrl.startsWith('http')) {
+          if (finalImageUrl.startsWith('/')) {
+            data['thumbnail_path'] = 'http://sibapak.pocari.id$finalImageUrl';
+          } else {
+            data['thumbnail_path'] = 'http://sibapak.pocari.id/$finalImageUrl';
+          }
+        }
+
+        kegiatanData.value = data;
+      } else {
+        throw response.data['message'] ?? 'Gagal memuat detail kegiatan';
       }
-
-      kegiatanData.value = response;
 
     } catch (e) {
       print("Error fetch detail: $e");

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../app/data/services/api_service.dart';
 
 class KegiatanItem {
   final String id;
@@ -32,15 +32,24 @@ class KegiatanItem {
 
     String? finalImageUrl = json['thumbnail_path'];
     if (finalImageUrl != null && finalImageUrl.isNotEmpty && !finalImageUrl.startsWith('http')) {
-      finalImageUrl = Supabase.instance.client.storage
-          .from('kegiatan-thumbnails')
-          .getPublicUrl(finalImageUrl);
+      if (finalImageUrl.startsWith('/')) {
+        finalImageUrl = 'http://sibapak.pocari.id$finalImageUrl';
+      } else {
+        finalImageUrl = 'http://sibapak.pocari.id/$finalImageUrl';
+      }
     }
 
-    // ✅ Hitung jumlah orang yang ada di dalam array JSONB
+    // ✅ Hitung jumlah orang yang ada di dalam array JSONB atau List
     int hitungAnggota = 0;
-    if (json['anggota_terlibat'] != null && json['anggota_terlibat'] is List) {
-      hitungAnggota = (json['anggota_terlibat'] as List).length;
+    if (json['anggota_terlibat'] != null) {
+      if (json['anggota_terlibat'] is List) {
+        hitungAnggota = (json['anggota_terlibat'] as List).length;
+      } else if (json['anggota_terlibat'] is String) {
+        // Jika data string representation dari list
+        try {
+          // fallback jika datanya string list JSON
+        } catch (_) {}
+      }
     }
 
     return KegiatanItem(
@@ -56,7 +65,7 @@ class KegiatanItem {
 }
 
 class KelolaKegiatanController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
   var searchQuery = ''.obs;
   var isLoading = true.obs;
 
@@ -74,31 +83,13 @@ class KelolaKegiatanController extends GetxController {
   Future<void> fetchKegiatan() async {
     try {
       isLoading.value = true;
-      final user = supabase.auth.currentUser;
-      if (user == null) {
-        Get.snackbar('Sesi Berakhir', 'Silakan login kembali');
-        return;
+
+      final response = await _apiService.dio.get('/kegiatan');
+
+      if (response.data['status'] == true) {
+        final List<dynamic> data = response.data['data'];
+        allKegiatan.value = data.map((e) => e is Map<String, dynamic> ? KegiatanItem.fromJson(e) : KegiatanItem.fromJson(Map<String, dynamic>.from(e))).toList();
       }
-
-      final dataPosbankum = await supabase
-          .from('posbankum')
-          .select('id_posbankum')
-          .eq('email_akun', user.email ?? '')
-          .maybeSingle();
-
-      if (dataPosbankum == null) return;
-
-      final String idPosbankumAsli = dataPosbankum['id_posbankum'];
-
-      final response = await supabase
-          .from('kegiatan')
-          .select()
-          .eq('id_posbankum', idPosbankumAsli)
-          .order('tgl_upload', ascending: false);
-
-      final List<dynamic> data = response as List<dynamic>;
-      allKegiatan.value = data.map((e) => KegiatanItem.fromJson(e)).toList();
-
     } catch (e) {
       print("Error Fetch Kegiatan: $e");
     } finally {

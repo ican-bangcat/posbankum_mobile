@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../app/data/services/api_service.dart';
 import 'kelola_pengaduan_controller.dart';
 import 'detail_kasus_paralegal_controller.dart';
 import '../../auth/controllers/home_paralegal_controller.dart';
 
 class UpdateProgresController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
   var isLoading = false.obs;
 
   String kasusId = '';
@@ -48,24 +48,33 @@ class UpdateProgresController extends GetxController {
 
     try {
       isLoading.value = true;
-      final userId = supabase.auth.currentUser?.id;
 
-      await supabase.from('pengaduan_timeline').insert({
-        'id_pengaduan': kasusId,
-        'title': judulController.text.trim(),
-        'deskripsi': catatanController.text.trim(),
-        'tanggal': selectedDate.value.toIso8601String(),
-        'created_by': userId
-      });
+      // 1. Simpan progres ke timeline
+      final timelineResponse = await _apiService.dio.post(
+        '/pengaduan/$kasusId/timeline',
+        data: {
+          'title': judulController.text.trim(),
+          'deskripsi': catatanController.text.trim(),
+          'tanggal': selectedDate.value.toIso8601String(),
+        },
+      );
 
+      if (timelineResponse.data['status'] != true) {
+        throw timelineResponse.data['message'] ?? 'Gagal menyimpan progres timeline';
+      }
+
+      // 2. Jika diselesaikan, update status pengaduan
       if (isSelesai) {
-        await supabase
-            .from('pengaduan')
-            .update({
-          'status': 'selesai',
-          'tgl_selesai': DateTime.now().toIso8601String()
-        })
-            .eq('id_pengaduan', kasusId);
+        final statusResponse = await _apiService.dio.patch(
+          '/pengaduan/$kasusId/status',
+          data: {
+            'status': 'selesai',
+          },
+        );
+
+        if (statusResponse.data['status'] != true) {
+          throw statusResponse.data['message'] ?? 'Gagal menyelesaikan pengaduan';
+        }
       }
 
       // 1. Kosongkan form biar bersih

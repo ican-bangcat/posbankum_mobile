@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:dio/dio.dart' as dio_pkg;
+import '../../../app/data/services/api_service.dart';
 import 'kelola_kegiatan_controller.dart';
 import '../../../app/routes/app_routes.dart';
 
 class TambahKegiatanController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
   final judulCtrl = TextEditingController();
   final lokasiCtrl = TextEditingController();
   final deskripsiCtrl = TextEditingController();
@@ -33,26 +34,20 @@ class TambahKegiatanController extends GetxController {
 
   Future<void> fetchDataAwal() async {
     try {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final response = await _apiService.dio.get('/profile');
+      if (response.data['status'] == true) {
+        final userData = response.data['data'];
+        idPosbankumAsli.value = userData['id_posbankum']?.toString() ?? '';
 
-      final dataPosbankum = await supabase
-          .from('posbankum')
-          .select('id_posbankum')
-          .eq('email_akun', user.email ?? '')
-          .maybeSingle();
-
-      if (dataPosbankum != null) {
-        idPosbankumAsli.value = dataPosbankum['id_posbankum'];
-
-        final dataParalegal = await supabase
-            .from('paralegal_members')
-            .select('nama_paralegal')
-            .eq('id_posbankum', idPosbankumAsli.value)
-            .order('is_primary', ascending: false);
-
-        if (dataParalegal != null) {
-          paralegalList.value = List<String>.from(dataParalegal.map((e) => e['nama_paralegal']));
+        if (idPosbankumAsli.value.isNotEmpty) {
+          final posbankumResponse = await _apiService.dio.get('/posbankum/${idPosbankumAsli.value}');
+          if (posbankumResponse.data['status'] == true) {
+            final posbankumData = posbankumResponse.data['data'];
+            final List<dynamic> listParalegalRaw = posbankumData['paralegals'] ?? posbankumData['members'] ?? [];
+            paralegalList.value = listParalegalRaw.map<String>((p) {
+              return (p['nama_lengkap'] ?? p['nama_paralegal'] ?? p['name'] ?? '-').toString();
+            }).toList();
+          }
         }
       }
     } catch (e) {
@@ -97,47 +92,39 @@ class TambahKegiatanController extends GetxController {
       return;
     }
 
-    if (idPosbankumAsli.value.isEmpty) {
-      Get.snackbar("Error", "Gagal memverifikasi identitas Posbankum.");
-      return;
-    }
-
     try {
       isLoading.value = true;
-      String? imageUrl;
-
-      if (selectedImage.value != null) {
-        final fileName = 'kegiatan_${DateTime.now().millisecondsSinceEpoch}.png';
-        final path = 'posbankum/${idPosbankumAsli.value}/$fileName';
-
-        await supabase.storage
-            .from('kegiatan-thumbnails')
-            .upload(path, selectedImage.value!);
-
-        // ✅ SIMPAN PATH NYA SAJA (Sesuai Standar Web)
-        imageUrl = path;
-      }
-
       final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate.value!);
 
-      await supabase.from('kegiatan').insert({
-        'id_posbankum': idPosbankumAsli.value,
+      final Map<String, dynamic> dataMap = {
         'judul': judulCtrl.text,
         'deskripsi': deskripsiCtrl.text,
         'lokasi': lokasiCtrl.text,
         'status': 'menunggu',
         'tgl_mulai': formattedDate,
-        'thumbnail_path': imageUrl,
         'jumlah_peserta': jmlPesertaCtrl.text.isNotEmpty ? int.tryParse(jmlPesertaCtrl.text) : null,
-        'anggota_terlibat': selectedParalegals,
-      });
+        'anggota_terlibat': selectedParalegals.toList(),
+      };
 
-      if (Get.isRegistered<KelolaKegiatanController>()) {
-        Get.find<KelolaKegiatanController>().fetchKegiatan();
+      if (selectedImage.value != null) {
+        dataMap['thumbnail_path'] = await dio_pkg.MultipartFile.fromFile(
+          selectedImage.value!.path,
+          filename: selectedImage.value!.path.split('/').last,
+        );
       }
 
-      Get.offNamed(AppRoutes.KONFIRMASI_KEGIATAN);
+      final formData = dio_pkg.FormData.fromMap(dataMap);
 
+      final response = await _apiService.dio.post('/kegiatan', data: formData);
+
+      if (response.data['status'] == true) {
+        if (Get.isRegistered<KelolaKegiatanController>()) {
+          Get.find<KelolaKegiatanController>().fetchKegiatan();
+        }
+        Get.offNamed(AppRoutes.KONFIRMASI_KEGIATAN);
+      } else {
+        throw response.data['message'] ?? 'Gagal menyimpan kegiatan';
+      }
     } catch (e) {
       Get.snackbar("Error", "Gagal menyimpan kegiatan: $e");
     } finally {

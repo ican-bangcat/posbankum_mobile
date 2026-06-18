@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../app/data/services/api_service.dart';
 
 // Definisi model data kasus
 class KasusItem {
@@ -31,8 +31,8 @@ class KasusItem {
       kategori: json['jenis_masalah']?.toString() ?? 'Lain-lain',
       deskripsi: json['kronologi']?.toString() ?? 'Tidak ada kronologi',
       lokasi: json['lokasi_kejadian']?.toString() ?? 'Lokasi tidak diketahui',
-      tanggalPengajuan: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
-      tanggalKejadian: json['tanggal_kejadian'] != null ? DateTime.parse(json['tanggal_kejadian']) : null,
+      tanggalPengajuan: json['created_at'] != null ? DateTime.parse(json['created_at']).toLocal() : DateTime.now(),
+      tanggalKejadian: json['tanggal_kejadian'] != null ? DateTime.parse(json['tanggal_kejadian']).toLocal() : null,
       status: json['status']?.toString().toLowerCase() ?? 'menunggu',
       prioritas: json['prioritas']?.toString() ?? 'Normal',
       namaKlien: json['nama_pelapor']?.toString() ?? 'Masyarakat (Klien)', // Langsung baca dari tabel
@@ -42,7 +42,7 @@ class KasusItem {
 }
 
 class KelolaPengaduanController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
 
   var selectedTab = 0.obs;
   var searchQuery = ''.obs;
@@ -63,30 +63,17 @@ class KelolaPengaduanController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 1. Memverifikasi sesi aktif pengguna (Paralegal)
-      final user = supabase.auth.currentUser;
-      if (user == null) throw 'Sesi autentikasi tidak valid';
+      final response = await _apiService.dio.get('/pengaduan');
 
-      // 2. 🚀 CARA BARU YANG SUPER AMAN: Dapatkan id_posbankum dari profile admin yang login
-      final profile = await supabase.from('profiles').select('id_posbankum').eq('id', user.id).maybeSingle();
-      if (profile == null || profile['id_posbankum'] == null) {
-        throw 'Akun Anda belum terikat dengan instansi Posbankum manapun';
-      }
-      String idPosbankumAdmin = profile['id_posbankum'];
-
-      // 3. Tarik data pengaduan KHUSUS untuk Posbankum tersebut (Kecuali yang dibatalkan pelapor)
-      final response = await supabase
-          .from('pengaduan')
-          .select()
-          .eq('id_posbankum', idPosbankumAdmin)
-          .neq('status', 'dibatalkan')
-          .order('created_at', ascending: false);
-
-      if (response != null) {
-        final List<KasusItem> fetchedData = (response as List)
-            .map((data) => KasusItem.fromJson(data))
+      if (response.data['status'] == true) {
+        final List<dynamic> data = response.data['data'];
+        final List<KasusItem> fetchedData = data
+            .map((e) => e is Map<String, dynamic> ? KasusItem.fromJson(e) : KasusItem.fromJson(Map<String, dynamic>.from(e)))
+            .where((kasus) => kasus.status != 'dibatalkan')
             .toList();
         allKasus.assignAll(fetchedData);
+      } else {
+        throw response.data['message'] ?? 'Gagal mengambil data pengaduan';
       }
     } catch (e) {
       debugPrint('Kegagalan sinkronisasi data pengaduan: $e');

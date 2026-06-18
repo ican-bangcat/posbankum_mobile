@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../app/data/services/api_service.dart';
+import 'package:posbankum/modules/auth/controllers/auth_controller.dart';
 
 class ProfileController extends GetxController {
   final ApiService _apiService = ApiService();
@@ -265,16 +266,21 @@ class ProfileController extends GetxController {
                   OutlinedButton(
                     onPressed: () async {
                       Get.back();
-                      try {
-                        await _apiService.dio.post('/logout');
-                        await _storage.remove('token');
-                        await _storage.remove('user');
-                        await _storage.remove('role');
-                        await _storage.write('is_logged_in', false);
-                        Get.offAllNamed(AppRoutes.LOGIN_FORM);
-                      } catch (e) {
-                        await _storage.erase();
-                        Get.offAllNamed(AppRoutes.LOGIN_FORM);
+                      if (Get.isRegistered<AuthController>()) {
+                        await Get.find<AuthController>().logout();
+                      } else {
+                        // Fallback jika AuthController tidak terdaftar
+                        try {
+                          await _apiService.dio.post('/logout');
+                          await _storage.remove('token');
+                          await _storage.remove('user');
+                          await _storage.remove('role');
+                          await _storage.write('is_logged_in', false);
+                          Get.offAllNamed(AppRoutes.LOGIN);
+                        } catch (e) {
+                          await _storage.erase();
+                          Get.offAllNamed(AppRoutes.LOGIN);
+                        }
                       }
                     },
                     style: OutlinedButton.styleFrom(

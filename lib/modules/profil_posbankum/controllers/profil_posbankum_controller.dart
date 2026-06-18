@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:get_storage/get_storage.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../app/data/services/api_service.dart';
+import '../../auth/controllers/auth_controller.dart';
 
 class ProfilPosbankumController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
+  final _storage = GetStorage();
 
   var isLoading = true.obs;
 
@@ -29,66 +32,58 @@ class ProfilPosbankumController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 1. Cek Sesi User
-      final user = supabase.auth.currentUser;
-      if (user == null) {
-        Get.snackbar('Sesi Berakhir', 'Silakan login kembali');
+      // 1. Ambil id_posbankum dari profile user yang sedang login
+      final profileResponse = await _apiService.dio.get('/profile');
+      if (profileResponse.data['status'] != true) {
+        Get.snackbar('Error', 'Gagal memuat data profile.');
         return;
       }
 
-      // 2. Ambil id_posbankum
-      final profileData = await supabase
-          .from('profiles')
-          .select('id_posbankum')
-          .eq('id', user.id)
-          .maybeSingle();
+      final userData = profileResponse.data['data'];
+      final idPosbankumAsli = userData['id_posbankum'];
 
-      final idPosbankumAsli = profileData?['id_posbankum'];
       if (idPosbankumAsli == null) {
         Get.snackbar('Akses Ditolak', 'Akun Anda belum ditautkan ke Posbankum manapun.');
         return;
       }
 
-      // 3. Tarik Data Utama Posbankum + Wilayah (Sihir JOIN)
-      final dataPosbankum = await supabase
-          .from('posbankum')
-          .select('''
-            nama, 
-            email_akun, 
-            alamat, 
-            kode_pos, 
-            kabupaten:id_kabupaten (nama), 
-            kecamatan:id_kecamatan (nama), 
-            kelurahan:id_kelurahan (nama)
-          ''')
-          .eq('id_posbankum', idPosbankumAsli)
-          .maybeSingle();
+      // 2. Tarik Data Utama Posbankum dari Laravel API
+      final posbankumResponse = await _apiService.dio.get('/posbankum/$idPosbankumAsli');
 
-      if (dataPosbankum != null) {
-        // 4. Tarik Data Paralegal
-        final dataParalegal = await supabase
-            .from('paralegal_members')
-            .select('nama_paralegal, nomor_telepon, is_primary')
-            .eq('id_posbankum', idPosbankumAsli)
-            .order('is_primary', ascending: false);
+      if (posbankumResponse.data['status'] == true) {
+        final posbankumData = posbankumResponse.data['data'];
+        
+        namaPosbankum.value = posbankumData['nama'] ?? '-';
+        email.value = posbankumData['email_akun'] ?? '-';
+        alamat.value = posbankumData['alamat'] ?? '-';
+        kodePos.value = posbankumData['kode_pos'] ?? '-';
 
-        // 5. Masukkan Data ke UI
-        namaPosbankum.value = dataPosbankum['nama'] ?? '-';
-        email.value = dataPosbankum['email_akun'] ?? '-';
-        alamat.value = dataPosbankum['alamat'] ?? '-';
-        kodePos.value = dataPosbankum['kode_pos'] ?? '-';
+        // Hubungan Wilayah dari Laravel
+        kabupaten.value = posbankumData['kabupaten']?['nama'] ?? '-';
+        kecamatan.value = posbankumData['kecamatan']?['nama'] ?? '-';
+        kelurahan.value = posbankumData['kelurahan']?['nama'] ?? '-';
 
-        // Ekstrak data Join wilayah
-        kabupaten.value = dataPosbankum['kabupaten']?['nama'] ?? '-';
-        kecamatan.value = dataPosbankum['kecamatan']?['nama'] ?? '-';
-        kelurahan.value = dataPosbankum['kelurahan']?['nama'] ?? '-';
+        // Hubungan Paralegal (biasanya dikembalikan di nested 'paralegals' atau 'paralegal_members')
+        final List<dynamic> listParalegalRaw = posbankumData['paralegals'] ?? posbankumData['members'] ?? [];
+        
+        List<Map<String, dynamic>> mappedParalegals = listParalegalRaw.map((p) {
+          final isPrimaryVal = p['is_primary'] ?? p['pivot']?['is_primary'] ?? 0;
+          return {
+            'nama_paralegal': p['nama_lengkap'] ?? p['nama_paralegal'] ?? p['name'] ?? '-',
+            'nomor_telepon': p['nomor_telepon'] ?? p['no_hp'] ?? '-',
+            'is_primary': isPrimaryVal == 1 || isPrimaryVal == true,
+          };
+        }).toList();
 
-        if (dataParalegal.isNotEmpty) {
-          paralegalList.assignAll(List<Map<String, dynamic>>.from(dataParalegal));
-          jmlParalegal.value = paralegalList.length;
-        } else {
-          jmlParalegal.value = 0;
-        }
+        // Urutkan is_primary = true paling atas
+        mappedParalegals.sort((a, b) {
+          final aPri = a['is_primary'] == true ? 1 : 0;
+          final bPri = b['is_primary'] == true ? 1 : 0;
+          return bPri.compareTo(aPri);
+        });
+
+        paralegalList.assignAll(mappedParalegals);
+        jmlParalegal.value = paralegalList.length;
       }
 
     } catch (e) {
@@ -111,13 +106,21 @@ class ProfilPosbankumController extends GetxController {
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               Get.back();
-              Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
-              try {
-                await supabase.auth.signOut();
-                Get.offAllNamed(AppRoutes.LOGIN_FORM);
-              } catch (e) {
-                Get.back();
-                Get.snackbar('Error', 'Gagal logout: $e');
+              if (Get.isRegistered<AuthController>()) {
+                await Get.find<AuthController>().logout();
+              } else {
+                Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
+                try {
+                  await _apiService.dio.post('/logout');
+                  await _storage.remove('token');
+                  await _storage.remove('user');
+                  await _storage.remove('role');
+                  await _storage.write('is_logged_in', false);
+                  Get.offAllNamed(AppRoutes.LOGIN);
+                } catch (e) {
+                  await _storage.erase();
+                  Get.offAllNamed(AppRoutes.LOGIN);
+                }
               }
             },
             child: const Text('Ya, Keluar', style: TextStyle(color: Colors.white)),

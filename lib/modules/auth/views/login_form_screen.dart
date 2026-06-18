@@ -12,115 +12,86 @@ class LoginFormScreen extends StatefulWidget {
 
 class _LoginFormScreenState extends State<LoginFormScreen> {
   final authC = Get.find<AuthController>();
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
 
   static const Color darkBlueColor = Color(0xFF2A2E5E);
-  static const Color yellowAccent = Color(0xFFFDEF0C);
-  static const Color textDark = Color(0xFF1E1E1E);
-  static const Color textLight = Color(0xFF64748B);
 
   @override
   Widget build(BuildContext context) {
-    final double bottomNavBarPadding = MediaQuery.of(context).padding.bottom;
-
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: darkBlueColor,
       body: SafeArea(
-        bottom: false,
-        child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(32, 40, 32, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLogoRow(),
-                    const SizedBox(height: 20),
-                    const Text('Selamat Datang', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: textDark)),
-                    const Text('Masuk untuk melanjutkan', style: TextStyle(fontSize: 14, color: textLight)),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.fromLTRB(28, 32, 28, 32),
-                decoration: const BoxDecoration(
-                  color: darkBlueColor,
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildLabel('Email'),
-                      TextFormField(
-                        controller: _emailController,
-                        style: const TextStyle(color: textDark, fontSize: 14),
-                        decoration: _inputDecoration('Email', Icons.email_outlined),
-                        validator: (v) => v!.isEmpty ? 'Email wajib diisi' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildLabel('Kata Sandi'),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        style: const TextStyle(color: textDark, fontSize: 14),
-                        decoration: _inputDecoration('Kata Sandi', Icons.lock_outline).copyWith(
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey, size: 18),
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                          ),
-                        ),
-                        validator: (v) => v!.isEmpty ? 'Kata sandi wajib diisi' : null,
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: Obx(() => ElevatedButton(
-                          onPressed: authC.isLoading.value ? null : () {
-                            if (_formKey.currentState!.validate()) {
-                              authC.login(_emailController.text, _passwordController.text);
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                          child: authC.isLoading.value 
-                            ? const CircularProgressIndicator(color: darkBlueColor) 
-                            : const Text('Masuk', style: TextStyle(fontWeight: FontWeight.w700, color: darkBlueColor)),
-                        )),
-                      ),
-                      const SizedBox(height: 16),
-                      const Center(child: Text('ATAU', style: TextStyle(color: Colors.white70, fontSize: 12))),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: Obx(() => ElevatedButton.icon(
-                          onPressed: authC.isLoading.value ? null : () => authC.loginWithGoogle(),
-                          icon: Image.asset('assets/images/icons/google.png', height: 20, errorBuilder: (c,e,s) => const Icon(Icons.g_mobiledata)),
-                          label: const Text('Masuk dengan Google', style: TextStyle(color: textLight)),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                        )),
-                      ),
-                      const SizedBox(height: 24),
-                      Center(
-                        child: GestureDetector(
-                          onTap: () => Get.toNamed(AppRoutes.REGISTER),
-                          child: const Text.rich(TextSpan(style: TextStyle(color: Colors.white, fontSize: 13), children: [
-                            TextSpan(text: 'Belum punya akun? '),
-                            TextSpan(text: 'Daftar', style: TextStyle(fontWeight: FontWeight.bold, color: yellowAccent)),
-                          ])),
-                        ),
-                      ),
-                      SizedBox(height: bottomNavBarPadding),
-                    ],
+              // Top Section: Back Button & Title
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                    onPressed: () => Get.back(),
                   ),
-                ),
+                  const Text(
+                    'Kembali',
+                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+              
+              // Center Section: Logo & Text
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildLogoRow(),
+                  const SizedBox(height: 48),
+                  const Text(
+                    'Selamat Datang',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white),
+                  ),
+                  const SizedBox(height: 12),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      'Silakan masuk menggunakan akun Google Anda untuk mengakses seluruh layanan Pos Bantuan Hukum gratis.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Bottom Section: Google Button & Footer
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: Obx(() => ElevatedButton.icon(
+                      onPressed: authC.isLoading.value ? null : () => authC.loginWithGoogle(),
+                      icon: Image.asset('assets/images/icons/google.png', height: 22, errorBuilder: (c,e,s) => const Icon(Icons.g_mobiledata, color: Colors.blue)),
+                      label: authC.isLoading.value 
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(color: darkBlueColor, strokeWidth: 2.5),
+                            )
+                          : const Text('Masuk dengan Google', style: TextStyle(color: darkBlueColor, fontSize: 16, fontWeight: FontWeight.w600)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                      ),
+                    )),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Kanwil Kemenkumham Riau',
+                    style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.w500),
+                  ),
+                ],
               ),
             ],
           ),
@@ -129,24 +100,20 @@ class _LoginFormScreenState extends State<LoginFormScreen> {
     );
   }
 
-  Widget _buildLabel(String text) => Padding(padding: const EdgeInsets.only(bottom: 8), child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)));
-
-  InputDecoration _inputDecoration(String hint, IconData icon) => InputDecoration(
-    hintText: hint,
-    prefixIcon: Icon(icon, size: 18, color: const Color(0xFF94A3B8)),
-    filled: true,
-    fillColor: Colors.white,
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+  Widget _buildLogoRow() => Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Image.asset('assets/images/logo/logo_kemenkum.png', width: 56, height: 56),
+      const SizedBox(width: 16),
+      Container(width: 1.5, height: 44, color: Colors.white30),
+      const SizedBox(width: 16),
+      const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Posbankum', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)),
+          Text('Bantuan Hukum Gratis', style: TextStyle(fontSize: 12, color: Colors.white70)),
+        ],
+      ),
+    ],
   );
-
-  Widget _buildLogoRow() => Row(children: [
-    Image.asset('assets/images/logo/logo_kemenkum.png', width: 44, height: 44),
-    const SizedBox(width: 12),
-    Container(width: 1.5, height: 36, color: darkBlueColor),
-    const SizedBox(width: 12),
-    const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Posbankum', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: darkBlueColor)),
-      Text('Kanwil kemenkum Riau', style: TextStyle(fontSize: 12, color: textLight)),
-    ]),
-  ]);
 }

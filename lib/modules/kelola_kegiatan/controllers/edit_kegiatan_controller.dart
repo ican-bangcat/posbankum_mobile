@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:dio/dio.dart' as dio_pkg;
+import '../../../app/data/services/api_service.dart';
 import 'kelola_kegiatan_controller.dart';
 import 'detail_kegiatan_controller.dart';
 
 class EditKegiatanController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
   var kegiatanId = '';
   var existingImageUrl = ''.obs;
 
@@ -39,46 +40,45 @@ class EditKegiatanController extends GetxController {
     try {
       isLoading.value = true;
 
-      final user = supabase.auth.currentUser;
-      if (user != null) {
-        final dataPosbankum = await supabase
-            .from('posbankum')
-            .select('id_posbankum')
-            .eq('email_akun', user.email ?? '')
-            .maybeSingle();
+      final profileResponse = await _apiService.dio.get('/profile');
+      if (profileResponse.data['status'] == true) {
+        final userData = profileResponse.data['data'];
+        idPosbankumAsli.value = userData['id_posbankum']?.toString() ?? '';
 
-        if (dataPosbankum != null) {
-          idPosbankumAsli.value = dataPosbankum['id_posbankum'];
-          final dataParalegal = await supabase
-              .from('paralegal_members')
-              .select('nama_paralegal')
-              .eq('id_posbankum', idPosbankumAsli.value)
-              .order('is_primary', ascending: false);
-          if (dataParalegal != null) {
-            paralegalList.value = List<String>.from(dataParalegal.map((e) => e['nama_paralegal']));
+        if (idPosbankumAsli.value.isNotEmpty) {
+          final posbankumResponse = await _apiService.dio.get('/posbankum/${idPosbankumAsli.value}');
+          if (posbankumResponse.data['status'] == true) {
+            final posbankumData = posbankumResponse.data['data'];
+            final List<dynamic> listParalegalRaw = posbankumData['paralegals'] ?? posbankumData['members'] ?? [];
+            paralegalList.value = listParalegalRaw.map<String>((p) {
+              return (p['nama_lengkap'] ?? p['nama_paralegal'] ?? p['name'] ?? '-').toString();
+            }).toList();
           }
         }
       }
 
-      final data = await supabase
-          .from('kegiatan')
-          .select()
-          .eq('id_kegiatan', kegiatanId)
-          .single();
+      final response = await _apiService.dio.get('/kegiatan/$kegiatanId');
 
-      judulCtrl.text = data['judul'] ?? '';
-      lokasiCtrl.text = data['lokasi'] ?? '';
-      deskripsiCtrl.text = data['deskripsi'] ?? '';
-      jmlPesertaCtrl.text = (data['jumlah_peserta'] ?? '').toString();
-      existingImageUrl.value = data['thumbnail_path'] ?? '';
+      if (response.data['status'] == true) {
+        final data = response.data['data'];
+        judulCtrl.text = data['judul'] ?? '';
+        lokasiCtrl.text = data['lokasi'] ?? '';
+        deskripsiCtrl.text = data['deskripsi'] ?? '';
+        jmlPesertaCtrl.text = (data['jumlah_peserta'] ?? '').toString();
+        existingImageUrl.value = data['thumbnail_path'] ?? '';
 
-      if (data['tgl_mulai'] != null) {
-        selectedDate.value = DateTime.parse(data['tgl_mulai']).toLocal();
-      }
+        if (data['tgl_mulai'] != null) {
+          selectedDate.value = DateTime.parse(data['tgl_mulai']).toLocal();
+        }
 
-      if (data['anggota_terlibat'] != null) {
-        List<dynamic> rawAnggota = data['anggota_terlibat'];
-        selectedParalegals.value = rawAnggota.map((e) => e.toString()).toList();
+        if (data['anggota_terlibat'] != null) {
+          if (data['anggota_terlibat'] is List) {
+            List<dynamic> rawAnggota = data['anggota_terlibat'];
+            selectedParalegals.value = rawAnggota.map((e) => e.toString()).toList();
+          } else if (data['anggota_terlibat'] is String) {
+            // fallback
+          }
+        }
       }
 
     } catch (e) {
@@ -127,38 +127,43 @@ class EditKegiatanController extends GetxController {
 
     try {
       isLoading.value = true;
-      String? finalImageUrl = existingImageUrl.value;
-
-      if (selectedImage.value != null) {
-        final fileName = 'kegiatan_${DateTime.now().millisecondsSinceEpoch}.png';
-        final path = 'posbankum/${idPosbankumAsli.value}/$fileName';
-
-        await supabase.storage
-            .from('kegiatan-thumbnails')
-            .upload(path, selectedImage.value!);
-
-        // ✅ SIMPAN PATH NYA SAJA
-        finalImageUrl = path;
-      }
-
       final formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate.value!);
 
-      await supabase.from('kegiatan').update({
+      final Map<String, dynamic> dataMap = {
+        '_method': 'PUT',
         'judul': judulCtrl.text,
         'tgl_mulai': formattedDate,
         'lokasi': lokasiCtrl.text,
         'deskripsi': deskripsiCtrl.text,
         'jumlah_peserta': jmlPesertaCtrl.text.isNotEmpty ? int.tryParse(jmlPesertaCtrl.text) : null,
-        'anggota_terlibat': selectedParalegals,
-        'thumbnail_path': finalImageUrl,
+        'anggota_terlibat': selectedParalegals.toList(),
+        'thumbnail_path': existingImageUrl.value,
         'status': 'menunggu',
-      }).eq('id_kegiatan', kegiatanId);
+      };
 
-      if (Get.isRegistered<KelolaKegiatanController>()) Get.find<KelolaKegiatanController>().fetchKegiatan();
-      if (Get.isRegistered<DetailKegiatanController>()) Get.find<DetailKegiatanController>().fetchDetailKegiatan();
+      if (selectedImage.value != null) {
+        dataMap['thumbnail_path'] = await dio_pkg.MultipartFile.fromFile(
+          selectedImage.value!.path,
+          filename: selectedImage.value!.path.split('/').last,
+        );
+      }
 
-      Get.back();
-      Get.snackbar("Berhasil", "Kegiatan diperbarui & masuk antrean persetujuan!", backgroundColor: Colors.green, colorText: Colors.white);
+      final formData = dio_pkg.FormData.fromMap(dataMap);
+
+      final response = await _apiService.dio.post(
+        '/kegiatan/$kegiatanId',
+        data: formData,
+      );
+
+      if (response.data['status'] == true) {
+        if (Get.isRegistered<KelolaKegiatanController>()) Get.find<KelolaKegiatanController>().fetchKegiatan();
+        if (Get.isRegistered<DetailKegiatanController>()) Get.find<DetailKegiatanController>().fetchDetailKegiatan();
+
+        Get.back();
+        Get.snackbar("Berhasil", "Kegiatan diperbarui & masuk antrean persetujuan!", backgroundColor: Colors.green, colorText: Colors.white);
+      } else {
+        throw response.data['message'] ?? 'Gagal memperbarui kegiatan';
+      }
     } catch (e) {
       Get.snackbar("Error", "Gagal memperbarui kegiatan: $e");
     } finally {

@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import '../../../app/data/services/api_service.dart';
 
 enum StatusPengaduan { semua, dalamProses, selesai }
 
@@ -21,30 +21,30 @@ class PengaduanItem {
 
   factory PengaduanItem.fromJson(Map<String, dynamic> json) {
     String formattedDate = '';
-    if (json['tgl_lapor'] != null) {
-      DateTime dt = DateTime.parse(json['tgl_lapor']).toLocal();
+    // Laravel uses created_at instead of tgl_lapor
+    final rawDate = json['created_at'] ?? json['tgl_lapor'];
+    if (rawDate != null) {
+      DateTime dt = DateTime.parse(rawDate).toLocal();
       formattedDate = DateFormat('dd MMM yyyy').format(dt);
     }
 
     return PengaduanItem(
-      judul: json['judul_laporan'] ?? json['kategori_masalah'] ?? 'Tanpa Judul',
-      kategoriMasalah: json['kategori_masalah'] ?? 'Lain-lain',
+      judul: json['judul_pengaduan'] ?? json['jenis_masalah'] ?? 'Tanpa Judul',
+      kategoriMasalah: json['jenis_masalah'] ?? 'Lain-lain',
       tanggal: formattedDate,
-      idTiket: json['id'] ?? '-',
+      idTiket: json['id_pengaduan'] != null ? json['id_pengaduan'].toString() : '-',
       status: json['status'] ?? 'Pending',
     );
   }
 }
 
 class RiwayatPengaduanController extends GetxController {
-  final supabase = Supabase.instance.client;
+  final ApiService _apiService = ApiService();
 
   final selectedTab = StatusPengaduan.semua.obs;
   final searchQuery = ''.obs;
 
-  // ✅ INI DIA YANG BIKIN ERROR KALAU GAK ADA
   var isLoading = true.obs;
-
   var allItems = <PengaduanItem>[].obs;
 
   @override
@@ -55,24 +55,18 @@ class RiwayatPengaduanController extends GetxController {
 
   Future<void> fetchRiwayatPengaduan() async {
     try {
-      isLoading.value = true; // Set loading nyala
+      isLoading.value = true;
 
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final response = await _apiService.dio.get('/pengaduan');
 
-      final response = await supabase
-          .from('pengaduan')
-          .select()
-          .eq('masyarakat_id', user.id)
-          .order('tgl_lapor', ascending: false);
-
-      final List<dynamic> data = response as List<dynamic>;
-      allItems.value = data.map((e) => PengaduanItem.fromJson(e)).toList();
-
+      if (response.data['status'] == true) {
+        final List<dynamic> data = response.data['data'];
+        allItems.value = data.map((e) => e is Map<String, dynamic> ? PengaduanItem.fromJson(e) : PengaduanItem.fromJson(Map<String, dynamic>.from(e))).toList();
+      }
     } catch (e) {
       print("Error: $e");
     } finally {
-      isLoading.value = false; // Set loading mati
+      isLoading.value = false;
     }
   }
 
