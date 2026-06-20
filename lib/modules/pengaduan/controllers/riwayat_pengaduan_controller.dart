@@ -77,7 +77,9 @@ class RiwayatPengaduanController extends GetxController {
     if (selectedTab.value == StatusPengaduan.dalamProses) {
       // ✅ AMAN: Kita paksa jadi huruf kecil semua saat ngecek
       items = items.where((e) =>
-      e.status.toLowerCase() == 'proses' ||
+      e.status.toLowerCase() == 'menunggu' ||
+          e.status.toLowerCase() == 'pending' ||
+          e.status.toLowerCase() == 'proses' ||
           e.status.toLowerCase() == 'diproses').toList();
     } else if (selectedTab.value == StatusPengaduan.selesai) {
       items = items.where((e) => e.status.toLowerCase() == 'selesai').toList();

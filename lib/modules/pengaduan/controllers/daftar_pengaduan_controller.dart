@@ -91,7 +91,8 @@ class DaftarPengaduanController extends GetxController {
 
     if (selectedTab.value == StatusPengaduan.dalamProses) {
       result = result.where((item) =>
-      item.status.toLowerCase() == 'pending' ||
+      item.status.toLowerCase() == 'menunggu' ||
+          item.status.toLowerCase() == 'pending' ||
           item.status.toLowerCase() == 'diproses'
       ).toList();
     } else if (selectedTab.value == StatusPengaduan.selesai) {

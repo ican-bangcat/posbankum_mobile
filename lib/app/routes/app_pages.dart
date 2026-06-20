@@ -11,7 +11,7 @@ import '../../modules/warga_dashboard/views/home_warga_view.dart';
 import '../../modules/paralegal_dashboard/views/home_paralegal_view.dart';
 import '../../modules/pengaduan/views/form_pengaduan_view.dart';
 import '../../modules/pengaduan/views/pengaduan_success_screen.dart';
-import '../../modules/pengaduan/controllers/FormPengaduanController.dart';
+import '../../modules/pengaduan/controllers/form_pengaduan_controller.dart';
 import '../../modules/auth/views/forgot_password_view.dart';
 import '../../modules/auth/controllers/forgot_password_controller.dart';
 import '../../modules/auth/views/update_password_view.dart';
@@ -137,7 +137,7 @@ class AppPages {
       page: () => const FormPengaduanScreen(),
       binding: BindingsBuilder(() {
         // Wajib inject Controller di sini biar gak error!
-        Get.lazyPut<PengaduanController>(() => PengaduanController());
+        Get.lazyPut<FormPengaduanController>(() => FormPengaduanController());
       }),
       transition: Transition.rightToLeft,
       transitionDuration: const Duration(milliseconds: 300),

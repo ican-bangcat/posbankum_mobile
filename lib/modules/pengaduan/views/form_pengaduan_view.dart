@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../app/themes/app_colors.dart';
-import '../controllers/FormPengaduanController.dart'; // Sesuaikan jika nama file controller beda
+import '../controllers/form_pengaduan_controller.dart'; // Sesuaikan jika nama file controller beda
 
-class FormPengaduanScreen extends GetView<PengaduanController> {
+class FormPengaduanScreen extends GetView<FormPengaduanController> {
   const FormPengaduanScreen({super.key});
 
   final List<String> _kategoriMasalah = const [
@@ -312,7 +312,7 @@ class FormPengaduanScreen extends GetView<PengaduanController> {
       children: [
         _buildLabelWithIcon(Icons.assignment_outlined, 'Jenis Masalah'),
         const SizedBox(height: 12),
-        GetBuilder<PengaduanController>(
+        GetBuilder<FormPengaduanController>(
             builder: (controller) {
               return DropdownButtonFormField<String>(
                 value: controller.selectedKategori,
