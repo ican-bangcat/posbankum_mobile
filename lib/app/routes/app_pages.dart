@@ -43,6 +43,8 @@ import '../../modules/profile/views/edit_profile_view.dart';
 import '../../modules/profile/bindings/edit_profile_binding.dart';
 import '../../modules/profil_paralegal/bindings/profil_paralegal_binding.dart';
 import '../../modules/profil_paralegal/views/profil_paralegal_view.dart';
+import '../../modules/profil_paralegal/bindings/edit_profil_paralegal_binding.dart';
+import '../../modules/profil_paralegal/views/edit_profil_paralegal_view.dart';
 import '../../modules/notifikasi_masyarakat/views/notifikasi_masyarakat_view.dart';
 import '../../modules/notifikasi_masyarakat/bindings/notifikasi_masyarakat_binding.dart';
 import '../../modules/daftar_chat_paralegal/controllers/daftar_chat_paralegal_controller.dart';
@@ -241,6 +243,11 @@ class AppPages {
       name: AppRoutes.PROFIL_PARALEGAL,
       page: () => const ProfilParalegalView(),
       binding: ProfilParalegalBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.EDIT_PROFILE_PARALEGAL,
+      page: () => const EditProfilParalegalView(),
+      binding: EditProfilParalegalBinding(),
     ),
     GetPage(
       name: AppRoutes.NOTIFICATION,

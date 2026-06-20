@@ -61,6 +61,7 @@ class AppRoutes {
   static const EDIT_PROFILE = '/edit-profile';
 
   static const String PROFIL_PARALEGAL = '/profil-paralegal';
+  static const String EDIT_PROFILE_PARALEGAL = '/edit-profile-paralegal';
 //Fitur chat pov paralegal
   static const DAFTAR_CHAT_PARALEGAL = '/daftar-chat-paralegal';
   static const DETAIL_CHAT_PARALEGAL = '/detail-chat-paralegal';
