@@ -106,19 +106,67 @@ class FormPengaduanController extends GetxController {
     selectedFiles.removeAt(index);
   }
 
+  String formatTanggalIndo(DateTime date) {
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return "${date.day} ${months[date.month - 1]} ${date.year}";
+  }
+
   Future<void> pickDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
-      context: context, initialDate: DateTime.now(), firstDate: DateTime(2000), lastDate: DateTime.now(),
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF464E97), // primaryBlue
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF2A2E5E), // darkBlueColor
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF464E97),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != selectedDate) {
       selectedDate = picked;
-      tglKejadianC.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      tglKejadianC.text = formatTanggalIndo(picked);
       calculateProgress();
     }
   }
 
   Future<void> pickTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF464E97), // primaryBlue
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF2A2E5E), // darkBlueColor
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF464E97),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
     if (picked != null) {
       selectedTime = picked;
       waktuKejadianC.text = "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}";
@@ -186,7 +234,9 @@ class FormPengaduanController extends GetxController {
         'jenis_masalah': selectedKategori,
         'kronologi': gabunganKronologi,
         'lokasi_kejadian': lokasiC.text.trim(),
-        'tanggal_kejadian': tglKejadianC.text,
+        'tanggal_kejadian': selectedDate != null
+            ? "${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}"
+            : '',
         'waktu_kejadian': waktuKejadianC.text,
         'prioritas': prioritasOtomatis,
       });
@@ -233,14 +283,7 @@ class FormPengaduanController extends GetxController {
         final fileExt = file.path.split('.').last.toLowerCase();
         final fileName = 'bukti_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}.$fileExt';
 
-        String realMimeType = 'application/octet-stream';
-        if (fileExt == 'jpg' || fileExt == 'jpeg') {
-          realMimeType = 'image/jpeg';
-        } else if (fileExt == 'png') {
-          realMimeType = 'image/png';
-        } else if (fileExt == 'pdf') {
-          realMimeType = 'application/pdf';
-        }
+
 
         dio_pkg.FormData formData = dio_pkg.FormData.fromMap({
           'file': await dio_pkg.MultipartFile.fromFile(

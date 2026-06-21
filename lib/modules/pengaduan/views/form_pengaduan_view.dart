@@ -29,50 +29,69 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
       body: Column(
         children: [
           // ── HEADER AREA ──
-          Container(
-            width: double.infinity,
-            clipBehavior: Clip.hardEdge,
-            decoration: const BoxDecoration(
-              color: darkBlueColor,
-            ),
-            child: Stack(
-              children: [
-                Positioned(
-                  top: -10, right: -5,
-                  child: Opacity(
-                    opacity: 0.15,
-                    child: Image.asset('assets/images/icons/building_illustration3.png', width: 300, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => const SizedBox()),
+          Stack(
+            children: [
+              Positioned(
+                bottom: 0,
+                left: 0,
+                child: Container(width: 50, height: 50, color: whiteBgColor),
+              ),
+              Container(
+                width: double.infinity,
+                clipBehavior: Clip.hardEdge,
+                decoration: const BoxDecoration(
+                  color: darkBlueColor,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(28),
+                    bottomRight: Radius.zero,
                   ),
                 ),
-                SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Get.back(),
-                          child: Container(
-                            width: 40, height: 40,
-                            decoration: BoxDecoration(border: Border.all(color: Colors.white.withOpacity(0.3)), borderRadius: BorderRadius.circular(12)),
-                            child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Text('Buat Pengaduan', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-                      ],
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: -10, right: -5,
+                      child: Opacity(
+                        opacity: 0.15,
+                        child: Image.asset('assets/images/icons/building_illustration3.png', width: 300, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => const SizedBox()),
+                      ),
                     ),
-                  ),
+                    SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+                        child: Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => Get.back(),
+                              child: Container(
+                                width: 40, height: 40,
+                                decoration: BoxDecoration(border: Border.all(color: Colors.white.withOpacity(0.3)), borderRadius: BorderRadius.circular(12)),
+                                child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            const Text('Buat Pengaduan', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
 
           // ── BODY AREA ──
           Expanded(
             child: Container(
               width: double.infinity,
-              decoration: const BoxDecoration(color: whiteBgColor, borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28))),
+              decoration: const BoxDecoration(
+                color: whiteBgColor,
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(28),
+                  topLeft: Radius.zero,
+                ),
+              ),
               child: Column(
                 children: [
                   // Progress Bar - Pinned at the top
@@ -104,9 +123,9 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
                           const SizedBox(height: 20),
 
                           _buildTextField(
-                            label: 'Nama Lurah/Kelurahan',
+                            label: 'Nama Lurah',
                             icon: Icons.domain,
-                            hint: 'Masukkan nama lurah/kelurahan',
+                            hint: 'Masukkan nama lurah',
                             controller: controller.namaLurahC,
                           ),
                           const SizedBox(height: 20),
@@ -139,7 +158,7 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
                           ),
                           const SizedBox(height: 20),
 
-                          _buildJenisMasalahField(),
+                          _buildJenisMasalahField(context),
                           const SizedBox(height: 20),
 
                           _buildTextField(
@@ -269,18 +288,30 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
       children: [
         _buildLabelWithIcon(icon, label),
         const SizedBox(height: 12),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          maxLines: maxLines,
-          inputFormatters: inputFormatters,
-          decoration: InputDecoration(
-            hintText: hint, hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-            filled: true, fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF2A2E5E).withOpacity(0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            maxLines: maxLines,
+            inputFormatters: inputFormatters,
+            decoration: InputDecoration(
+              hintText: hint, hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+              filled: true, fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+            ),
           ),
         ),
         if (bottomText != null || showDigitCount || showCharacterCount) ...[
@@ -306,35 +337,167 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
     );
   }
 
-  Widget _buildJenisMasalahField() {
+  void _showKategoriSheet(BuildContext context) {
+    Get.bottomSheet(
+      Builder(
+        builder: (sheetContext) {
+          final double sheetBottomPadding = MediaQuery.of(sheetContext).padding.bottom;
+          return Container(
+            height: Get.height * 0.75,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+                  child: Text(
+                    'Pilih Jenis Masalah',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2A2E5E),
+                    ),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  child: Text(
+                    'Silakan pilih jenis masalah hukum yang paling sesuai dengan laporan Anda.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                const Divider(),
+                Expanded(
+                  child: GetBuilder<FormPengaduanController>(
+                    builder: (ctrl) {
+                      return ListView.builder(
+                        padding: EdgeInsets.fromLTRB(16, 8, 16, 20 + sheetBottomPadding),
+                        itemCount: _kategoriMasalah.length,
+                        itemBuilder: (ctx, i) {
+                          final item = _kategoriMasalah[i];
+                          final isSelected = ctrl.selectedKategori == item;
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: isSelected ? const Color(0xFFF2F4FB) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected ? primaryBlue.withOpacity(0.3) : Colors.grey[200]!,
+                                width: isSelected ? 1.5 : 1,
+                              ),
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                              title: Text(
+                                item,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  color: isSelected ? primaryBlue : const Color(0xFF2A2E5E),
+                                ),
+                              ),
+                              leading: Radio<String>(
+                                value: item,
+                                groupValue: ctrl.selectedKategori,
+                                activeColor: primaryBlue,
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    ctrl.selectedKategori = value;
+                                    ctrl.calculateProgress();
+                                    ctrl.update();
+                                    Future.delayed(const Duration(milliseconds: 200), () {
+                                      Get.back();
+                                    });
+                                  }
+                                },
+                              ),
+                              onTap: () {
+                                ctrl.selectedKategori = item;
+                                ctrl.calculateProgress();
+                                ctrl.update();
+                                Future.delayed(const Duration(milliseconds: 200), () {
+                                  Get.back();
+                                });
+                              },
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+  Widget _buildJenisMasalahField(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLabelWithIcon(Icons.assignment_outlined, 'Jenis Masalah'),
         const SizedBox(height: 12),
         GetBuilder<FormPengaduanController>(
-            builder: (controller) {
-              return DropdownButtonFormField<String>(
-                value: controller.selectedKategori,
-                isExpanded: true,
-                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                decoration: InputDecoration(
-                  hintText: 'Pilih jenis masalah',
-                  hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-                  filled: true, fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+          builder: (ctrl) {
+            final hasValue = ctrl.selectedKategori != null && ctrl.selectedKategori!.isNotEmpty;
+            return GestureDetector(
+              onTap: () => _showKategoriSheet(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: hasValue ? primaryBlue.withOpacity(0.5) : Colors.grey[200]!,
+                    width: hasValue ? 1.5 : 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2A2E5E).withOpacity(0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                items: _kategoriMasalah.map((kategori) => DropdownMenuItem(value: kategori, child: Text(kategori, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)))).toList(),
-                onChanged: (value) {
-                  controller.selectedKategori = value;
-                  controller.calculateProgress();
-                  controller.update();
-                },
-              );
-            }
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        hasValue ? ctrl.selectedKategori! : 'Pilih jenis masalah',
+                        style: TextStyle(
+                          color: hasValue ? const Color(0xFF2A2E5E) : Colors.grey[400],
+                          fontSize: 14,
+                          fontWeight: hasValue ? FontWeight.w500 : FontWeight.normal,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey, size: 20),
+                  ],
+                ),
+              ),
+            );
+          }
         ),
       ],
     );
@@ -346,15 +509,27 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
       children: [
         _buildLabelWithIcon(Icons.calendar_today_outlined, 'Tanggal Kejadian'),
         const SizedBox(height: 12),
-        TextFormField(
-          controller: controller.tglKejadianC, readOnly: true, onTap: () => controller.pickDate(context),
-          decoration: InputDecoration(
-            hintText: 'Pilih tanggal', hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14), filled: true, fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            suffixIcon: const Icon(Icons.calendar_today, color: AppColors.primary, size: 20),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF2A2E5E).withOpacity(0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: TextFormField(
+            controller: controller.tglKejadianC, readOnly: true, onTap: () => controller.pickDate(context),
+            decoration: InputDecoration(
+              hintText: 'Pilih tanggal', hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14), filled: true, fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              suffixIcon: const Icon(Icons.calendar_today, color: AppColors.primary, size: 20),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+            ),
           ),
         ),
       ],
@@ -367,15 +542,27 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
       children: [
         _buildLabelWithIcon(Icons.access_time, 'Waktu Kejadian'),
         const SizedBox(height: 12),
-        TextFormField(
-          controller: controller.waktuKejadianC, readOnly: true, onTap: () => controller.pickTime(context),
-          decoration: InputDecoration(
-            hintText: 'Pilih jam', hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14), filled: true, fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            suffixIcon: const Icon(Icons.access_time, color: AppColors.primary, size: 20),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF2A2E5E).withOpacity(0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: TextFormField(
+            controller: controller.waktuKejadianC, readOnly: true, onTap: () => controller.pickTime(context),
+            decoration: InputDecoration(
+              hintText: 'Pilih jam', hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14), filled: true, fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              suffixIcon: const Icon(Icons.access_time, color: AppColors.primary, size: 20),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+            ),
           ),
         ),
       ],

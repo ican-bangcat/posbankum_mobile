@@ -373,7 +373,7 @@ class _HomeParalegalViewState extends State<HomeParalegalView>
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _buildHistoryCard(
-                  icon: Icons.update_rounded,
+                  icon: Icons.assignment_rounded,
                   title: judulKasus,
                   subtitle: "Nomor: ${kasus['nomor_pengaduan'] ?? '-'}",
                   badgeText: statusRaw.toUpperCase(),
@@ -397,7 +397,7 @@ class _HomeParalegalViewState extends State<HomeParalegalView>
       ),
       child: Row(
         children: [
-          Container(width: 48, height: 48, decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: const Color(0xFF64748B), size: 24)),
+          Container(width: 48, height: 48, decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: const Color(0xFF3B82F6), size: 24)),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

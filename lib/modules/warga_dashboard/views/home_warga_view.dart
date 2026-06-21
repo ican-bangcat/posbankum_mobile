@@ -491,7 +491,7 @@ class _HomeWargaViewState extends State<HomeWargaView>
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _buildHistoryCard(
-                  iconData: Icons.image,
+                  iconData: Icons.description_rounded,
                   title: judulKasus,
                   subtitle: 'ID: #$idKasus',
                   badgeText: badgeText,
@@ -512,7 +512,7 @@ class _HomeWargaViewState extends State<HomeWargaView>
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 3))]),
       child: Row(
         children: [
-          Container(width: 46, height: 46, decoration: BoxDecoration(color: const Color(0xFFF7FAFC), borderRadius: BorderRadius.circular(12)), child: Center(child: Icon(iconData, color: const Color(0xFFA0AEC0), size: 24))),
+          Container(width: 46, height: 46, decoration: BoxDecoration(color: const Color(0xFFEBF8FF), borderRadius: BorderRadius.circular(12)), child: Center(child: Icon(iconData, color: const Color(0xFF3182CE), size: 24))),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
