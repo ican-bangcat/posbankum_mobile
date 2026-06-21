@@ -150,7 +150,7 @@ class FormPengaduanController extends GetxController {
     try {
       isLoading.value = true;
 
-      // Ambil data profil & kependudukan pelapor dari Laravel
+      // Ambil data profil pelapor untuk snapshot nama_pelapor
       final profileRes = await _apiService.dio.get('/profile');
       if (profileRes.data['status'] != true) {
         throw profileRes.data['message'] ?? 'Gagal memuat profil pelapor';
@@ -163,42 +163,21 @@ class FormPengaduanController extends GetxController {
         throw 'Data kependudukan Anda tidak ditemukan. Harap hubungi admin.';
       }
 
+      // Pastikan warga sudah lengkapi profil (id_kelurahan wajib ada untuk filter paralegal)
       final msk = userData['masyarakat'];
-      String? idKelurahanUser = msk['id_kelurahan'];
-      String? idKabupaten = msk['id_kabupaten'];
-      String? idKecamatan = msk['id_kecamatan'];
-
-      if (idKelurahanUser == null) {
+      if (msk['id_kelurahan'] == null) {
         throw 'Data kelurahan Anda tidak ditemukan. Silakan lengkapi profil terlebih dahulu.';
       }
-
-      // 🚀 LOGIKA POSBANKUM: Cari id_posbankum yang melayani kelurahan pelapor
-      final posbankumRes = await _apiService.dio.get('/posbankum');
-      if (posbankumRes.data['status'] != true) {
-        throw posbankumRes.data['message'] ?? 'Gagal memuat data Posbankum';
-      }
-
-      final List<dynamic> posbankumList = posbankumRes.data['data'];
-      var posbankumTujuan = posbankumList.firstWhere(
-        (element) => element['id_kelurahan'] == idKelurahanUser,
-        orElse: () => null,
-      );
-
-      if (posbankumTujuan == null) {
-        throw 'Tidak ada Posbankum yang melayani kelurahan Anda saat ini.';
-      }
-      String idPosbankum = posbankumTujuan['id_posbankum'];
 
       String prioritasOtomatis = _determinePriority(selectedKategori!);
       String customId = _generatePengaduanId();
       String gabunganKronologi = 'Lurah/Kelurahan: ${namaLurahC.text.trim()}\n\nKronologi:\n${kronologiC.text.trim()}';
 
-      // 🔵 TAHAP 1: SIMPAN DATA UTAMA KE TABEL `pengaduan` Laravel REST API
+      // 🔵 TAHAP 1: SIMPAN DATA UTAMA KE TABEL `pengaduan`
+      // CATATAN: Tabel pengaduan TIDAK menyimpan id_posbankum / id_kabupaten /
+      // id_kecamatan / id_kelurahan. Relasi ke posbankum diperoleh secara
+      // dinamis via JOIN: pengaduan.user_id → masyarakat.id_kelurahan → posbankum.id_kelurahan
       final response = await _apiService.dio.post('/pengaduan', data: {
-        'id_posbankum': idPosbankum,
-        'id_kabupaten': idKabupaten,
-        'id_kecamatan': idKecamatan,
-        'id_kelurahan': idKelurahanUser,
         'nomor_pengaduan': customId,
         'nama_pelapor': namaOtomatis,
         'nik': nikBersih,
@@ -210,7 +189,6 @@ class FormPengaduanController extends GetxController {
         'tanggal_kejadian': tglKejadianC.text,
         'waktu_kejadian': waktuKejadianC.text,
         'prioritas': prioritasOtomatis,
-        'status': 'menunggu',
       });
 
       if (response.data['status'] != true) {

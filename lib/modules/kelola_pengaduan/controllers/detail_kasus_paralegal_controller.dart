@@ -16,7 +16,8 @@ class ProgresItem {
     return ProgresItem(
       title: json['title']?.toString() ?? 'Update Progres',
       deskripsi: json['deskripsi']?.toString() ?? '',
-      tanggal: json['tanggal'] != null ? DateTime.parse(json['tanggal']).toLocal() : DateTime.now(),
+      // DB column = 'created_at', bukan 'tanggal'
+      tanggal: json['created_at'] != null ? DateTime.parse(json['created_at']).toLocal() : DateTime.now(),
     );
   }
 }
@@ -90,7 +91,8 @@ class DetailKasusModel {
         pathFile: e['path_file']?.toString() ?? '',
         mimeType: e['mime_type']?.toString(),
       )).toList(),
-      catatanAdmin: json['catatan_admin']?.toString(),
+      // DB column = 'catatan_internal', bukan 'catatan_admin'
+      catatanAdmin: json['catatan_internal']?.toString(),
     );
   }
 }

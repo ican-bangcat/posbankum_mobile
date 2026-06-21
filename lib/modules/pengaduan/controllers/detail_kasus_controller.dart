@@ -73,8 +73,9 @@ class DetailKasus {
     // 2. Loop data dari tabel pengaduan_timeline
     for (var t in timelineDB) {
       String tgl = '-';
-      if (t['tanggal'] != null) {
-        final dt = DateTime.parse(t['tanggal']).toLocal();
+      // DB column = 'created_at', bukan 'tanggal'
+      if (t['created_at'] != null) {
+        final dt = DateTime.parse(t['created_at']).toLocal();
         tgl = DateFormat('dd MMM yyyy').format(dt);
       }
       generatedTimeline.add(TimelineItem(
@@ -119,7 +120,8 @@ class DetailKasus {
       kronologi: json['kronologi'] ?? 'Tidak ada kronologi',
       timeline: generatedTimeline,
       lampiranUrls: lampiranUrlsDB,
-      catatanParalegal: json['catatan_admin'],
+      // DB column = 'catatan_internal', bukan 'catatan_admin'
+      catatanParalegal: json['catatan_internal'],
       // ✅ AMBIL DATA LOKASI & NAMA DARI JSON
       lokasi: json['lokasi_kejadian']?.toString() ?? 'Lokasi tidak diketahui',
       namaPelapor: json['nama_pelapor']?.toString() ?? 'Nama Pelapor',

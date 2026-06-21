@@ -279,10 +279,16 @@ class AppPages {
     GetPage(
       name: AppRoutes.DAFTAR_CHAT_MASYARAKAT,
       page: () => const DaftarChatMasyarakatView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<DaftarChatMasyarakatController>(() => DaftarChatMasyarakatController());
+      }),
     ),
     GetPage(
       name: AppRoutes.DETAIL_CHAT_MASYARAKAT,
       page: () => const DetailChatMasyarakatView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<DetailChatMasyarakatController>(() => DetailChatMasyarakatController());
+      }),
     ),
   ];
 }

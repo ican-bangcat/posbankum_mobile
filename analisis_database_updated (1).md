@@ -17,8 +17,8 @@ erDiagram
     posbankum ||--o{ posbankum_paralegal : "memiliki paralegal"
     
     users ||--o{ pengaduan : "membuat (created_by = warga)"
-    posbankum ||--o{ pengaduan : "menerima pengaduan"
     users ||--o{ pengaduan : "mengambil kasus (id_paralegal)"
+    masyarakat ||--o{ pengaduan : "filter via id_kelurahan (query, bukan FK)"
     
     pengaduan ||--o{ pengaduan_lampiran : "memiliki lampiran"
     pengaduan ||--o{ pengaduan_timeline : "memiliki timeline"
@@ -56,11 +56,14 @@ erDiagram
 | FK yang Dipakai | Semantiknya | Contoh Penggunaan |
 |---|---|---|
 | `id_kelurahan` | Identitas **wilayah geografis** | `masyarakat.id_kelurahan` (warga tinggal di mana), `pengaduan.id_kelurahan` (kejadian di wilayah mana), hierarki wilayah |
-| `id_posbankum` | Identitas **lembaga/institusi** | `kegiatan`, `data_posbankum`, `notifikasi`, `pengaduan.id_posbankum` (lembaga penerima pengaduan) |
+| `id_posbankum` | Identitas **lembaga/institusi** | `kegiatan`, `data_posbankum`, `notifikasi` |
 
 **Aturan praktisnya:** Jika suatu baris data "milik" atau "dikerjakan oleh" sebuah lembaga posbankum → pakai `id_posbankum`. Jika data itu hanya menyebut lokasi geografis suatu kejadian/tempat tinggal → pakai `id_kelurahan`.
 
-Tabel `kegiatan`, `data_posbankum`, dan `notifikasi` sudah benar menggunakan `id_posbankum`. Jangan diganti ke `id_kelurahan` walaupun nilainya bisa di-lookup bolak-balik.
+> [!IMPORTANT]
+> **Tabel `pengaduan` tidak menyimpan `id_posbankum` sama sekali.** Relasi antara pengaduan dan posbankum diperoleh secara dinamis melalui query JOIN: `pengaduan.created_by` → `masyarakat.id_kelurahan` → `posbankum.id_kelurahan`. Ini sesuai dengan requirement dosen: *"pengaduan yang masuk ke list paralegal adalah pengaduan dimana user pengajunya memiliki id_kelurahan yang sama dengan wilayah kerja paralegal."*
+
+Tabel `kegiatan`, `data_posbankum`, dan `notifikasi` sudah benar menggunakan `id_posbankum`. Jangan diganti ke `id_kelurahan`.
 
 ---
 
@@ -99,7 +102,7 @@ kabupaten → kecamatan → kelurahan → posbankum (1:1, UNIQUE KEY)
 | `id_user` (PK + FK) | = `users.id_user`, relasi 1:1 |
 | `nik` | NIK kependudukan |
 | `alamat` | Alamat tinggal detail |
-| `id_kelurahan` | **Penentu pengaduan masuk ke posbankum mana** |
+| `id_kelurahan` | **Kunci filter pengaduan** — paralegal mencari pengaduan berdasarkan kesamaan kelurahan ini |
 
 ✅ Sudah benar. Tabel ini **khusus untuk warga saja**, jangan dipakai untuk paralegal.
 
@@ -142,8 +145,8 @@ kabupaten → kecamatan → kelurahan → posbankum (1:1, UNIQUE KEY)
 | Kolom | Fungsi | Diisi Oleh |
 |---|---|---|
 | `id_pengaduan` (PK) | UUID auto-generate | Trigger |
-| `id_posbankum` (FK, NOT NULL) | Posbankum penerima pengaduan | **Sistem** — cari posbankum berdasarkan kelurahan warga |
-| `id_kabupaten`, `id_kecamatan`, `id_kelurahan` | Wilayah kejadian | Warga (opsional) |
+| ~~`id_posbankum`~~ | ❌ **HARUS DIHAPUS** — tidak sesuai requirement dosen. Relasi ke posbankum diperoleh via query, bukan FK statis | — |
+| `id_kabupaten`, `id_kecamatan`, `id_kelurahan` | Wilayah **kejadian** (bukan wilayah warga) | Warga (opsional) |
 | `nama_pelapor`, `nomor_telepon`, `email`, `nik` | **Snapshot** data warga saat buat pengaduan | Warga (auto-fill dari profil) |
 | `jenis_masalah`, `judul_pengaduan`, `kronologi` | Detail aduan | Warga |
 | `tanggal_kejadian`, `waktu_kejadian`, `lokasi_kejadian` | Detail kejadian | Warga |
@@ -156,7 +159,31 @@ kabupaten → kecamatan → kelurahan → posbankum (1:1, UNIQUE KEY)
 | `id_paralegal` (FK, nullable) | **id_user paralegal** yang **mengambil/klaim** kasus ini | **Paralegal sendiri** di mobile |
 
 > [!IMPORTANT]
-> **Trigger `pengaduan_before_update`** memvalidasi bahwa `id_paralegal` yang mengambil kasus **harus paralegal aktif yang terdaftar di posbankum yang sama** (`posbankum_paralegal`). Ini mencegah paralegal dari posbankum lain mengambil kasus yang bukan wilayahnya.
+> **Cara paralegal melihat pengaduan yang masuk (query filter):**
+> ```sql
+> SELECT p.*
+> FROM pengaduan p
+> JOIN masyarakat m ON m.id_user = p.created_by
+> JOIN posbankum_paralegal pp ON pp.id_user = [id_paralegal_login]
+> JOIN posbankum pos ON pos.id_posbankum = pp.id_posbankum
+> WHERE m.id_kelurahan = pos.id_kelurahan
+>   AND pp.status = 'aktif';
+> ```
+> Tidak ada `id_posbankum` di tabel `pengaduan` — relasinya diperoleh dinamis lewat kesamaan `id_kelurahan`.
+
+> [!NOTE]
+> **Cara web melihat posbankum mana yang handle pengaduan:**
+> ```sql
+> SELECT p.*, pos.nama AS nama_posbankum
+> FROM pengaduan p
+> JOIN posbankum_paralegal pp ON pp.id_user = p.id_paralegal AND pp.status = 'aktif'
+> JOIN posbankum pos ON pos.id_posbankum = pp.id_posbankum
+> WHERE p.id_paralegal IS NOT NULL;
+> ```
+> `id_paralegal` → join ke `posbankum_paralegal` → dapat `id_posbankum`. Tidak perlu simpan `id_posbankum` di `pengaduan`.
+
+> [!WARNING]
+> **Trigger `pengaduan_before_update` perlu direvisi.** Kondisi validasi lama memakai `pp.id_posbankum = NEW.id_posbankum` — setelah `id_posbankum` dihapus dari `pengaduan`, trigger ini akan error. Lihat SQL perbaikan di [7.6](#76-revisi-trigger-pengaduan_before_update).
 
 ---
 
@@ -311,15 +338,13 @@ flowchart TD
         W1 --> W2 --> W3
     end
 
-    W3 --> SYS{"⚙️ Sistem cari posbankum<br>di kelurahan warga:<br>SELECT id_posbankum<br>FROM posbankum<br>WHERE id_kelurahan =<br>masyarakat.id_kelurahan"}
-
-    SYS --> DB_INSERT["INSERT ke <b>pengaduan</b>:<br>• created_by = id_user warga<br>• id_posbankum = hasil pencarian<br>• id_paralegal = NULL<br>• status = 'menunggu'<br>• snapshot: nama, nik, telp, email"]
+    W3 --> DB_INSERT["INSERT ke <b>pengaduan</b>:<br>• created_by = id_user warga<br>• id_paralegal = NULL<br>• status = 'menunggu'<br>• snapshot: nama, nik, telp, email<br>❌ TIDAK ada id_posbankum"]
 
     DB_INSERT --> TL1["INSERT ke <b>pengaduan_timeline</b>:<br>tipe='sistem', title='Pengaduan Dibuat'"]
     DB_INSERT --> LP1["INSERT ke <b>pengaduan_lampiran</b>:<br>jenis='bukti_awal'"]
 
     subgraph PARALEGAL_MOBILE["📱 Paralegal di Mobile"]
-        P1["Paralegal lihat daftar pengaduan<br>di posbankumnya<br>(filter: pengaduan.id_posbankum<br>= posbankum_paralegal.id_posbankum)"]
+        P1["Paralegal lihat daftar pengaduan<br>→ JOIN masyarakat ON created_by<br>→ cocokkan masyarakat.id_kelurahan<br>= posbankum.id_kelurahan paralegal"]
         P2["Paralegal <b>ambil/klaim kasus</b><br>→ UPDATE pengaduan<br>SET id_paralegal = id_user sendiri<br>SET status = 'diproses'"]
         P3["Paralegal update progres<br>→ INSERT <b>pengaduan_timeline</b><br>→ Tambah <b>pengaduan_lampiran</b> (progress)"]
         P4["Kasus selesai<br>→ UPDATE pengaduan<br>SET status='selesai', tgl_selesai=NOW()"]
@@ -327,7 +352,23 @@ flowchart TD
     end
 
     DB_INSERT --> P1
+
+    subgraph WEB_VIEW["🌐 Web — Monitoring Admin"]
+        W_MON["Lihat posbankum mana yang handle:<br>JOIN pengaduan → posbankum_paralegal → posbankum<br>via id_paralegal"]
+    end
+
+    P2 --> W_MON
 ```
+
+### Narasi Singkat:
+
+1. **Admin (web)** membuat akun paralegal dan menugaskannya ke sebuah posbankum
+2. **Warga (mobile)** mendaftar, mengisi profil (termasuk `id_kelurahan` tinggal), lalu membuat pengaduan — **tidak ada `id_posbankum` yang disimpan di pengaduan**
+3. **Paralegal (mobile)** melihat pengaduan dengan cara: filter pengaduan yang `masyarakat.id_kelurahan`-nya sama dengan kelurahan posbankum tempat paralegal bertugas
+4. **Paralegal mengambil kasus sendiri** → `id_paralegal` terisi dengan id_user paralegal tersebut
+5. Paralegal mengerjakan kasus: update status, tambah timeline, tambah lampiran
+6. Kasus selesai → status `selesai`, `tgl_selesai` terisi
+7. **Admin (web)** bisa tahu posbankum mana yang handle kasus dengan JOIN dari `id_paralegal` → `posbankum_paralegal` → `posbankum`
 
 ---
 
@@ -439,6 +480,51 @@ ALTER TABLE `berita`
 > [!NOTE]
 > Jalankan 7.5 **hanya jika** berita memang harus difilter per posbankum. Konfirmasi dulu dengan tim sebelum dijalankan.
 
+### 7.6 Hapus `id_posbankum` dari tabel `pengaduan` + Revisi Trigger
+
+`id_posbankum` tidak boleh ada di tabel `pengaduan` sesuai requirement dosen. Trigger lama juga harus direvisi karena masih merujuk kolom ini.
+
+```sql
+-- 1. Drop trigger lama yang masih pakai id_posbankum
+DROP TRIGGER IF EXISTS `pengaduan_before_update`;
+
+-- 2. Hapus FK constraint id_posbankum di pengaduan
+ALTER TABLE `pengaduan` DROP FOREIGN KEY `fk_pengaduan_posbankum`;
+
+-- 3. Hapus index id_posbankum di pengaduan
+ALTER TABLE `pengaduan` DROP KEY `fk_pengaduan_posbankum`;
+
+-- 4. Hapus kolom id_posbankum dari pengaduan
+ALTER TABLE `pengaduan` DROP COLUMN `id_posbankum`;
+
+-- 5. Buat ulang trigger dengan validasi yang benar:
+--    id_paralegal yang mengambil kasus harus paralegal
+--    yang wilayah kerja posbankumnya sama dengan kelurahan warga pengadu
+DELIMITER $$
+CREATE TRIGGER `pengaduan_before_update`
+BEFORE UPDATE ON `pengaduan`
+FOR EACH ROW
+BEGIN
+  IF NEW.id_paralegal IS NOT NULL AND NEW.id_paralegal <> '' THEN
+    IF (
+      SELECT COUNT(*)
+      FROM users u
+      JOIN posbankum_paralegal pp ON pp.id_user = u.id_user AND pp.status = 'aktif'
+      JOIN posbankum pos ON pos.id_posbankum = pp.id_posbankum
+      JOIN masyarakat m ON m.id_user = NEW.created_by
+      WHERE u.id_user = NEW.id_paralegal
+        AND u.role = 'paralegal'
+        AND u.status = 'aktif'
+        AND pos.id_kelurahan = m.id_kelurahan
+    ) = 0 THEN
+      SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'id_paralegal harus paralegal aktif yang wilayah kerjanya sama dengan kelurahan warga pengadu';
+    END IF;
+  END IF;
+END$$
+DELIMITER ;
+```
+
 ---
 
 ## 8. Ringkasan Temuan
@@ -450,7 +536,6 @@ ALTER TABLE `berita`
 | Hierarki Wilayah | Lengkap, FK CASCADE benar |
 | 1 Kelurahan = 1 Posbankum | UNIQUE KEY menjaga |
 | `posbankum_paralegal` | Pivot table dengan UNIQUE (id_posbankum, id_user) |
-| Trigger validasi pengaduan | `id_paralegal` harus paralegal aktif di posbankum yang sama |
 | Snapshot data pelapor | Denormalisasi yang tepat di tabel pengaduan |
 | Timeline + Lampiran | Desain fleksibel, `is_visible` berguna |
 | UUID Auto-generate | Semua tabel konsisten pakai trigger `before_insert` |
@@ -469,3 +554,5 @@ ALTER TABLE `berita`
 | 4 | `kegiatan.status` pakai varchar — tidak aman, tidak ada ENUM constraint | [7.4](#74-perbaiki-tabel-kegiatan--tambah-kolom-approval) |
 | 5 | `kegiatan` tidak punya kolom approval admin (`id_user_verifikator`, `tgl_verifikasi`, `catatan_admin`) | [7.4](#74-perbaiki-tabel-kegiatan--tambah-kolom-approval) |
 | 6 | `berita` tidak ada `id_posbankum` — perlu konfirmasi apakah berita global atau per-posbankum | [7.5](#75-rekomendasi-tambah-id_posbankum-ke-tabel-berita) |
+| 7 | `pengaduan.id_posbankum` harus dihapus — tidak sesuai requirement; relasi ke posbankum lewat query JOIN, bukan FK statis | [7.6](#76-hapus-id_posbankum-dari-tabel-pengaduan--revisi-trigger) |
+| 8 | Trigger `pengaduan_before_update` harus direvisi — validasi lama memakai `pp.id_posbankum = NEW.id_posbankum` yang sudah tidak ada | [7.6](#76-hapus-id_posbankum-dari-tabel-pengaduan--revisi-trigger) |
