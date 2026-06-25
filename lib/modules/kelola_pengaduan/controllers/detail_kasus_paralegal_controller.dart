@@ -154,6 +154,15 @@ class DetailKasusParalegalController extends GetxController {
           fetchedProgres = progresData.map((data) => ProgresItem.fromJson(data)).toList();
         }
 
+        // Tambahkan progres awal "Pengaduan diajukan" secara dinamis berdasarkan tanggal dibuat
+        if (kasus != null) {
+          fetchedProgres.add(ProgresItem(
+            title: 'Pengaduan diajukan',
+            deskripsi: 'Laporan warga telah berhasil dikirim dan terdaftar di dalam sistem.',
+            tanggal: kasus!.tanggalPengajuan,
+          ));
+        }
+
         // Urutkan timeline dari yang terbaru ke terlama jika belum diurutkan oleh server
         fetchedProgres.sort((a, b) => b.tanggal.compareTo(a.tanggal));
 
