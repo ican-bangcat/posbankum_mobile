@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../controllers/detail_kasus_paralegal_controller.dart';
 import '../../../app/routes/app_routes.dart';
+import '../models/detail_kasus_paralegal_model.dart';
 
 class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
   const DetailKasusParalegalView({super.key});

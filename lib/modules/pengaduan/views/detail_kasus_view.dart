@@ -25,13 +25,18 @@ class DetailKasusView extends GetView<DetailKasusController> {
       final String statusKasus = (kasus.status).toLowerCase().trim();
       bool isSelesai = statusKasus == 'selesai';
 
-      final double bottomPadding = MediaQuery.of(context).padding.bottom;
+      final double bottomPadding = MediaQuery.paddingOf(context).bottom;
 
       return Scaffold(
         backgroundColor: darkBlueColor,
-        body: isSelesai
-            ? _buildSelesaiLayout(kasus, isSelesai, bottomPadding)
-            : _buildProsesLayout(kasus, isSelesai, statusKasus, bottomPadding),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 650.0),
+            child: isSelesai
+                ? _buildSelesaiLayout(kasus, isSelesai, bottomPadding)
+                : _buildProsesLayout(kasus, isSelesai, statusKasus, bottomPadding),
+          ),
+        ),
       );
     });
   }
