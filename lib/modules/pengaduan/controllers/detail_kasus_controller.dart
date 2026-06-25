@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:path_provider/path_provider.dart';
+import '../../../widgets/pdf_viewer_screen.dart';
 import '../../../app/data/services/api_service.dart';
 
 class TimelineItem {
@@ -11,6 +13,14 @@ class TimelineItem {
   final bool isActive;
 
   TimelineItem({required this.title, this.tanggal, this.description, this.isActive = true});
+}
+
+class LampiranItem {
+  final String namaFile;
+  final String pathFile;
+  final String? mimeType;
+
+  LampiranItem({required this.namaFile, required this.pathFile, this.mimeType});
 }
 
 class DetailKasus {
@@ -23,7 +33,7 @@ class DetailKasus {
   final String status;
   final String kronologi;
   final List<TimelineItem> timeline;
-  final List<String> lampiranUrls;
+  final List<LampiranItem> lampiranUrls;
   final String? catatanParalegal;
   // ✅ Data tambahan ditarik untuk detail Selesai
   final String lokasi;
@@ -45,7 +55,7 @@ class DetailKasus {
     required this.namaPelapor,
   });
 
-  factory DetailKasus.fromJson(Map<String, dynamic> json, List<String> lampiranUrlsDB, List<Map<String, dynamic>> timelineDB) {
+  factory DetailKasus.fromJson(Map<String, dynamic> json, List<LampiranItem> lampiranUrlsDB, List<Map<String, dynamic>> timelineDB) {
     String formattedDate = '-';
     if (json['created_at'] != null) {
       final dt = DateTime.parse(json['created_at']).toLocal();
@@ -155,10 +165,14 @@ class DetailKasusController extends GetxController {
       if (response.data['status'] == true) {
         final detailData = response.data['data'];
 
-        List<String> urls = [];
+        List<LampiranItem> urls = [];
         if (lampiranResponse.data['status'] == true) {
           urls = (lampiranResponse.data['data'] as List)
-              .map((e) => e['path_file'].toString())
+              .map((e) => LampiranItem(
+                    namaFile: e['nama_file'].toString(),
+                    pathFile: e['path_file'].toString(),
+                    mimeType: e['mime_type']?.toString(),
+                  ))
               .toList();
         }
 
@@ -176,11 +190,19 @@ class DetailKasusController extends GetxController {
     }
   }
 
-  // 🚀 FUNGSI SAKTI BUKA LAMPIRAN (Langsung buka URL)
-  Future<void> bukaLampiran(String urlFromDb) async {
+  // 🚀 FUNGSI SAKTI BUKA LAMPIRAN (Langsung buka URL via API terproteksi)
+  Future<void> bukaLampiran(String urlFromDb, String? mimeType, {String? namaFile}) async {
     try {
       final String lowerPath = urlFromDb.toLowerCase();
-      bool isImage = lowerPath.contains('.jpg') || lowerPath.contains('.jpeg') || lowerPath.contains('.png') || lowerPath.contains('image');
+      bool isImage = false;
+      if (mimeType != null) {
+        isImage = mimeType.toLowerCase().contains('image');
+      } else {
+        isImage = lowerPath.contains('.jpg') || lowerPath.contains('.jpeg') || lowerPath.contains('.png') || lowerPath.contains('image');
+      }
+
+      final token = GetStorage().read('token');
+      final headers = token != null ? {'Authorization': 'Bearer $token'} : <String, String>{};
 
       if (isImage) {
         Get.dialog(
@@ -198,6 +220,7 @@ class DetailKasusController extends GetxController {
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
                       urlFromDb,
+                      headers: headers, // 👈 Kirim token auth
                       fit: BoxFit.contain,
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
@@ -223,14 +246,31 @@ class DetailKasusController extends GetxController {
           ),
         );
       } else {
-        final Uri uri = Uri.parse(urlFromDb);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          Get.snackbar("Error", "Tidak dapat membuka file dokumen ini.", backgroundColor: Colors.red, colorText: Colors.white);
-        }
+        // --- LOGIKA PDF: Unduh secara aman ke Cache, lalu Buka In-App ---
+        Get.dialog(
+          const Center(child: CircularProgressIndicator(color: Colors.white)),
+          barrierDismissible: false,
+        );
+
+        final directory = await getTemporaryDirectory();
+        final filename = namaFile ?? urlFromDb.split('/').last.split('?').first;
+        final tempPath = "${directory.path}/$filename";
+
+        // Dio download otomatis melampirkan token auth
+        await _apiService.dio.download(
+          urlFromDb,
+          tempPath,
+        );
+
+        Get.back(); // Tutup loading
+
+        Get.to(() => PdfViewerScreen(
+          pdfPath: tempPath,
+          title: filename,
+        ));
       }
     } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back(); // Tutup loading jika error terjadi
       Get.snackbar("Error", "Gagal membuka lampiran: $e", backgroundColor: Colors.red, colorText: Colors.white);
     }
   }

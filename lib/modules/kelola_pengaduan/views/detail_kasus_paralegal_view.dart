@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import '../controllers/detail_kasus_paralegal_controller.dart';
 import '../../../app/routes/app_routes.dart';
 
@@ -405,6 +406,8 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
           const SizedBox(height: 12),
           _buildInfoBoxItem(icon: Icons.access_time, label: 'WAKTU KEJADIAN', value: kasus.waktuKejadian ?? '-'),
           const SizedBox(height: 12),
+          _buildInfoBoxItem(icon: Icons.assignment_outlined, label: 'JENIS MASALAH', value: kasus.kategori),
+          const SizedBox(height: 12),
           _buildInfoBoxItem(icon: Icons.location_on_outlined, label: 'LOKASI KEJADIAN', value: kasus.lokasi),
         ],
       ),
@@ -591,6 +594,8 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
   // ✅ KARTU LAMPIRAN & FUNGSI KLIK
   Widget _buildLampiranCard(LampiranItem file) {
     bool isImage = file.mimeType?.toLowerCase().contains('image') ?? false;
+    final token = GetStorage().read('token');
+    final headers = token != null ? {'Authorization': 'Bearer $token'} : <String, String>{};
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -619,16 +624,32 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
             ],
           ),
           const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            height: 120,
-            decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12)),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: isImage ? const Color(0xFF3B82F6) : const Color(0xFFEF4444), borderRadius: BorderRadius.circular(12)),
-                child: Icon(isImage ? Icons.image_outlined : Icons.picture_as_pdf_outlined, color: Colors.white, size: 32),
-              ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: double.infinity,
+              height: 120,
+              decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
+              child: isImage
+                  ? Image.network(
+                      file.pathFile,
+                      headers: headers, // 👈 Kirim token auth
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                      },
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.broken_image_outlined, color: Colors.grey, size: 32),
+                      ),
+                    )
+                  : Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: const Color(0xFFEF4444), borderRadius: BorderRadius.circular(12)),
+                        child: const Icon(Icons.picture_as_pdf_outlined, color: Colors.white, size: 32),
+                      ),
+                    ),
             ),
           ),
           const SizedBox(height: 16),
@@ -637,7 +658,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
 
           // ✅ TOMBOL KLIK BUKA LAMPIRAN
           InkWell(
-            onTap: () => controller.bukaLampiran(file.pathFile, file.mimeType),
+            onTap: () => controller.bukaLampiran(file.pathFile, file.mimeType, namaFile: file.namaFile),
             borderRadius: BorderRadius.circular(8),
             child: const Padding(
               padding: EdgeInsets.symmetric(vertical: 4),

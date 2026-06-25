@@ -230,42 +230,53 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
   }
 
   Widget _buildTabFilter() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-      child: Row(
-        children: [
-          _buildTabItem(0, 'Semua'),
-          _buildTabItem(1, 'Dalam Proses'),
-          _buildTabItem(2, 'Selesai'),
-        ],
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildTabButton(text: 'Semua', index: 0, activeColor: darkBlue),
+        const SizedBox(width: 10),
+        _buildTabButton(text: 'Dalam Proses', index: 1, activeColor: Colors.blue.shade600),
+        const SizedBox(width: 10),
+        _buildTabButton(text: 'Selesai', index: 2, activeColor: Colors.green.shade600),
+      ],
     );
   }
 
-  Widget _buildTabItem(int index, String title) {
-    return Expanded(
-      child: Obx(() {
-        final bool isActive = controller.selectedTab.value == index;
-        return GestureDetector(
+  Widget _buildTabButton({required String text, required int index, required Color activeColor}) {
+    return Obx(() {
+      final bool isActive = controller.selectedTab.value == index;
+      return Expanded(
+        child: GestureDetector(
           onTap: () => controller.changeTab(index),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            height: 45,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: isActive ? const Color(0xFFEFF6FF) : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
+              color: isActive ? activeColor : Colors.white,
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(10),
+                bottomLeft: Radius.circular(10),
+                topLeft: Radius.circular(4),
+                bottomRight: Radius.circular(4),
+              ),
+              boxShadow: isActive
+                  ? [BoxShadow(color: activeColor.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4))]
+                  : [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))],
+              border: isActive ? null : Border.all(color: Colors.grey.shade300),
             ),
             child: Text(
-              title, textAlign: TextAlign.center,
+              text,
               style: TextStyle(
-                fontSize: 13, fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                color: isActive ? darkBlue : const Color(0xFF64748B),
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive ? Colors.white : Colors.grey[600],
               ),
             ),
           ),
-        );
-      }),
-    );
+        ),
+      );
+    });
   }
 
   // ✅ KARTU KASUS YANG UDAH DI-REDESIGN UX-NYA

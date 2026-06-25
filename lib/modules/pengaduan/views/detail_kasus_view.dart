@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import '../controllers/detail_kasus_controller.dart';
 
 class DetailKasusView extends GetView<DetailKasusController> {
@@ -444,7 +445,10 @@ class DetailKasusView extends GetView<DetailKasusController> {
     );
   }
 
-  Widget _buildDokumenGrid(List<String> urls) {
+  Widget _buildDokumenGrid(List<LampiranItem> urls) {
+    final token = GetStorage().read('token');
+    final headers = token != null ? {'Authorization': 'Bearer $token'} : <String, String>{};
+
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.80,
@@ -454,13 +458,13 @@ class DetailKasusView extends GetView<DetailKasusController> {
       padding: EdgeInsets.zero,
       itemCount: urls.length,
       itemBuilder: (context, index) {
-        String url = urls[index];
-        bool isPdf = url.toLowerCase().contains('.pdf');
-        String fileName = url.split('/').last.split('?').first;
+        LampiranItem file = urls[index];
+        bool isPdf = file.mimeType?.toLowerCase().contains('pdf') ?? file.namaFile.toLowerCase().endsWith('.pdf');
+        String fileName = file.namaFile;
         if (fileName.length > 25) fileName = '${fileName.substring(0, 20)}...';
 
         return GestureDetector(
-          onTap: () => controller.bukaLampiran(url),
+          onTap: () => controller.bukaLampiran(file.pathFile, file.mimeType, namaFile: file.namaFile),
           child: Container(
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5)),
             child: Column(
@@ -475,7 +479,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
                         borderRadius: const BorderRadius.only(topLeft: Radius.circular(14), topRight: Radius.circular(14)),
                         child: isPdf
                             ? Container(color: const Color(0xFFFFF6F5), child: const Center(child: Icon(Icons.picture_as_pdf_rounded, size: 48, color: Color(0xFFEF4444))))
-                            : Image.network(url, fit: BoxFit.cover, errorBuilder: (_,__,___) => Container(color: Colors.grey.shade200, child: const Icon(Icons.image, color: Colors.grey))),
+                            : Image.network(file.pathFile, headers: headers, fit: BoxFit.cover, errorBuilder: (_,__,___) => Container(color: Colors.grey.shade200, child: const Icon(Icons.image, color: Colors.grey))),
                       ),
                       Positioned(
                         top: 8, right: 8,

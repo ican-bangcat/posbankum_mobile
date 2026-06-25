@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart'; // ✅ IMPORT URL LAUNCHER
+import 'package:get_storage/get_storage.dart';
+import 'package:path_provider/path_provider.dart';
+import '../../../widgets/pdf_viewer_screen.dart';
 import '../../../app/data/services/api_service.dart';
 import 'kelola_pengaduan_controller.dart';
 
@@ -260,7 +262,7 @@ class DetailKasusParalegalController extends GetxController {
   }
 
   // 🚀 FUNGSI SAKTI BUKA LAMPIRAN (Sudah Support Private Bucket & Signed URL via API) 🚀
-  Future<void> bukaLampiran(String pathFile, String? mimeType) async {
+  Future<void> bukaLampiran(String pathFile, String? mimeType, {String? namaFile}) async {
     try {
       final String lowerPath = pathFile.toLowerCase();
       bool isImage = false;
@@ -270,8 +272,11 @@ class DetailKasusParalegalController extends GetxController {
         isImage = lowerPath.endsWith('.jpg') || lowerPath.endsWith('.jpeg') || lowerPath.endsWith('.png') || lowerPath.contains('image');
       }
 
+      final token = GetStorage().read('token');
+      final headers = token != null ? {'Authorization': 'Bearer $token'} : <String, String>{};
+
       if (isImage) {
-        // --- LOGIKA GAMBAR: Buka Pop-Up Dialog ---
+        // --- LOGIKA GAMBAR: Buka Pop-Up Dialog dengan Header Token ---
         Get.dialog(
           Dialog(
             backgroundColor: Colors.transparent,
@@ -286,7 +291,8 @@ class DetailKasusParalegalController extends GetxController {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
-                      pathFile, // 👈 Pakai link dari REST API langsung
+                      pathFile,
+                      headers: headers, // 👈 Kirim Bearer token agar bisa bypass middleware terproteksi
                       fit: BoxFit.contain,
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
@@ -312,15 +318,31 @@ class DetailKasusParalegalController extends GetxController {
           ),
         );
       } else {
-        // --- LOGIKA PDF/DOKUMEN LAIN: Buka ke Browser ---
-        final Uri url = Uri.parse(pathFile);
-        if (await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
-        } else {
-          Get.snackbar('Error', 'Tidak dapat membuka file dokumen ini.', backgroundColor: Colors.red, colorText: Colors.white);
-        }
+        // --- LOGIKA PDF/DOKUMEN: Unduh via Dio Terotentikasi ke Cache Lokal, lalu Buka In-App ---
+        Get.dialog(
+          const Center(child: CircularProgressIndicator(color: Colors.white)),
+          barrierDismissible: false,
+        );
+
+        final directory = await getTemporaryDirectory();
+        final filename = namaFile ?? pathFile.split('/').last.split('?').first;
+        final tempPath = "${directory.path}/$filename";
+
+        // Dio download otomatis melampirkan token auth karena menggunakan ApiService wrapper
+        await _apiService.dio.download(
+          pathFile,
+          tempPath,
+        );
+
+        Get.back(); // Tutup loading
+
+        Get.to(() => PdfViewerScreen(
+          pdfPath: tempPath,
+          title: filename,
+        ));
       }
     } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back(); // Tutup loading jika error terjadi
       Get.snackbar('Error', 'Terjadi kesalahan saat membuka lampiran: $e', backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
