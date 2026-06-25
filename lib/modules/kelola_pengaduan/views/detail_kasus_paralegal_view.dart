@@ -75,69 +75,88 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildTitleCard(kasus, statusText, statusColor, statusBg),
-                          const SizedBox(height: 16),
-
-                          if (kasus.status == 'dibatalkan' && kasus.catatanAdmin != null) ...[
-                            _buildPenolakanAlert(kasus.catatanAdmin!),
-                            const SizedBox(height: 16),
-                          ],
-
-                          _buildDataPelaporCard(kasus),
-                          const SizedBox(height: 16),
-                          _buildDetailKejadianCard(kasus, tglKejadian),
-                          const SizedBox(height: 16),
-                          _buildKronologiCard(kasus),
-                          const SizedBox(height: 16),
-                          _buildLampiranSection(kasus), // ✅ UI Lampiran
-                          const SizedBox(height: 16),
-                          _buildRiwayatUpdateCard(),
-                        ],
-                      ),
-                    ),
-
-                    // BUTTONS DI BAGIAN BAWAH
-                    if (kasus.status == 'menunggu')
-                      Positioned(
-                        bottom: 20 + bottomPadding, left: 20, right: 20,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 1,
-                              child: _buildButtonAction(
-                                text: 'Tolak',
-                                icon: Icons.cancel_outlined,
-                                onPressed: () => _showTolakDialog(context, kasus.id),
-                                color: Colors.white,
-                                textColor: const Color(0xFFEF4444),
-                                isOutline: true,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              flex: 2,
-                              child: _buildButtonAction(
-                                text: 'Ambil Kasus',
-                                icon: Icons.assignment_turned_in,
-                                onPressed: () => controller.ambilKasus(kasus.id),
-                                color: const Color(0xFF3B4A8D),
-                                isLoading: controller.isUpdating.value,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    if (kasus.status == 'diproses')
-                      Positioned(
-                        bottom: 20 + bottomPadding, left: 20, right: 20,
-                        child: _buildButtonAction(
-                          text: 'Update Kasus',
-                          icon: Icons.assignment_outlined,
-                          onPressed: () => Get.toNamed(AppRoutes.UPDATE_PROGRES, arguments: {'id': kasus.id, 'judul': kasus.judul}),
-                          color: const Color(0xFF3B4A8D),
-                        ),
-                      ),
+                           _buildTitleCard(kasus, statusText, statusColor, statusBg),
+                           const SizedBox(height: 16),
+ 
+                           if ((kasus.status == 'dibatalkan' || kasus.status == 'selesai') && kasus.catatanAdmin != null) ...[
+                             _buildCatatanInternalAlert(kasus.status, kasus.catatanAdmin!),
+                             const SizedBox(height: 16),
+                           ],
+ 
+                           _buildDataPelaporCard(kasus),
+                           const SizedBox(height: 16),
+                           _buildDetailKejadianCard(kasus, tglKejadian),
+                           const SizedBox(height: 16),
+                           _buildKronologiCard(kasus),
+                           const SizedBox(height: 16),
+                           _buildLampiranSection(kasus), // ✅ UI Lampiran
+                           const SizedBox(height: 16),
+                           _buildRiwayatUpdateCard(),
+                         ],
+                       ),
+                     ),
+ 
+                     // BUTTONS DI BAGIAN BAWAH
+                     if (kasus.status == 'menunggu')
+                       Positioned(
+                         bottom: 20 + bottomPadding, left: 20, right: 20,
+                         child: Row(
+                           children: [
+                             Expanded(
+                               flex: 1,
+                               child: _buildButtonAction(
+                                 text: 'Tolak',
+                                 icon: Icons.cancel_outlined,
+                                 onPressed: () => _showTolakDialog(context, kasus.id),
+                                 color: Colors.white,
+                                 textColor: const Color(0xFFEF4444),
+                                 isOutline: true,
+                               ),
+                             ),
+                             const SizedBox(width: 12),
+                             Expanded(
+                               flex: 2,
+                               child: _buildButtonAction(
+                                 text: 'Ambil Kasus',
+                                 icon: Icons.assignment_turned_in,
+                                 onPressed: () => controller.ambilKasus(kasus.id),
+                                 color: const Color(0xFF3B4A8D),
+                                 isLoading: controller.isUpdating.value,
+                               ),
+                             ),
+                           ],
+                         ),
+                       ),
+ 
+                     if (kasus.status == 'diproses')
+                       Positioned(
+                         bottom: 20 + bottomPadding, left: 20, right: 20,
+                         child: Row(
+                           children: [
+                             Expanded(
+                               flex: 1,
+                               child: _buildButtonAction(
+                                 text: 'Tutup Kasus',
+                                 icon: Icons.lock_outline,
+                                 onPressed: () => _showTutupKasusDialog(context, kasus.id),
+                                 color: Colors.white,
+                                 textColor: const Color(0xFFEF4444),
+                                 isOutline: true,
+                               ),
+                             ),
+                             const SizedBox(width: 12),
+                             Expanded(
+                               flex: 2,
+                               child: _buildButtonAction(
+                                 text: 'Update Progres',
+                                 icon: Icons.assignment_outlined,
+                                 onPressed: () => Get.toNamed(AppRoutes.UPDATE_PROGRES, arguments: {'id': kasus.id, 'judul': kasus.judul}),
+                                 color: const Color(0xFF3B4A8D),
+                               ),
+                             ),
+                           ],
+                         ),
+                       ),
 
                     if (kasus.status == 'selesai' || kasus.status == 'dibatalkan')
                       Positioned(
@@ -234,31 +253,215 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
     );
   }
 
-  Widget _buildPenolakanAlert(String alasan) {
+  Widget _buildCatatanInternalAlert(String status, String catatan) {
+    if (catatan.trim().isEmpty) return const SizedBox.shrink();
+    
+    final bool isDibatalkan = status == 'dibatalkan';
+    final Color bgColor = isDibatalkan ? const Color(0xFFFEF2F2) : const Color(0xFFECFDF5);
+    final Color borderColor = isDibatalkan ? const Color(0xFFFECACA) : const Color(0xFFA7F3D0);
+    final Color titleColor = isDibatalkan ? const Color(0xFF991B1B) : const Color(0xFF065F46);
+    final Color textColor = isDibatalkan ? const Color(0xFFB91C1C) : const Color(0xFF047857);
+    final IconData icon = isDibatalkan ? Icons.info_outline : Icons.check_circle_outline;
+    final String titleStr = isDibatalkan ? 'Alasan Penolakan/Pembatalan:' : 'Catatan Akhir Penyelesaian:';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF2F2),
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFECACA)),
+        border: Border.all(color: borderColor),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline, color: Color(0xFFEF4444), size: 20),
+          Icon(icon, color: textColor, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Alasan Penolakan:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF991B1B))),
+                Text(titleStr, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: titleColor)),
                 const SizedBox(height: 4),
-                Text(alasan, style: const TextStyle(fontSize: 13, color: Color(0xFFB91C1C), height: 1.5)),
+                Text(catatan, style: TextStyle(fontSize: 13, color: textColor, height: 1.5)),
               ],
             ),
           )
         ],
+      ),
+    );
+  }
+
+  void _showTutupKasusDialog(BuildContext context, String idPengaduan) {
+    final RxString selectedStatus = 'selesai'.obs;
+    final textController = TextEditingController();
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.lock_clock_outlined, color: Color(0xFF3B4A8D)),
+                  SizedBox(width: 8),
+                  Text('Tutup Kasus', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E2452))),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                  'Pilih status akhir penutupan kasus ini dan berikan catatan atau alasan penutupan.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF64748B), height: 1.5)
+              ),
+              const SizedBox(height: 16),
+              
+              // Opsi Status: Selesai atau Batalkan
+              Obx(() => Row(
+                children: [
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Center(
+                        child: Text(
+                          'Selesaikan',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      selected: selectedStatus.value == 'selesai',
+                      selectedColor: const Color(0xFFD1FAE5),
+                      disabledColor: Colors.grey.shade100,
+                      backgroundColor: Colors.grey.shade100,
+                      labelStyle: TextStyle(
+                        color: selectedStatus.value == 'selesai' ? const Color(0xFF047857) : Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      onSelected: (selected) {
+                        if (selected) selectedStatus.value = 'selesai';
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Center(
+                        child: Text(
+                          'Batalkan',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      selected: selectedStatus.value == 'dibatalkan',
+                      selectedColor: const Color(0xFFFEE2E2),
+                      backgroundColor: Colors.grey.shade100,
+                      labelStyle: TextStyle(
+                        color: selectedStatus.value == 'dibatalkan' ? const Color(0xFFB91C1C) : Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      onSelected: (selected) {
+                        if (selected) selectedStatus.value = 'dibatalkan';
+                      },
+                    ),
+                  ),
+                ],
+              )),
+              const SizedBox(height: 16),
+              
+              // Input Catatan
+              Obx(() => TextField(
+                controller: textController,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: selectedStatus.value == 'selesai'
+                      ? 'Tuliskan catatan penyelesaian akhir kasus ini...'
+                      : 'Tuliskan alasan lengkap mengapa kasus dibatalkan...',
+                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              )),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Batal', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Obx(() => ElevatedButton(
+                      onPressed: controller.isUpdating.value ? null : () {
+                        controller.tutupKasus(
+                          id: idPengaduan,
+                          status: selectedStatus.value,
+                          catatan: textController.text,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: selectedStatus.value == 'selesai' ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                      ),
+                      child: controller.isUpdating.value
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                          : const Text('Tutup Kasus', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    )),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  Widget _buildPriorityBadge(String prioritas) {
+    Color color = Colors.grey;
+    Color bg = Colors.grey.shade100;
+    
+    switch (prioritas) {
+      case 'Sangat Tinggi':
+        color = const Color(0xFFEF4444);
+        bg = const Color(0xFFFEE2E2);
+        break;
+      case 'Tinggi':
+        color = const Color(0xFFF97316);
+        bg = const Color(0xFFFFEDD5);
+        break;
+      case 'Menengah':
+        color = const Color(0xFF3B82F6);
+        bg = const Color(0xFFEFF6FF);
+        break;
+      case 'Normal':
+        color = const Color(0xFF10B981);
+        bg = const Color(0xFFECFDF5);
+        break;
+      case 'Rendah':
+        color = const Color(0xFF64748B);
+        bg = const Color(0xFFF1F5F9);
+        break;
+    }
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+      child: Text(
+        'PRIORITAS: ${prioritas.toUpperCase()}',
+        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -318,10 +521,23 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
   }
 
   Widget _buildTitleCard(dynamic kasus, String statusText, Color statusColor, Color statusBg) {
+    String idStr = kasus.id.toString();
+    String displayId = idStr.length >= 8 ? idStr.substring(0, 8).toUpperCase() : idStr.toUpperCase();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: Colors.white, 
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -329,7 +545,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(20)),
             child: Text(
-              'ID KASUS: #${kasus.id.toString().substring(0, 8).toUpperCase()}',
+              'ID KASUS: #$displayId',
               style: const TextStyle(color: Color(0xFF3B82F6), fontSize: 10, fontWeight: FontWeight.w800, fontFamily: 'Monospace'),
             ),
           ),
@@ -338,17 +554,24 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
           const SizedBox(height: 4),
           Text(kasus.namaKlien ?? '-', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textSecondary)),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(color: statusBg, borderRadius: BorderRadius.circular(8)),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(width: 6, height: 6, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
-                const SizedBox(width: 6),
-                Text(statusText, style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w800)),
-              ],
-            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(color: statusBg, borderRadius: BorderRadius.circular(8)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(width: 6, height: 6, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
+                    const SizedBox(width: 6),
+                    Text(statusText, style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w800)),
+                  ],
+                ),
+              ),
+              _buildPriorityBadge(kasus.prioritas),
+            ],
           ),
         ],
       ),
@@ -690,19 +913,33 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
           foregroundColor: textColor ?? Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: isOutline ? BorderSide(color: textColor ?? Colors.black, width: 1.5) : BorderSide.none,
+            side: isOutline ? BorderSide(color: textColor ?? Colors.red.shade400, width: 1.5) : BorderSide.none,
           ),
           elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 8), // Memberi sedikit padding agar tulisan tidak nempel ke pinggir
         ),
         child: isLoading
             ? CircularProgressIndicator(color: textColor ?? Colors.white, strokeWidth: 2)
-            : Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null) ...[Icon(icon, color: textColor ?? Colors.white, size: 18), const SizedBox(width: 8)],
-            Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: textColor ?? Colors.white)),
-          ],
-        ),
+            : FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (icon != null) ...[
+                      Icon(icon, color: textColor ?? Colors.white, size: 16),
+                      const SizedBox(width: 6),
+                    ],
+                    Text(
+                      text,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: textColor ?? Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
       ),
     );
   }

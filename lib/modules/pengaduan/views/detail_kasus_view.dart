@@ -609,9 +609,16 @@ class DetailKasusView extends GetView<DetailKasusController> {
         child: ElevatedButton(
           onPressed: () => Get.snackbar('Info', 'Fitur Chat segera hadir!'),
           style: ElevatedButton.styleFrom(backgroundColor: darkBlueColor, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 18), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-          child: const Row(
+          child: const FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20), SizedBox(width: 8), Text('Chat Paralegal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14, fontFamily: 'Poppins'))]
+              children: [
+                Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Text('Chat Paralegal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14, fontFamily: 'Poppins')),
+              ],
+            ),
           ),
         ),
       ),

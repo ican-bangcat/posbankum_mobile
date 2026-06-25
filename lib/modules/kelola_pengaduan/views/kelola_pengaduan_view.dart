@@ -117,14 +117,43 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // List Kasus Dinamis
                   Expanded(
                     child: Obx(() {
                       if (controller.isLoading.value) {
                         return const Center(child: CircularProgressIndicator());
                       }
 
+                      // 🚀 JIKA TAB SEMUA (0), TAMPILKAN DENGAN PENGELOMPOKAN STATUS
+                      if (controller.selectedTab.value == 0) {
+                        final elements = controller.groupedListElements;
+
+                        if (elements.isEmpty) {
+                          return const Center(child: Text("Belum ada data pengaduan", style: TextStyle(color: Colors.grey)));
+                        }
+
+                        return RefreshIndicator(
+                          onRefresh: () => controller.fetchPengaduan(),
+                          child: ListView.builder(
+                            padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPadding + 30),
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: elements.length,
+                            itemBuilder: (context, index) {
+                              final el = elements[index];
+                              if (el is HeaderElement) {
+                                return _buildSectionHeader(el.title, el.count);
+                              } else {
+                                final kasus = (el as CardElement).kasus;
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _buildCaseCardFromItem(kasus),
+                                );
+                              }
+                            },
+                          ),
+                        );
+                      }
+
+                      // 🚀 JIKA TAB LAIN (1 ATAU 2), TAMPILKAN SEPERTI BIASA
                       final listKasus = controller.filteredKasus;
 
                       if (listKasus.isEmpty) {
@@ -140,66 +169,7 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
                           separatorBuilder: (context, index) => const SizedBox(height: 16),
                           itemBuilder: (context, index) {
                             final kasus = listKasus[index];
-
-                            final tanggalStr = "${kasus.tanggalPengajuan.day.toString().padLeft(2, '0')}/${kasus.tanggalPengajuan.month.toString().padLeft(2, '0')}/${kasus.tanggalPengajuan.year}";
-
-                            // ✅ LOGIKA BADGE BAHASA INDONESIA
-                            String badgeText = '';
-                            Color badgeColor = Colors.grey;
-                            Color badgeBg = Colors.grey.shade200;
-                            IconData? badgeIcon;
-                            bool showButton = false;
-                            String buttonText = '';
-
-                            // 🚀 FIX: Baca status 'menunggu' sesuai aturan database baru
-                            if (kasus.status == 'menunggu') {
-                              showButton = true;
-                              buttonText = 'Ambil Kasus ->';
-
-                              // 🚀 FIX: Langsung pakai controller.getPriorityValue(kasus.prioritas)
-                              int levelPrioritas = controller.getPriorityValue(kasus.prioritas);
-
-                              if (levelPrioritas == 1) {
-                                badgeText = 'MENUNGGU (URGENT)';
-                                badgeColor = const Color(0xFFEF4444);
-                                badgeBg = const Color(0xFFFEE2E2);
-                                badgeIcon = Icons.warning_rounded;
-                              } else {
-                                badgeText = 'MENUNGGU';
-                                badgeColor = const Color(0xFFF59E0B);
-                                badgeBg = const Color(0xFFFEF3C7);
-                                badgeIcon = Icons.hourglass_empty_rounded;
-                              }
-                            }
-                            else if (kasus.status == 'proses' || kasus.status == 'dalam proses' || kasus.status == 'diproses') {
-                              badgeText = 'DIPROSES';
-                              badgeColor = const Color(0xFF3B82F6);
-                              badgeBg = const Color(0xFFEFF6FF);
-                              badgeIcon = Icons.autorenew_rounded;
-                              showButton = true;
-                              buttonText = 'Update Progres ✎';
-                            }
-                            else if (kasus.status == 'selesai') {
-                              badgeText = 'SELESAI';
-                              badgeColor = const Color(0xFF10B981);
-                              badgeBg = const Color(0xFFECFDF5);
-                              badgeIcon = Icons.check_circle_outline;
-                              showButton = false;
-                            }
-
-                            return _buildCaseCard(
-                              badgeText: badgeText, badgeColor: badgeColor, badgeBg: badgeBg, badgeIcon: badgeIcon,
-                              date: tanggalStr,
-                              title: kasus.judul,
-                              kategori: kasus.kategori,
-                              deskripsi: kasus.status == 'menunggu' ? kasus.deskripsi : null,
-                              lokasi: (kasus.status == 'menunggu' || kasus.status == 'selesai') ? kasus.lokasi : null,
-                              namaKlien: kasus.status != 'menunggu' ? kasus.namaKlien : null,
-                              showButton: showButton, buttonText: buttonText,
-                              onTapButton: () {
-                                Get.toNamed(AppRoutes.DETAIL_KASUS_PARALEGAL, arguments: {'id': kasus.id});
-                              },
-                            );
+                            return _buildCaseCardFromItem(kasus);
                           },
                         ),
                       );
@@ -379,12 +349,12 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                        buttonText == 'Ambil Kasus ->' ? 'Lihat Detail' : (buttonText ?? ''),
+                        (buttonText == 'Ambil Kasus' || buttonText == 'Ambil Kasus ->') ? 'Lihat Detail' : (buttonText ?? ''),
                         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)
                     ),
                     const SizedBox(width: 8),
                     Icon(
-                        buttonText == 'Ambil Kasus ->' ? Icons.arrow_forward_rounded : Icons.edit_rounded,
+                        (buttonText == 'Ambil Kasus' || buttonText == 'Ambil Kasus ->') ? Icons.arrow_forward_rounded : Icons.edit_rounded,
                         color: Colors.white,
                         size: 18
                     ),
@@ -404,6 +374,106 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
         const SizedBox(width: 6),
         Flexible(child: Text(text, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
       ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title, int count) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 24, bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 4, height: 16,
+            decoration: BoxDecoration(
+              color: darkBlue,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title.toUpperCase(),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF1E2452), letterSpacing: 0.5),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '$count',
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCaseCardFromItem(KasusItem kasus) {
+    final tanggalStr = "${kasus.tanggalPengajuan.day.toString().padLeft(2, '0')}/${kasus.tanggalPengajuan.month.toString().padLeft(2, '0')}/${kasus.tanggalPengajuan.year}";
+
+    String badgeText = '';
+    Color badgeColor = Colors.grey;
+    Color badgeBg = Colors.grey.shade200;
+    IconData? badgeIcon;
+    bool showButton = false;
+    String buttonText = '';
+
+    if (kasus.status == 'menunggu') {
+      showButton = true;
+      buttonText = 'Ambil Kasus';
+
+      int levelPrioritas = controller.getPriorityValue(kasus.prioritas);
+
+      if (levelPrioritas == 1) {
+        badgeText = 'MENUNGGU (URGENT)';
+        badgeColor = const Color(0xFFEF4444);
+        badgeBg = const Color(0xFFFEE2E2);
+        badgeIcon = Icons.warning_rounded;
+      } else {
+        badgeText = 'MENUNGGU';
+        badgeColor = const Color(0xFFF59E0B);
+        badgeBg = const Color(0xFFFEF3C7);
+        badgeIcon = Icons.hourglass_empty_rounded;
+      }
+    }
+    else if (kasus.status == 'proses' || kasus.status == 'dalam proses' || kasus.status == 'diproses') {
+      badgeText = 'DIPROSES';
+      badgeColor = const Color(0xFF3B82F6);
+      badgeBg = const Color(0xFFEFF6FF);
+      badgeIcon = Icons.autorenew_rounded;
+      showButton = true;
+      buttonText = 'Update Progres';
+    }
+    else if (kasus.status == 'selesai') {
+      badgeText = 'SELESAI';
+      badgeColor = const Color(0xFF10B981);
+      badgeBg = const Color(0xFFECFDF5);
+      badgeIcon = Icons.check_circle_outline;
+      showButton = false;
+    }
+    else if (kasus.status == 'dibatalkan') {
+      badgeText = 'DIBATALKAN';
+      badgeColor = const Color(0xFFEF4444);
+      badgeBg = const Color(0xFFFEE2E2);
+      badgeIcon = Icons.cancel_outlined;
+      showButton = false;
+    }
+
+    return _buildCaseCard(
+      badgeText: badgeText, badgeColor: badgeColor, badgeBg: badgeBg, badgeIcon: badgeIcon,
+      date: tanggalStr,
+      title: kasus.judul,
+      kategori: kasus.kategori,
+      deskripsi: kasus.status == 'menunggu' ? kasus.deskripsi : null,
+      lokasi: (kasus.status == 'menunggu' || kasus.status == 'selesai') ? kasus.lokasi : null,
+      namaKlien: kasus.status != 'menunggu' ? kasus.namaKlien : null,
+      showButton: showButton, buttonText: buttonText,
+      onTapButton: () {
+        Get.toNamed(AppRoutes.DETAIL_KASUS_PARALEGAL, arguments: {'id': kasus.id});
+      },
     );
   }
 }

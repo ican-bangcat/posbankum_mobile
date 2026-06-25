@@ -72,7 +72,6 @@ class KelolaPengaduanController extends GetxController {
         final List<dynamic> data = response.data['data'];
         final List<KasusItem> fetchedData = data
             .map((e) => e is Map<String, dynamic> ? KasusItem.fromJson(e) : KasusItem.fromJson(Map<String, dynamic>.from(e)))
-            .where((kasus) => kasus.status != 'dibatalkan')
             .toList();
         allKasus.assignAll(fetchedData);
       } else {
@@ -103,7 +102,7 @@ class KelolaPengaduanController extends GetxController {
     List<KasusItem> filtered = allKasus.where((kasus) {
       bool matchTab = true;
       if (selectedTab.value == 1) matchTab = (kasus.status == 'proses' || kasus.status == 'diproses');
-      if (selectedTab.value == 2) matchTab = kasus.status == 'selesai';
+      if (selectedTab.value == 2) matchTab = (kasus.status == 'selesai');
 
       bool matchSearch = kasus.judul.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
           kasus.kategori.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
@@ -117,4 +116,62 @@ class KelolaPengaduanController extends GetxController {
 
     return filtered;
   }
+
+  // 🚀 GETTER UNTUK PENGELOMPOKAN KASUS (Tab Semua)
+  List<ListElement> get groupedListElements {
+    final List<ListElement> elements = [];
+    final query = searchQuery.value.toLowerCase();
+
+    bool matchesSearch(KasusItem k) {
+      return k.judul.toLowerCase().contains(query) ||
+          k.kategori.toLowerCase().contains(query) ||
+          k.lokasi.toLowerCase().contains(query);
+    }
+
+    final searchedKasus = query.isEmpty ? allKasus : allKasus.where(matchesSearch).toList();
+
+    final waiting = searchedKasus.where((k) => k.status == 'menunggu').toList()
+      ..sort((a, b) => b.priorityScore.compareTo(a.priorityScore));
+    final processing = searchedKasus.where((k) => k.status == 'proses' || k.status == 'dalam proses' || k.status == 'diproses').toList()
+      ..sort((a, b) => b.priorityScore.compareTo(a.priorityScore));
+    final finished = searchedKasus.where((k) => k.status == 'selesai').toList()
+      ..sort((a, b) => b.priorityScore.compareTo(a.priorityScore));
+    final cancelled = searchedKasus.where((k) => k.status == 'dibatalkan').toList()
+      ..sort((a, b) => b.priorityScore.compareTo(a.priorityScore));
+
+    if (waiting.isNotEmpty) {
+      elements.add(HeaderElement('Kasus Menunggu', waiting.length));
+      elements.addAll(waiting.map((k) => CardElement(k)));
+    }
+
+    if (processing.isNotEmpty) {
+      elements.add(HeaderElement('Sedang Diproses', processing.length));
+      elements.addAll(processing.map((k) => CardElement(k)));
+    }
+
+    if (finished.isNotEmpty) {
+      elements.add(HeaderElement('Selesai', finished.length));
+      elements.addAll(finished.map((k) => CardElement(k)));
+    }
+
+    if (cancelled.isNotEmpty) {
+      elements.add(HeaderElement('Dibatalkan / Ditolak', cancelled.length));
+      elements.addAll(cancelled.map((k) => CardElement(k)));
+    }
+
+    return elements;
+  }
+}
+
+abstract class ListElement {}
+
+class HeaderElement extends ListElement {
+  final String title;
+  final int count;
+  HeaderElement(this.title, this.count);
+}
+
+class CardElement extends ListElement {
+  final KasusItem kasus;
+  CardElement(this.kasus);
 }

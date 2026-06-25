@@ -270,6 +270,63 @@ class DetailKasusParalegalController extends GetxController {
     }
   }
 
+  Future<void> tutupKasus({required String id, required String status, required String catatan}) async {
+    if (catatan.trim().isEmpty) {
+      Get.snackbar('Peringatan', 'Catatan penutupan wajib diisi!', backgroundColor: Colors.orange.shade700, colorText: Colors.white);
+      return;
+    }
+
+    try {
+      isUpdating.value = true;
+
+      // 1. Update status pengaduan ke selesai atau dibatalkan
+      final statusResponse = await _apiService.dio.patch(
+        '/pengaduan/$id/status',
+        data: {
+          'status': status,
+          'catatan_internal': catatan.trim(),
+        },
+      );
+
+      if (statusResponse.data['status'] != true) {
+        throw statusResponse.data['message'] ?? 'Gagal memperbarui status pengaduan';
+      }
+
+      // 2. Tambah progres timeline
+      final isSelesai = status == 'selesai';
+      final timelineResponse = await _apiService.dio.post(
+        '/pengaduan/$id/timeline',
+        data: {
+          'title': isSelesai ? 'Kasus Selesai' : 'Kasus Dibatalkan',
+          'deskripsi': isSelesai 
+              ? 'Catatan Penyelesaian: ${catatan.trim()}' 
+              : 'Alasan Pembatalan: ${catatan.trim()}',
+        },
+      );
+
+      if (timelineResponse.data['status'] != true) {
+        throw timelineResponse.data['message'] ?? 'Gagal menyimpan timeline pengaduan';
+      }
+
+      Get.back(); // Tutup dialog
+      Get.snackbar(
+        'Berhasil', 
+        isSelesai ? 'Kasus berhasil diselesaikan!' : 'Kasus berhasil dibatalkan.', 
+        backgroundColor: const Color(0xFF10B981), 
+        colorText: Colors.white
+      );
+
+      await fetchDetailKasus(id);
+      if (Get.isRegistered<KelolaPengaduanController>()) {
+        Get.find<KelolaPengaduanController>().fetchPengaduan();
+      }
+    } catch (e) {
+      Get.snackbar('Gagal', 'Terjadi kesalahan: $e', backgroundColor: const Color(0xFFEF4444), colorText: Colors.white);
+    } finally {
+      isUpdating.value = false;
+    }
+  }
+
   // 🚀 FUNGSI SAKTI BUKA LAMPIRAN (Sudah Support Private Bucket & Signed URL via API) 🚀
   Future<void> bukaLampiran(String pathFile, String? mimeType, {String? namaFile}) async {
     try {

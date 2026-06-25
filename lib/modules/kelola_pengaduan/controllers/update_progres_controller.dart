@@ -69,6 +69,7 @@ class UpdateProgresController extends GetxController {
           '/pengaduan/$kasusId/status',
           data: {
             'status': 'selesai',
+            'catatan_internal': catatanController.text.trim(),
           },
         );
 
