@@ -488,7 +488,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
               children: [
                 Icon(Icons.history, color: Color(0xFF1E2452)),
                 SizedBox(width: 8),
-                Text('Riwayat Timeline', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1E2452))),
+                Text('Riwayat Penanganan Kasus', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1E2452))),
               ],
             ),
             const SizedBox(height: 24),
@@ -500,7 +500,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                     children: [
                       Icon(Icons.hourglass_empty_rounded, size: 40, color: Colors.grey.shade300),
                       const SizedBox(height: 12),
-                      const Text('Belum ada timeline\nuntuk kasus ini.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF94A3B8))),
+                      const Text('Belum ada riwayat penanganan\nuntuk kasus ini.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF94A3B8))),
                     ],
                   ),
                 ),

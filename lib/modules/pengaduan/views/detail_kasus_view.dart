@@ -139,7 +139,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Alur Penanganan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
+                            const Text('Status Penanganan Laporan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(color: const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(8)),
@@ -410,7 +410,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
                         Text(kasus.kronologi, style: const TextStyle(fontSize: 13, color: textSecondary, height: 1.6, fontWeight: FontWeight.w400, fontFamily: 'Poppins')),
 
                         const SizedBox(height: 32),
-                        const Text('Perjalanan Kasus', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
+                        const Text('Status Laporan Anda', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
                         const SizedBox(height: 20),
                         _buildTimelineSection(kasus),
 
