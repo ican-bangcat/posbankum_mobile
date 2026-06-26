@@ -138,12 +138,19 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
                             }
     
                             return RefreshIndicator(
-                              onRefresh: () => controller.fetchPengaduan(),
+                              onRefresh: () => controller.fetchPengaduan(isRefresh: true),
                               child: ListView.builder(
+                                controller: controller.scrollController,
                                 padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPadding + 30),
                                 physics: const AlwaysScrollableScrollPhysics(),
-                                itemCount: elements.length,
+                                itemCount: elements.length + (controller.isLoadingMore.value ? 1 : 0),
                                 itemBuilder: (context, index) {
+                                  if (index == elements.length) {
+                                    return const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 16),
+                                      child: Center(child: CircularProgressIndicator()),
+                                    );
+                                  }
                                   final el = elements[index];
                                   if (el is HeaderElement) {
                                     return _buildSectionHeader(el.title, el.count, isCompact: isCompact);
@@ -169,17 +176,26 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
                           }
     
                           return RefreshIndicator(
-                            onRefresh: () => controller.fetchPengaduan(),
-                            child: ListView.separated(
+                            onRefresh: () => controller.fetchPengaduan(isRefresh: true),
+                            child: ListView.builder(
+                              controller: controller.scrollController,
                               padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPadding + 30),
                               physics: const AlwaysScrollableScrollPhysics(),
-                              itemCount: listKasus.length,
-                              separatorBuilder: (context, index) => SizedBox(height: isCompact ? 8 : 16),
+                              itemCount: listKasus.length + (controller.isLoadingMore.value ? 1 : 0),
                               itemBuilder: (context, index) {
+                                if (index == listKasus.length) {
+                                  return const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    child: Center(child: CircularProgressIndicator()),
+                                  );
+                                }
                                 final kasus = listKasus[index];
-                                return isCompact
-                                    ? _buildCompactCaseCardFromItem(kasus)
-                                    : _buildCaseCardFromItem(kasus);
+                                return Padding(
+                                  padding: EdgeInsets.only(bottom: isCompact ? 8 : 16),
+                                  child: isCompact
+                                      ? _buildCompactCaseCardFromItem(kasus)
+                                      : _buildCaseCardFromItem(kasus),
+                                );
                               },
                             ),
                           );

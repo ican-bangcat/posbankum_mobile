@@ -17,10 +17,31 @@ class KelolaPengaduanController extends GetxController {
   var filterPriority = 'Semua'.obs; // 'Semua', 'Sangat Tinggi', 'Tinggi', etc.
   var filterCategory = 'Semua'.obs; // 'Semua', etc.
 
+  // Lazy Loading / Pagination States
+  final ScrollController scrollController = ScrollController();
+  int page = 1;
+  var hasMore = true.obs;
+  var isLoadingMore = false.obs;
+
   @override
   void onInit() {
     super.onInit();
-    fetchPengaduan();
+    fetchPengaduan(isRefresh: true);
+    scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void onClose() {
+    scrollController.dispose();
+    super.onClose();
+  }
+
+  void _onScroll() {
+    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 200) {
+      if (hasMore.value && !isLoadingMore.value && !isLoading.value) {
+        loadMorePengaduan();
+      }
+    }
   }
 
   void changeTab(int index) {
@@ -33,18 +54,34 @@ class KelolaPengaduanController extends GetxController {
     filterCategory.value = 'Semua';
   }
 
-  Future<void> fetchPengaduan() async {
+  Future<void> fetchPengaduan({bool isRefresh = true}) async {
     try {
-      isLoading.value = true;
+      if (isRefresh) {
+        isLoading.value = true;
+        page = 1;
+        hasMore.value = true;
+      }
 
-      final response = await _apiService.dio.get('/pengaduan');
+      final response = await _apiService.dio.get('/pengaduan', queryParameters: {
+        'page': page,
+        'limit': 10,
+      });
 
       if (response.data['status'] == true) {
         final List<dynamic> data = response.data['data'];
         final List<KasusItem> fetchedData = data
             .map((e) => e is Map<String, dynamic> ? KasusItem.fromJson(e) : KasusItem.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        allKasus.assignAll(fetchedData);
+
+        if (isRefresh) {
+          allKasus.assignAll(fetchedData);
+        } else {
+          allKasus.addAll(fetchedData);
+        }
+
+        if (fetchedData.length < 10) {
+          hasMore.value = false;
+        }
       } else {
         throw response.data['message'] ?? 'Gagal mengambil data pengaduan';
       }
@@ -53,7 +90,15 @@ class KelolaPengaduanController extends GetxController {
       Get.snackbar('Error', 'Gagal memuat data pengaduan: $e', backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
+      isLoadingMore.value = false;
     }
+  }
+
+  Future<void> loadMorePengaduan() async {
+    if (isLoadingMore.value) return;
+    isLoadingMore.value = true;
+    page++;
+    await fetchPengaduan(isRefresh: false);
   }
 
   // 🚀 FIX: Konversi dari kolom 'prioritas' database ke angka untuk sorting (Level 1 paling Urgent)

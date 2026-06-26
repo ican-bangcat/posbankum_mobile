@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../app/data/services/api_service.dart';
+import '../repositories/kelola_pengaduan_repository.dart';
 import 'kelola_pengaduan_controller.dart';
 import 'detail_kasus_paralegal_controller.dart';
 import '../../paralegal_dashboard/controllers/home_paralegal_controller.dart';
 
 class UpdateProgresController extends GetxController {
-  final ApiService _apiService = ApiService();
+  final KelolaPengaduanRepository _repository;
   var isLoading = false.obs;
 
   String kasusId = '';
   String namaKasus = '';
 
-  final judulController = TextEditingController(); // ✅ Tambahan Controller Judul
+  final judulController = TextEditingController();
   final catatanController = TextEditingController();
   var selectedDate = DateTime.now().obs;
+
+  UpdateProgresController({KelolaPengaduanRepository? repository})
+      : _repository = repository ?? KelolaPengaduanRepository();
 
   @override
   void onInit() {
@@ -23,6 +26,13 @@ class UpdateProgresController extends GetxController {
       kasusId = Get.arguments['id'] ?? '';
       namaKasus = Get.arguments['judul'] ?? 'Kasus';
     }
+  }
+
+  @override
+  void onClose() {
+    judulController.dispose();
+    catatanController.dispose();
+    super.onClose();
   }
 
   Future<void> pilihTanggal(BuildContext context) async {
@@ -49,33 +59,21 @@ class UpdateProgresController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 1. Simpan progres ke timeline
-      final timelineResponse = await _apiService.dio.post(
-        '/pengaduan/$kasusId/timeline',
-        data: {
-          'title': judulController.text.trim(),
-          'deskripsi': catatanController.text.trim(),
-          'tanggal': selectedDate.value.toIso8601String(),
-        },
+      // 1. Simpan progres ke timeline via Repository
+      await _repository.simpanProgresTimeline(
+        kasusId: kasusId,
+        title: judulController.text.trim(),
+        deskripsi: catatanController.text.trim(),
+        tanggal: selectedDate.value.toIso8601String(),
       );
 
-      if (timelineResponse.data['status'] != true) {
-        throw timelineResponse.data['message'] ?? 'Gagal menyimpan progres timeline';
-      }
-
-      // 2. Jika diselesaikan, update status pengaduan
+      // 2. Jika diselesaikan, update status pengaduan via Repository
       if (isSelesai) {
-        final statusResponse = await _apiService.dio.patch(
-          '/pengaduan/$kasusId/status',
-          data: {
-            'status': 'selesai',
-            'catatan_internal': catatanController.text.trim(),
-          },
+        await _repository.updateStatusKasus(
+          kasusId: kasusId,
+          status: 'selesai',
+          catatanInternal: catatanController.text.trim(),
         );
-
-        if (statusResponse.data['status'] != true) {
-          throw statusResponse.data['message'] ?? 'Gagal menyelesaikan pengaduan';
-        }
       }
 
       // 1. Kosongkan form biar bersih
