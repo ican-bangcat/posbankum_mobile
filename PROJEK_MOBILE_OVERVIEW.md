@@ -67,11 +67,16 @@ Aplikasi Web SIBAPAK bertindak sebagai **Pusat Kontrol (Admin Panel)**, sedangka
 ## 5. Progres Projek Sejauh Ini & Rencana Langkah Selanjutnya
 
 ### Progres Saat Ini (Progress Report)
+*   [x] **Autentikasi & Manajemen Akun (PB01):** Integrasi Login & Register manual, Google OAuth, penyimpanan token sesi (`GetStorage`), dan kerangka dashboard BottomNavigationBar warga.
+*   [x] **Pengajuan & Manajemen Pengaduan (PB02-03):** Slicing form pengaduan dinamis (bukti file & PDF), daftar status pengaduan, dan panel dashboard klaim kasus berbasis wilayah kerja prioritas (*Priority Queue*).
+*   [x] **Linimasa & Riwayat Penanganan (PB04 - TC-19):** Sinkronisasi log linimasa dinamis dari paralegal ke warga dengan penanganan fallback parsing tanggal serta pembaruan data minim gangguan (*silent reload*) via tarik-segarkan (*pull-to-refresh*).
+*   [x] **Unit Testing Komprehensif (PB02-04):** Pembuatan 29 unit/widget test lengkap dengan inisialisasi context `GetMaterialApp` dan advance fake async timers untuk memvalidasi alur bisnis modul pengaduan.
 *   [x] **Sistem Pengamanan File Privat:** Penyimpanan privat lokal server, verifikasi otorisasi RBAC (warga pemilik, paralegal sewilayah, admin) di backend, dan pemuatan aman di mobile via header token.
 *   [x] **In-App PDF Viewer:** Widget pembaca PDF internal dengan layout yang aman dari tabrakan tombol navigasi sistem Android/iOS.
 *   [x] **Pemberantasan Bug Update Status:** Perbaikan error 500 saat "Ambil Kasus" yang disebabkan oleh ketidakcocokan kolom `updated_at` pada tabel `pengaduan_timeline` di server Laravel.
-*   [x] **Algoritma Priority Queue:** List pengaduan paralegal otomatis terurut berdasarkan tingkat urgensi aduan warga sewilayah kerja.
+*   [x] **Uji Coba Alur Kasus End-to-End:** Memastikan transisi status berjalan mulus dari dibuat (`menunggu`) $\rightarrow$ diklaim (`diproses` + pencatatan log timeline) $\rightarrow$ penyusunan progres kegiatan $\rightarrow$ diselesaikan secara formal (`selesai` / `dibatalkan` disertai catatan internal penolakan kasus).
 
 ### Rencana Selanjutnya (Next Steps)
-*   [ ] **Perbaikan Tampilan POV Paralegal:** Merapikan dan memperindah alur visual pengelolaan kasus dari sudut pandang Paralegal.
-*   [ ] **Uji Coba Alur Kasus End-to-End:** Memastikan transisi status berjalan mulus dari dibuat (`menunggu`) $\rightarrow$ diklaim (`diproses` + pencatatan log timeline) $\rightarrow$ penyusunan progres kegiatan $\rightarrow$ diselesaikan secara formal (`selesai` / `dibatalkan` disertai catatan internal penolakan kasus).
+*   [ ] **Komunikasi & Chat Konsultasi (PB05):** Membuat ruang obrolan/chat room real-time per kasus antara warga dengan paralegal pendamping.
+*   [ ] **Notifikasi Sistem (PB06):** Membuat Pusat Notifikasi (Notification Center) aplikasi dan integrasi Push Notification SDK (Firebase Cloud Messaging).
+*   [ ] **Laporan Kegiatan Lapangan (PB07):** Pembuatan form laporan kegiatan lapangan paralegal (penyuluhan/sosialisasi) disertai kamera picker dan approval verifikasi admin.
