@@ -150,6 +150,18 @@ class EditProfileController extends GetxController {
       return;
     }
 
+    final nikClean = nikC.text.trim();
+    if (nikClean.length != 16) {
+      Get.snackbar(
+        'Validasi NIK Gagal',
+        'NIK wajib 16 digit angka! Saat ini ketikan terbaca: ${nikClean.length} karakter.',
+        backgroundColor: Colors.orange.shade700,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+
     try {
       isSaving.value = true;
       String? finalAvatarUrl = avatarUrl.value;

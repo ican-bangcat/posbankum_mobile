@@ -84,7 +84,7 @@ class ProfilParalegalController extends GetxController {
       // ── AMBIL STATISTIK PENGADUAN ──
       debugPrint('🔵 [PROFIL PARALEGAL] 2. Menarik statistik pengaduan...');
       final stats = await _profileRepository.fetchStatistik();
-      int countProses = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0);
+      int countProses = stats['diproses'] ?? 0;
       int countSelesai = stats['selesai'] ?? 0;
       int countTotal = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0) + 
                        (stats['selesai'] ?? 0) + (stats['dibatalkan'] ?? 0);

@@ -108,7 +108,7 @@ class ProfileController extends GetxController {
       debugPrint('🔵 [PROFIL] 2. Menarik statistik pengaduan...');
       final stats = await _profileRepository.fetchStatistik();
       // Backend return: { menunggu: X, diproses: Y, selesai: Z, dibatalkan: W }
-      int countProses = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0);
+      int countProses = stats['diproses'] ?? 0;
       int countSelesai = stats['selesai'] ?? 0;
       int countTotal = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0) + 
                        (stats['selesai'] ?? 0) + (stats['dibatalkan'] ?? 0);
