@@ -152,12 +152,7 @@ class EditProfileView extends GetView<EditProfileController> {
                       maxLines: 3,
                     ),
 
-                    const SizedBox(height: 32),
-                    _buildSectionLabel('KEAMANAN'),
-                    const SizedBox(height: 16),
-                    _buildSecurityCard(),
                     const SizedBox(height: 40),
-                    
                     _buildBigSaveButton(),
                   ],
                 ),
@@ -328,36 +323,7 @@ class EditProfileView extends GetView<EditProfileController> {
     );
   }
 
-  Widget _buildSecurityCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderLight),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.key_rounded, color: accentBlue, size: 20),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Ubah Password', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textDark)),
-                Text('Ganti kata sandi akun Anda', style: TextStyle(color: textGray, fontSize: 11)),
-              ],
-            ),
-          ),
-          const Icon(Icons.chevron_right_rounded, color: textGray),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildBigSaveButton() {
     return Obx(() => GestureDetector(

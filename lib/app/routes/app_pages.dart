@@ -12,10 +12,7 @@ import '../../modules/paralegal_dashboard/views/home_paralegal_view.dart';
 import '../../modules/pengaduan/views/form_pengaduan_view.dart';
 import '../../modules/pengaduan/views/pengaduan_success_screen.dart';
 import '../../modules/pengaduan/controllers/form_pengaduan_controller.dart';
-import '../../modules/auth/views/forgot_password_view.dart';
-import '../../modules/auth/controllers/forgot_password_controller.dart';
-import '../../modules/auth/views/update_password_view.dart';
-import '../../modules/auth/controllers/update_password_controller.dart';
+
 import '../../modules/pengaduan/views/daftar_pengaduan_view.dart';
 import '../../modules/pengaduan/controllers/riwayat_pengaduan_controller.dart';
 import '../../modules/pengaduan/views/detail_kasus_view.dart';
@@ -109,28 +106,7 @@ class AppPages {
       transitionDuration: const Duration(milliseconds: 400),
     ),
 
-    // ✅ FORGOT PASSWORD (BARU)
-    GetPage(
-      name: AppRoutes.FORGOT_PASSWORD,
-      page: () => const ForgotPasswordView(),
-      binding: BindingsBuilder(() {
-        // LazyPut: Controller hanya dibuat saat halaman dibuka
-        Get.lazyPut<ForgotPasswordController>(() => ForgotPasswordController());
-      }),
-      transition: Transition.rightToLeft,
-      transitionDuration: const Duration(milliseconds: 300),
-    ),
 
-    // ✅ UPDATE PASSWORD (BARU)
-    GetPage(
-      name: AppRoutes.UPDATE_PASSWORD,
-      page: () => const UpdatePasswordView(),
-      binding: BindingsBuilder(() {
-        Get.lazyPut<UpdatePasswordController>(() => UpdatePasswordController());
-      }),
-      transition: Transition.fadeIn, // Fade in karena ini biasanya otomatis
-      transitionDuration: const Duration(milliseconds: 400),
-    ),
 
     // ✅ PENGADUAN ROUTES (SUDAH DISESUAIKAN)
     GetPage(

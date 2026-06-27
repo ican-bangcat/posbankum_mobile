@@ -11,10 +11,6 @@ class AppRoutes {
   static const String LOGIN = '/login'; // Main login (2 button)
   static const String LOGIN_FORM = '/login-form'; // Form login
   static const  REGISTER = '/register'; // Form register
-  static const String FORGOT_PASSWORD = '/forgot-password';
-  static const String VERIFY_OTP = '/verify-otp';
-  static const String RESET_PASSWORD = '/reset-password';
-  static const UPDATE_PASSWORD = '/update-password';
   static const String PARALEGAL_DASHBOARD = '/paralegal-dashboard';
 
   // Main

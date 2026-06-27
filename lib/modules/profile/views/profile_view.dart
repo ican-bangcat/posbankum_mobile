@@ -57,32 +57,22 @@ class ProfileView extends GetView<ProfileController> {
             ),
             SafeArea(
               bottom: false,
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _buildSummaryCard(),
-                  ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(16, 0, 16, 40 + bottomNavBarPadding),
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        children: [
-                          _buildDataDiriCard(),
-                          const SizedBox(height: 20),
-                          _buildRiwayatCard(),
-                          const SizedBox(height: 20),
-                          _buildSettingsAndHelpCard(),
-                          const SizedBox(height: 30),
-                          _buildLogoutButton(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(16, 40, 16, 40 + bottomNavBarPadding),
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    _buildSummaryCard(),
+                    const SizedBox(height: 20),
+                    _buildDataDiriCard(),
+                    const SizedBox(height: 20),
+                    _buildRiwayatCard(),
+                    const SizedBox(height: 20),
+                    _buildSettingsAndHelpCard(),
+                    const SizedBox(height: 30),
+                    _buildLogoutButton(),
+                  ],
+                ),
               ),
             ),
           ],

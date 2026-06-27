@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart' as dio_pkg;
-import '../../../app/data/services/api_service.dart';
+import '../../profile/repositories/profile_repository.dart';
 import 'profil_paralegal_controller.dart';
 
 class EditProfilParalegalController extends GetxController {
-  final ApiService _apiService = ApiService();
+  final ProfileRepository _profileRepository;
 
   // --- CONTROLLER UNTUK TEKS ---
   final namaC = TextEditingController();
@@ -26,6 +26,9 @@ class EditProfilParalegalController extends GetxController {
 
   var isSaving = false.obs;
 
+  EditProfilParalegalController({ProfileRepository? profileRepository})
+      : _profileRepository = profileRepository ?? ProfileRepository();
+
   @override
   void onInit() {
     super.onInit();
@@ -37,21 +40,17 @@ class EditProfilParalegalController extends GetxController {
     try {
       isLoadingData.value = true;
 
-      final response = await _apiService.dio.get('/profile');
-      if (response.data['status'] == true) {
-        final userData = response.data['data'];
+      final userData = await _profileRepository.fetchProfile();
+      emailC.text = userData['email'] ?? '';
+      namaC.text = userData['nama_lengkap'] ?? '';
+      noHpC.text = userData['nomor_telepon'] ?? '';
+      avatarUrl.value = userData['foto_profile'] ?? '';
+      displayNama.value = userData['nama_lengkap'] ?? 'Paralegal';
 
-        emailC.text = userData['email'] ?? '';
-        namaC.text = userData['nama_lengkap'] ?? '';
-        noHpC.text = userData['nomor_telepon'] ?? '';
-        avatarUrl.value = userData['foto_profile'] ?? '';
-        displayNama.value = userData['nama_lengkap'] ?? 'Paralegal';
-
-        if (userData['posbankum'] != null) {
-          posbankumName.value = userData['posbankum']['nama_posbankum'] ?? '-';
-        } else {
-          posbankumName.value = 'Belum ditugaskan';
-        }
+      if (userData['posbankum'] != null) {
+        posbankumName.value = userData['posbankum']['nama_posbankum'] ?? '-';
+      } else {
+        posbankumName.value = 'Belum ditugaskan';
       }
     } catch (e) {
       Get.snackbar('Error', 'Gagal memuat data profil: $e');
@@ -91,38 +90,26 @@ class EditProfilParalegalController extends GetxController {
           ),
         });
 
-        final uploadRes = await _apiService.dio.post(
-          '/upload/foto-profil',
-          data: formData,
-        );
-
-        if (uploadRes.data['status'] == true) {
-          finalAvatarUrl = uploadRes.data['data']['foto_profile'] ?? uploadRes.data['data']['url'];
-          avatarUrl.value = finalAvatarUrl ?? '';
-        } else {
-          throw uploadRes.data['message'] ?? 'Gagal mengunggah foto profil';
-        }
+        final uploadData = await _profileRepository.uploadFotoProfil(formData);
+        finalAvatarUrl = uploadData['foto_profile'] ?? uploadData['url'];
+        avatarUrl.value = finalAvatarUrl ?? '';
       }
 
       // 2. Kirim Request Update Profil ke Laravel API
-      final response = await _apiService.dio.put('/profile', data: {
+      await _profileRepository.updateProfile({
         'nama_lengkap': namaC.text.trim(),
         'nomor_telepon': noHpC.text.trim(),
         'foto_profile': finalAvatarUrl,
       });
 
-      if (response.data['status'] == true) {
-        refreshProfileData();
-        Get.back();
-        Get.snackbar(
-          'Sukses',
-          'Profil berhasil diperbarui!',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-      } else {
-        throw response.data['message'] ?? 'Gagal memperbarui data profil';
-      }
+      refreshProfileData();
+      Get.back();
+      Get.snackbar(
+        'Sukses',
+        'Profil berhasil diperbarui!',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
     } catch (e) {
       Get.snackbar(
         'Error',

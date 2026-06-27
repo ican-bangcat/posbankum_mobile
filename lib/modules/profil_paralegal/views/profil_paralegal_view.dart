@@ -56,30 +56,20 @@ class ProfilParalegalView extends GetView<ProfilParalegalController> {
             ),
             SafeArea(
               bottom: false,
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _buildSummaryCard(),
-                  ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        children: [
-                          _buildDataDiriCard(),
-                          const SizedBox(height: 20),
-                          _buildRiwayatCard(),
-                          const SizedBox(height: 30),
-                          _buildLogoutButton(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 40, 16, 40),
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    _buildSummaryCard(),
+                    const SizedBox(height: 20),
+                    _buildDataDiriCard(),
+                    const SizedBox(height: 20),
+                    _buildRiwayatCard(),
+                    const SizedBox(height: 30),
+                    _buildLogoutButton(),
+                  ],
+                ),
               ),
             ),
           ],

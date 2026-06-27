@@ -75,12 +75,7 @@ class EditProfilParalegalView extends GetView<EditProfilParalegalController> {
                       readOnly: true,
                     )),
 
-                    const SizedBox(height: 32),
-                    _buildSectionLabel('KEAMANAN'),
-                    const SizedBox(height: 16),
-                    _buildSecurityCard(),
                     const SizedBox(height: 40),
-                    
                     _buildBigSaveButton(),
                   ],
                 ),
@@ -221,45 +216,7 @@ class EditProfilParalegalView extends GetView<EditProfilParalegalController> {
     );
   }
 
-  Widget _buildSecurityCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderLight),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () => Get.toNamed(AppRoutes.UPDATE_PASSWORD),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.key_rounded, color: accentBlue, size: 20),
-                ),
-                const SizedBox(width: 16),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Ubah Password', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textDark)),
-                      Text('Ganti kata sandi akun Anda', style: TextStyle(color: textGray, fontSize: 11)),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right_rounded, color: textGray),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildBigSaveButton() {
     return Obx(() => GestureDetector(

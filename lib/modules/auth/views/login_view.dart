@@ -20,105 +20,121 @@ class _LoginViewState extends State<LoginView> {
     return Scaffold(
       backgroundColor: darkBlueColor,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Top Section: Back Button & Title
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                    onPressed: () => Get.back(),
-                  ),
-                  const Text(
-                    'Kembali',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-              
-              // Center Section: Logo & Text
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildLogoRow(),
-                  const SizedBox(height: 48),
-                  const Text(
-                    'Selamat Datang',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white),
-                  ),
-                  const SizedBox(height: 12),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      'Silakan masuk menggunakan akun Google Anda untuk mengakses seluruh layanan Pos Bantuan Hukum gratis.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Top Section: Back Button & Title
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                              onPressed: () => Get.back(),
+                            ),
+                            const Text(
+                              'Kembali',
+                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                        
+                        // Center Section: Logo & Text
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(height: 24),
+                            _buildLogoRow(),
+                            const SizedBox(height: 48),
+                            const Text(
+                              'Selamat Datang',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white),
+                            ),
+                            const SizedBox(height: 12),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Text(
+                                'Silakan masuk menggunakan akun Google Anda untuk mengakses seluruh layanan Pos Bantuan Hukum gratis.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                          ],
+                        ),
+
+                        // Bottom Section: Google Button & Footer
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              height: 54,
+                              child: Obx(() {
+                                final isLoading = authC.isLoading.value;
+                                return ElevatedButton(
+                                  onPressed: isLoading ? null : () => authC.loginWithGoogle(),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    disabledBackgroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    elevation: 0,
+                                  ),
+                                  child: isLoading
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            color: darkBlueColor,
+                                            strokeWidth: 2.5,
+                                          ),
+                                        )
+                                      : Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Image.asset(
+                                              'assets/images/icons/google.png',
+                                              height: 22,
+                                              errorBuilder: (c, e, s) => const Icon(Icons.g_mobiledata, color: Colors.blue),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            const Text(
+                                              'Masuk dengan Google',
+                                              style: TextStyle(
+                                                color: darkBlueColor,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                );
+                              }),
+                            ),
+                            const SizedBox(height: 32),
+                            const Text(
+                              'Kanwil Kemenkumham Riau',
+                              style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
-
-              // Bottom Section: Google Button & Footer
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: Obx(() {
-                      final isLoading = authC.isLoading.value;
-                      return ElevatedButton(
-                        onPressed: isLoading ? null : () => authC.loginWithGoogle(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          disabledBackgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 0,
-                        ),
-                        child: isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: darkBlueColor,
-                                  strokeWidth: 2.5,
-                                ),
-                              )
-                            : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Image.asset(
-                                    'assets/images/icons/google.png',
-                                    height: 22,
-                                    errorBuilder: (c, e, s) => const Icon(Icons.g_mobiledata, color: Colors.blue),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    'Masuk dengan Google',
-                                    style: TextStyle(
-                                      color: darkBlueColor,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Kanwil Kemenkumham Riau',
-                    style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

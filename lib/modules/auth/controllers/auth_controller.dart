@@ -3,28 +3,23 @@ import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../app/routes/app_routes.dart';
-import '../../../app/data/services/api_service.dart';
+import '../repositories/auth_repository.dart';
 
 class AuthController extends GetxController {
-  final ApiService _apiService = ApiService();
+  final AuthRepository _authRepository;
   final _storage = GetStorage();
   
   var isLoading = false.obs;
+
+  AuthController({AuthRepository? authRepository})
+      : _authRepository = authRepository ?? AuthRepository();
 
   // --- FUNGSI LOGIN MANUAL (EMAIL & PASSWORD) ---
   Future<void> login(String email, String password) async {
     try {
       isLoading.value = true;
-      final response = await _apiService.dio.post('/login', data: {
-        'email': email,
-        'password': password,
-      });
-
-      if (response.data['status'] == true) {
-        _saveSessionAndRedirect(response.data['data']);
-      } else {
-        throw response.data['message'] ?? 'Login gagal.';
-      }
+      final data = await _authRepository.loginManual(email, password);
+      _saveSessionAndRedirect(data);
     } catch (e) {
       _handleError('Gagal Login', e);
     } finally {
@@ -38,17 +33,8 @@ class AuthController extends GetxController {
       if (password != confirmPassword) throw 'Konfirmasi kata sandi tidak cocok.';
       
       isLoading.value = true;
-      final response = await _apiService.dio.post('/register', data: {
-        'nama_lengkap': name,
-        'email': email,
-        'password': password,
-      });
-
-      if (response.data['status'] == true) {
-        _saveSessionAndRedirect(response.data['data']);
-      } else {
-        throw response.data['message'] ?? 'Registrasi gagal.';
-      }
+      final data = await _authRepository.registerManual(name, email, password);
+      _saveSessionAndRedirect(data);
     } catch (e) {
       _handleError('Gagal Registrasi', e);
     } finally {
@@ -78,15 +64,8 @@ class AuthController extends GetxController {
 
       if (idToken == null) throw 'Token ID Google tidak ditemukan.';
 
-      final response = await _apiService.dio.post('/auth/google/callback', data: {
-        'id_token': idToken,
-      });
-
-      if (response.data['status'] == true) {
-        _saveSessionAndRedirect(response.data['data']);
-      } else {
-        throw response.data['message'] ?? 'Gagal otorisasi Google.';
-      }
+      final data = await _authRepository.loginWithGoogle(idToken);
+      _saveSessionAndRedirect(data);
     } catch (e) {
       _handleError('Gagal Google Sign In', e);
     } finally {
@@ -116,7 +95,7 @@ class AuthController extends GetxController {
       isLoading.value = true;
       
       // Post logout to Laravel backend
-      await _apiService.dio.post('/logout');
+      await _authRepository.logout();
       
       // Disconnect from Google Sign-In to force the account chooser next time
       try {

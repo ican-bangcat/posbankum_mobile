@@ -4,10 +4,15 @@ import 'package:get_storage/get_storage.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../app/data/services/api_service.dart';
 import 'package:posbankum/modules/auth/controllers/auth_controller.dart';
+import '../repositories/profile_repository.dart';
 
 class ProfileController extends GetxController {
+  final ProfileRepository _profileRepository;
   final ApiService _apiService = ApiService();
   final _storage = GetStorage();
+
+  ProfileController({ProfileRepository? profileRepository})
+      : _profileRepository = profileRepository ?? ProfileRepository();
 
   // ── VARIABEL REAKTIF UNTUK DATA DIRI ──
   var isLoading = true.obs;
@@ -53,105 +58,95 @@ class ProfileController extends GetxController {
   Future<void> fetchUserData() async {
     try {
       isLoading.value = true;
-      debugPrint('🔵 [PROFIL] 1. Menarik data profil dari Laravel API...');
-      final response = await _apiService.dio.get('/profile');
+      debugPrint('🔵 [PROFIL] 1. Menarik data profil...');
+      final userData = await _profileRepository.fetchProfile();
+      
+      email.value = userData['email'] ?? '-';
+      namaLengkap.value = userData['nama_lengkap'] ?? 'Pengguna Baru';
+      noHp.value = userData['nomor_telepon'] ?? '-';
+      avatarUrl.value = userData['foto_profile'] ?? '';
+      role.value = userData['role'] ?? 'warga';
 
-      if (response.data['status'] == true) {
-        final userData = response.data['data'];
-        
-        email.value = userData['email'] ?? '-';
-        namaLengkap.value = userData['nama_lengkap'] ?? 'Pengguna Baru';
-        noHp.value = userData['nomor_telepon'] ?? '-';
-        avatarUrl.value = userData['foto_profile'] ?? '';
-        role.value = userData['role'] ?? 'warga';
+      String rawId = (userData['id_user'] ?? 'UNKNOWN').toString();
+      if (rawId.length >= 8) {
+        rawId = rawId.substring(0, 8).toUpperCase();
+      }
+      displayId.value = 'ID: PB-$rawId';
 
-        String rawId = (userData['id_user'] ?? 'UNKNOWN').toString();
-        if (rawId.length >= 8) {
-          rawId = rawId.substring(0, 8).toUpperCase();
-        }
-        displayId.value = 'ID: PB-$rawId';
+      if (userData['created_at'] != null) {
+        final dt = DateTime.parse(userData['created_at']);
+        memberSince.value = dt.year.toString();
+      }
 
-        if (userData['created_at'] != null) {
-          final dt = DateTime.parse(userData['created_at']);
-          memberSince.value = dt.year.toString();
-        }
+      // TAHAP 2: BACA DATA MASYARAKAT & WILAYAH (Jika role warga)
+      if (role.value.toLowerCase() == 'warga' && userData['masyarakat'] != null) {
+        final msk = userData['masyarakat'];
+        nik.value = msk['nik'] ?? '-';
+        alamat.value = msk['alamat'] ?? '-';
 
-        // TAHAP 2: BACA DATA MASYARAKAT & WILAYAH (Jika role warga)
-        if (role.value.toLowerCase() == 'warga' && userData['masyarakat'] != null) {
-          final msk = userData['masyarakat'];
-          nik.value = msk['nik'] ?? '-';
-          alamat.value = msk['alamat'] ?? '-';
+        final kel = msk['kelurahan'];
+        final kec = msk['kecamatan'];
+        final kab = msk['kabupaten'];
 
-          final kel = msk['kelurahan'];
-          final kec = msk['kecamatan'];
-          final kab = msk['kabupaten'];
+        String namaKel = (kel != null && kel is Map) ? (kel['nama'] ?? '') : '';
+        String namaKec = (kec != null && kec is Map) ? (kec['nama'] ?? '') : '';
+        String namaKab = (kab != null && kab is Map) ? (kab['nama'] ?? '') : '';
 
-          String namaKel = (kel != null && kel is Map) ? (kel['nama'] ?? '') : '';
-          String namaKec = (kec != null && kec is Map) ? (kec['nama'] ?? '') : '';
-          String namaKab = (kab != null && kab is Map) ? (kab['nama'] ?? '') : '';
+        List<String> regionParts = [];
+        if (namaKel.isNotEmpty) regionParts.add(namaKel);
+        if (namaKec.isNotEmpty) regionParts.add(namaKec);
+        if (namaKab.isNotEmpty) regionParts.add(namaKab);
 
-          List<String> regionParts = [];
-          if (namaKel.isNotEmpty) regionParts.add(namaKel);
-          if (namaKec.isNotEmpty) regionParts.add(namaKec);
-          if (namaKab.isNotEmpty) regionParts.add(namaKab);
-
-          if (regionParts.isNotEmpty) {
-            kelurahanInfo.value = regionParts.join(', ');
-          } else {
-            kelurahanInfo.value = '-';
-          }
+        if (regionParts.isNotEmpty) {
+          kelurahanInfo.value = regionParts.join(', ');
+        } else {
+          kelurahanInfo.value = '-';
         }
       }
 
       // TAHAP 3: AMBIL STATISTIK PENGADUAN
       debugPrint('🔵 [PROFIL] 2. Menarik statistik pengaduan...');
-      final statsResponse = await _apiService.dio.get('/pengaduan/statistik');
-      if (statsResponse.data['status'] == true) {
-        final stats = statsResponse.data['data'];
-        // Backend return: { menunggu: X, diproses: Y, selesai: Z, dibatalkan: W }
-        int countProses = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0);
-        int countSelesai = stats['selesai'] ?? 0;
-        int countTotal = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0) + 
-                         (stats['selesai'] ?? 0) + (stats['dibatalkan'] ?? 0);
+      final stats = await _profileRepository.fetchStatistik();
+      // Backend return: { menunggu: X, diproses: Y, selesai: Z, dibatalkan: W }
+      int countProses = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0);
+      int countSelesai = stats['selesai'] ?? 0;
+      int countTotal = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0) + 
+                       (stats['selesai'] ?? 0) + (stats['dibatalkan'] ?? 0);
 
-        totalPengaduan.value = countTotal.toString();
-        totalDiproses.value = countProses.toString();
-        totalSelesai.value = countSelesai.toString();
-      }
+      totalPengaduan.value = countTotal.toString();
+      totalDiproses.value = countProses.toString();
+      totalSelesai.value = countSelesai.toString();
 
       // TAHAP 4: AMBIL RIWAYAT PENGADUAN
       debugPrint('🔵 [PROFIL] 3. Menarik riwayat pengaduan...');
-      final pengaduanResponse = await _apiService.dio.get('/pengaduan');
-      if (pengaduanResponse.data['status'] == true) {
-        final List<dynamic> list = pengaduanResponse.data['data'];
-        List<Map<String, dynamic>> riwayatTemp = [];
+      final list = await _profileRepository.fetchRiwayatPengaduan();
+      List<Map<String, dynamic>> riwayatTemp = [];
 
-        for (var p in list) {
-          String statusLaporan = (p['status'] ?? '').toString().toLowerCase();
+      for (var p in list) {
+        String statusLaporan = (p['status'] ?? '').toString().toLowerCase();
 
-          String statusTampil = 'Menunggu';
-          Color warnaStatus = Colors.orange;
+        String statusTampil = 'Menunggu';
+        Color warnaStatus = Colors.orange;
 
-          if (statusLaporan == 'diproses') {
-            statusTampil = 'Diproses';
-            warnaStatus = Colors.blue;
-          } else if (statusLaporan == 'selesai') {
-            statusTampil = 'Selesai';
-            warnaStatus = Colors.green;
-          } else if (statusLaporan == 'dibatalkan') {
-            statusTampil = 'Dibatalkan';
-            warnaStatus = Colors.red;
-          }
-
-          riwayatTemp.add({
-            'judul': p['judul_pengaduan'] ?? p['jenis_masalah'] ?? 'Pengaduan',
-            'sub': '${p['nomor_pengaduan'] ?? '-'}  •  ${_formatDate(p['created_at'])}',
-            'status': statusTampil,
-            'color': warnaStatus,
-          });
+        if (statusLaporan == 'diproses') {
+          statusTampil = 'Diproses';
+          warnaStatus = Colors.blue;
+        } else if (statusLaporan == 'selesai') {
+          statusTampil = 'Selesai';
+          warnaStatus = Colors.green;
+        } else if (statusLaporan == 'dibatalkan') {
+          statusTampil = 'Dibatalkan';
+          warnaStatus = Colors.red;
         }
-        riwayatPengaduan.assignAll(riwayatTemp.take(3).toList());
+
+        riwayatTemp.add({
+          'judul': p['judul_pengaduan'] ?? p['jenis_masalah'] ?? 'Pengaduan',
+          'sub': '${p['nomor_pengaduan'] ?? '-'}  •  ${_formatDate(p['created_at'])}',
+          'status': statusTampil,
+          'color': warnaStatus,
+        });
       }
+      riwayatPengaduan.assignAll(riwayatTemp.take(3).toList());
 
       debugPrint('✅ [PROFIL] Semua data sukses dimuat!');
     } catch (e, stackTrace) {

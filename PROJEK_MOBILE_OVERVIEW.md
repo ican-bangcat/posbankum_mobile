@@ -67,7 +67,7 @@ Aplikasi Web SIBAPAK bertindak sebagai **Pusat Kontrol (Admin Panel)**, sedangka
 ## 5. Progres Projek Sejauh Ini & Rencana Langkah Selanjutnya
 
 ### Progres Saat Ini (Progress Report)
-*   [x] **Autentikasi & Manajemen Akun (PB01):** Integrasi Login & Register manual, Google OAuth, penyimpanan token sesi (`GetStorage`), dan kerangka dashboard BottomNavigationBar warga.
+*   [x] **Autentikasi & Manajemen Akun (PB01):** Integrasi Login & Register via Google OAuth (SSO) secara eksklusif, penyimpanan token sesi (`GetStorage`), dan kerangka dashboard BottomNavigationBar warga.
 *   [x] **Pengajuan & Manajemen Pengaduan (PB02-03):** Slicing form pengaduan dinamis (bukti file & PDF), daftar status pengaduan, dan panel dashboard klaim kasus berbasis wilayah kerja prioritas (*Priority Queue*).
 *   [x] **Linimasa & Riwayat Penanganan (PB04 - TC-19):** Sinkronisasi log linimasa dinamis dari paralegal ke warga dengan penanganan fallback parsing tanggal serta pembaruan data minim gangguan (*silent reload*) via tarik-segarkan (*pull-to-refresh*).
 *   [x] **Unit Testing Komprehensif (PB02-04):** Pembuatan 29 unit/widget test lengkap dengan inisialisasi context `GetMaterialApp` dan advance fake async timers untuk memvalidasi alur bisnis modul pengaduan.

@@ -4,8 +4,10 @@ import 'package:get_storage/get_storage.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../app/data/services/api_service.dart';
 import '../../auth/controllers/auth_controller.dart';
+import '../../profile/repositories/profile_repository.dart';
 
 class ProfilParalegalController extends GetxController {
+  final ProfileRepository _profileRepository;
   final ApiService _apiService = ApiService();
   final _storage = GetStorage();
 
@@ -24,6 +26,9 @@ class ProfilParalegalController extends GetxController {
   var totalDiproses = '0'.obs;
   var totalSelesai = '0'.obs;
   var riwayatPengaduan = <Map<String, dynamic>>[].obs;
+
+  ProfilParalegalController({ProfileRepository? profileRepository})
+      : _profileRepository = profileRepository ?? ProfileRepository();
 
   @override
   void onInit() {
@@ -51,82 +56,72 @@ class ProfilParalegalController extends GetxController {
     try {
       isLoading.value = true;
       debugPrint('🔵 [PROFIL PARALEGAL] 1. Menarik data profil...');
-      final response = await _apiService.dio.get('/profile');
+      final userData = await _profileRepository.fetchProfile();
 
-      if (response.data['status'] == true) {
-        final userData = response.data['data'];
+      email.value = userData['email'] ?? '-';
+      namaLengkap.value = userData['nama_lengkap'] ?? 'Paralegal';
+      noHp.value = userData['nomor_telepon'] ?? '-';
+      avatarUrl.value = userData['foto_profile'] ?? '';
 
-        email.value = userData['email'] ?? '-';
-        namaLengkap.value = userData['nama_lengkap'] ?? 'Paralegal';
-        noHp.value = userData['nomor_telepon'] ?? '-';
-        avatarUrl.value = userData['foto_profile'] ?? '';
+      String rawId = (userData['id_user'] ?? 'UNKNOWN').toString();
+      if (rawId.length >= 8) {
+        rawId = rawId.substring(0, 8).toUpperCase();
+      }
+      displayId.value = 'ID: PL-$rawId';
 
-        String rawId = (userData['id_user'] ?? 'UNKNOWN').toString();
-        if (rawId.length >= 8) {
-          rawId = rawId.substring(0, 8).toUpperCase();
-        }
-        displayId.value = 'ID: PL-$rawId';
+      if (userData['created_at'] != null) {
+        final dt = DateTime.parse(userData['created_at']);
+        memberSince.value = dt.year.toString();
+      }
 
-        if (userData['created_at'] != null) {
-          final dt = DateTime.parse(userData['created_at']);
-          memberSince.value = dt.year.toString();
-        }
-
-        // Ambil nama posbankum penugasan
-        if (userData['posbankum'] != null) {
-          namaPosbankum.value = userData['posbankum']['nama_posbankum'] ?? '-';
-        } else {
-          namaPosbankum.value = 'Belum ditugaskan';
-        }
+      // Ambil nama posbankum penugasan
+      if (userData['posbankum'] != null) {
+        namaPosbankum.value = userData['posbankum']['nama_posbankum'] ?? '-';
+      } else {
+        namaPosbankum.value = 'Belum ditugaskan';
       }
 
       // ── AMBIL STATISTIK PENGADUAN ──
       debugPrint('🔵 [PROFIL PARALEGAL] 2. Menarik statistik pengaduan...');
-      final statsResponse = await _apiService.dio.get('/pengaduan/statistik');
-      if (statsResponse.data['status'] == true) {
-        final stats = statsResponse.data['data'];
-        int countProses = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0);
-        int countSelesai = stats['selesai'] ?? 0;
-        int countTotal = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0) + 
-                         (stats['selesai'] ?? 0) + (stats['dibatalkan'] ?? 0);
+      final stats = await _profileRepository.fetchStatistik();
+      int countProses = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0);
+      int countSelesai = stats['selesai'] ?? 0;
+      int countTotal = (stats['menunggu'] ?? 0) + (stats['diproses'] ?? 0) + 
+                       (stats['selesai'] ?? 0) + (stats['dibatalkan'] ?? 0);
 
-        totalPengaduan.value = countTotal.toString();
-        totalDiproses.value = countProses.toString();
-        totalSelesai.value = countSelesai.toString();
-      }
+      totalPengaduan.value = countTotal.toString();
+      totalDiproses.value = countProses.toString();
+      totalSelesai.value = countSelesai.toString();
 
       // ── AMBIL RIWAYAT PENGADUAN ──
       debugPrint('🔵 [PROFIL PARALEGAL] 3. Menarik riwayat pengaduan...');
-      final pengaduanResponse = await _apiService.dio.get('/pengaduan');
-      if (pengaduanResponse.data['status'] == true) {
-        final List<dynamic> list = pengaduanResponse.data['data'];
-        List<Map<String, dynamic>> riwayatTemp = [];
+      final list = await _profileRepository.fetchRiwayatPengaduan();
+      List<Map<String, dynamic>> riwayatTemp = [];
 
-        for (var p in list) {
-          String statusLaporan = (p['status'] ?? '').toString().toLowerCase();
-          String statusTampil = 'Menunggu';
-          Color warnaStatus = Colors.orange;
+      for (var p in list) {
+        String statusLaporan = (p['status'] ?? '').toString().toLowerCase();
+        String statusTampil = 'Menunggu';
+        Color warnaStatus = Colors.orange;
 
-          if (statusLaporan == 'diproses') {
-            statusTampil = 'Diproses';
-            warnaStatus = Colors.blue;
-          } else if (statusLaporan == 'selesai') {
-            statusTampil = 'Selesai';
-            warnaStatus = Colors.green;
-          } else if (statusLaporan == 'dibatalkan') {
-            statusTampil = 'Dibatalkan';
-            warnaStatus = Colors.red;
-          }
-
-          riwayatTemp.add({
-            'judul': p['judul_pengaduan'] ?? p['jenis_masalah'] ?? 'Pengaduan',
-            'sub': '${p['nomor_pengaduan'] ?? '-'}  •  ${_formatDate(p['created_at'])}',
-            'status': statusTampil,
-            'color': warnaStatus,
-          });
+        if (statusLaporan == 'diproses') {
+          statusTampil = 'Diproses';
+          warnaStatus = Colors.blue;
+        } else if (statusLaporan == 'selesai') {
+          statusTampil = 'Selesai';
+          warnaStatus = Colors.green;
+        } else if (statusLaporan == 'dibatalkan') {
+          statusTampil = 'Dibatalkan';
+          warnaStatus = Colors.red;
         }
-        riwayatPengaduan.assignAll(riwayatTemp.take(3).toList());
+
+        riwayatTemp.add({
+          'judul': p['judul_pengaduan'] ?? p['jenis_masalah'] ?? 'Pengaduan',
+          'sub': '${p['nomor_pengaduan'] ?? '-'}  •  ${_formatDate(p['created_at'])}',
+          'status': statusTampil,
+          'color': warnaStatus,
+        });
       }
+      riwayatPengaduan.assignAll(riwayatTemp.take(3).toList());
 
       debugPrint('✅ [PROFIL PARALEGAL] Semua data sukses dimuat!');
     } catch (e, stackTrace) {
