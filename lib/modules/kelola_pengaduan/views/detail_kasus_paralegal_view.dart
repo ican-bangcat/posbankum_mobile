@@ -544,10 +544,10 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(color: statusBg, borderRadius: BorderRadius.circular(20)),
             child: Text(
               'ID KASUS: #$displayId',
-              style: const TextStyle(color: Color(0xFF3B82F6), fontSize: 10, fontWeight: FontWeight.w800, fontFamily: 'Monospace'),
+              style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w800, fontFamily: 'Monospace'),
             ),
           ),
           const SizedBox(height: 12),
@@ -599,7 +599,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
           const SizedBox(height: 12),
           _buildInfoBoxItem(icon: Icons.person_outline, label: 'NAMA PELAPOR', value: kasus.namaKlien ?? '-'),
           const SizedBox(height: 12),
-          _buildInfoBoxItem(icon: Icons.location_city_outlined, label: 'LURAH/KELURAHAN', value: kasus.namaLurah ?? '-'),
+          _buildInfoBoxItem(icon: Icons.location_city_outlined, label: 'NAMA LURAH', value: kasus.namaLurah ?? '-'),
           const SizedBox(height: 12),
           _buildInfoBoxItem(icon: Icons.phone_outlined, label: 'NO. TELEPON', value: kasus.noHpKlien ?? '-'),
         ],

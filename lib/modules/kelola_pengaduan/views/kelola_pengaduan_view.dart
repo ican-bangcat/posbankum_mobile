@@ -697,12 +697,12 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                          (buttonText == 'Ambil Kasus' || buttonText == 'Ambil Kasus ->') ? 'Lihat Detail' : (buttonText ?? ''),
+                          (buttonText == 'Ambil Kasus' || buttonText == 'Ambil Kasus ->' || buttonText == 'Lihat Detail') ? 'Lihat Detail' : (buttonText ?? ''),
                           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)
                       ),
                       const SizedBox(width: 8),
                       Icon(
-                          (buttonText == 'Ambil Kasus' || buttonText == 'Ambil Kasus ->') ? Icons.arrow_forward_rounded : Icons.edit_rounded,
+                          (buttonText == 'Ambil Kasus' || buttonText == 'Ambil Kasus ->' || buttonText == 'Lihat Detail') ? Icons.arrow_forward_rounded : Icons.edit_rounded,
                           color: Colors.white,
                           size: 18
                       ),
@@ -794,21 +794,23 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
       badgeBg = const Color(0xFFEFF6FF);
       badgeIcon = Icons.autorenew_rounded;
       showButton = true;
-      buttonText = 'Update Progres';
+      buttonText = 'Lihat Detail';
     }
     else if (kasus.status == 'selesai') {
       badgeText = 'SELESAI';
       badgeColor = const Color(0xFF10B981);
       badgeBg = const Color(0xFFECFDF5);
       badgeIcon = Icons.check_circle_outline;
-      showButton = false;
+      showButton = true;
+      buttonText = 'Lihat Detail';
     }
     else if (kasus.status == 'dibatalkan') {
       badgeText = 'DIBATALKAN';
       badgeColor = const Color(0xFFEF4444);
       badgeBg = const Color(0xFFFEE2E2);
       badgeIcon = Icons.cancel_outlined;
-      showButton = false;
+      showButton = true;
+      buttonText = 'Lihat Detail';
     }
 
     return _buildCaseCard(
@@ -818,7 +820,7 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
       kategori: kasus.kategori,
       deskripsi: kasus.status == 'menunggu' ? kasus.deskripsi : null,
       lokasi: (kasus.status == 'menunggu' || kasus.status == 'selesai') ? kasus.lokasi : null,
-      namaKlien: kasus.status != 'menunggu' ? kasus.namaKlien : null,
+      namaKlien: kasus.namaKlien,
       showButton: showButton, buttonText: buttonText,
       onTapButton: () {
         Get.toNamed(AppRoutes.DETAIL_KASUS_PARALEGAL, arguments: {'id': kasus.id});

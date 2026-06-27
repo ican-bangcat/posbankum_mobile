@@ -63,3 +63,9 @@ app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+
+# Project Specific Ignored Directories & DB files
+/database/
+*.sql
+.agents/
+Api/

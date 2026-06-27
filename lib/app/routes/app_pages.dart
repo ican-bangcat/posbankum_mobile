@@ -20,6 +20,7 @@ import '../../modules/pengaduan/views/daftar_pengaduan_view.dart';
 import '../../modules/pengaduan/controllers/riwayat_pengaduan_controller.dart';
 import '../../modules/pengaduan/views/detail_kasus_view.dart';
 import '../../modules/pengaduan/bindings/detail_kasus_binding.dart';
+import '../../modules/pengaduan/bindings/pengaduan_binding.dart';
 import 'app_routes.dart';
 import '../../modules/warga_dashboard/views/warga_dashboard_view.dart';
 import '../../modules/warga_dashboard/bindings/warga_dashboard_binding.dart';
@@ -135,10 +136,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.FORM_PENGADUAN,
       page: () => const FormPengaduanScreen(),
-      binding: BindingsBuilder(() {
-        // Wajib inject Controller di sini biar gak error!
-        Get.lazyPut<FormPengaduanController>(() => FormPengaduanController());
-      }),
+      binding: PengaduanBinding(),
       transition: Transition.rightToLeft,
       transitionDuration: const Duration(milliseconds: 300),
     ),
@@ -160,12 +158,9 @@ class AppPages {
     ),
     // ✅ Route ke Daftar Pengaduan
     GetPage(
-      name: '/daftar-pengaduan', // Atur path rutenya
-      page: () => const DaftarPengaduanView(), // Arahkan ke View baru
-      binding: BindingsBuilder(() {
-        // Ikat (Bind) Controller barunya ke View ini
-        Get.lazyPut<DaftarPengaduanController>(() => DaftarPengaduanController());
-      }),
+      name: AppRoutes.DAFTAR_PENGADUAN,
+      page: () => const DaftarPengaduanView(),
+      binding: PengaduanBinding(),
     ),
     GetPage(
       name: AppRoutes.DETAIL_KASUS,

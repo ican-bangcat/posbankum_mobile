@@ -31,6 +31,7 @@ class AppRoutes {
   // ✅ PENGADUAN (BARU - TAMBAHKAN 2 ROUTE INI)
   static const String FORM_PENGADUAN = '/form-pengaduan';
   static const String PENGADUAN_SUCCESS = '/pengaduan-success';
+  static const String DAFTAR_PENGADUAN = '/daftar-pengaduan';
   static const RIWAYAT_PENGADUAN = '/riwayat-pengaduan';
   static const DETAIL_KASUS = '/detail-kasus';
   static const UPDATE_PROGRES = '/update-progres';

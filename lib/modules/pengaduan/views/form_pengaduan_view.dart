@@ -26,8 +26,11 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
 
     return Scaffold(
       backgroundColor: darkBlueColor,
-      body: Column(
-        children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 650.0),
+          child: Column(
+            children: [
           // ── HEADER AREA ──
           Stack(
             children: [
@@ -193,7 +196,9 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
           ),
         ],
       ),
-    );
+    ),
+  ),
+);
   }
 
   // ── PROGRESS BAR ──

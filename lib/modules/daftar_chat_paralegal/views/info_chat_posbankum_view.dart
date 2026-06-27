@@ -251,7 +251,7 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
         const SizedBox(height: 12),
         _buildDataTile(Icons.phone_outlined, Colors.green, 'No. Telepon', '081234567890'),
         const SizedBox(height: 12),
-        _buildDataTile(Icons.business_outlined, Colors.purple, 'Lurah / Kelurahan', 'Budi Santoso, S.Sos'),
+        _buildDataTile(Icons.business_outlined, Colors.purple, 'Nama Lurah', 'Budi Santoso, S.Sos'),
         const SizedBox(height: 12),
         _buildDataTile(Icons.location_on_outlined, Colors.orange, 'Alamat', 'Jl. Merdeka No. 45, RT 03/RW 05, Sukan...'),
       ],

@@ -29,12 +29,22 @@ class KasusItem {
   });
 
   factory KasusItem.fromJson(Map<String, dynamic> json) {
+    String rawKronologi = json['kronologi']?.toString() ?? 'Tidak ada kronologi';
+    String parsedDeskripsi = rawKronologi;
+
+    if (rawKronologi.startsWith('Lurah/Kelurahan:') || rawKronologi.startsWith('Nama Lurah:')) {
+      final parts = rawKronologi.split('\n\nKronologi:\n');
+      if (parts.length > 1) {
+        parsedDeskripsi = parts[1].trim();
+      }
+    }
+
     return KasusItem(
       // 🚀 FIX: Sesuaikan dengan nama kolom database yang baru!
       id: json['id_pengaduan']?.toString() ?? '',
       judul: json['judul_pengaduan']?.toString() ?? 'Tanpa Judul',
       kategori: json['jenis_masalah']?.toString() ?? 'Lain-lain',
-      deskripsi: json['kronologi']?.toString() ?? 'Tidak ada kronologi',
+      deskripsi: parsedDeskripsi,
       lokasi: json['lokasi_kejadian']?.toString() ?? 'Lokasi tidak diketahui',
       tanggalPengajuan: json['created_at'] != null ? DateTime.parse(json['created_at']).toLocal() : DateTime.now(),
       tanggalKejadian: json['tanggal_kejadian'] != null ? DateTime.parse(json['tanggal_kejadian']).toLocal() : null,

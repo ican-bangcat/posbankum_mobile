@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:dio/dio.dart' as dio_pkg;
 import '../../../widgets/pdf_viewer_screen.dart';
 import '../../../app/data/services/api_service.dart';
 import 'kelola_pengaduan_controller.dart';
@@ -317,7 +318,13 @@ class DetailKasusParalegalController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back(); // Tutup loading jika error terjadi
-      Get.snackbar('Error', 'Terjadi kesalahan saat membuka lampiran: $e', backgroundColor: Colors.red, colorText: Colors.white);
+      String msg = e.toString();
+      if (e is dio_pkg.DioException && e.response?.data != null) {
+        if (e.response?.data is Map && e.response?.data['message'] != null) {
+          msg = e.response?.data['message'].toString() ?? msg;
+        }
+      }
+      Get.snackbar('Error', 'Terjadi kesalahan saat membuka lampiran: $msg', backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
 }

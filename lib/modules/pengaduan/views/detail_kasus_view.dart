@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../controllers/detail_kasus_controller.dart';
+import '../models/pengaduan_models.dart';
 
 class DetailKasusView extends GetView<DetailKasusController> {
   const DetailKasusView({super.key});
 
   static const Color darkBlueColor = Color(0xFF2A2E5E);
-  static const Color whiteBgColor = Colors.white;
+  static const Color whiteBgColor = Color(0xFFF2F4FB);
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF64748B);
   static const Color bgSelesai = Color(0xFFF8FAFC);
@@ -77,6 +78,20 @@ class DetailKasusView extends GetView<DetailKasusController> {
   // 🟢 LAYOUT SELESAI (SESUAI FIGMA + LAMPIRAN & DATA ASLI)
   // ===========================================================================
   Widget _buildSelesaiLayout(DetailKasus kasus, bool isSelesai, double bottomPadding) {
+    String namaLurah = '-';
+    String kronologiText = kasus.kronologi;
+
+    if (kasus.kronologi.startsWith('Lurah/Kelurahan:') || kasus.kronologi.startsWith('Nama Lurah:')) {
+      final parts = kasus.kronologi.split('\n\nKronologi:\n');
+      if (parts.length > 1) {
+        namaLurah = parts[0]
+            .replaceAll('Lurah/Kelurahan: ', '')
+            .replaceAll('Nama Lurah: ', '')
+            .trim();
+        kronologiText = parts[1].trim();
+      }
+    }
+
     return Column(
       children: [
         _buildHeader(isSelesai),
@@ -84,9 +99,11 @@ class DetailKasusView extends GetView<DetailKasusController> {
           child: Container(
             width: double.infinity,
             decoration: const BoxDecoration(color: bgSelesai, borderRadius: BorderRadius.only(topRight: Radius.circular(28), topLeft: Radius.zero)),
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(20, 24, 20, 40 + bottomPadding),
+            child: RefreshIndicator(
+              onRefresh: () => controller.fetchDetailKasus(silent: true),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                padding: EdgeInsets.fromLTRB(20, 24, 20, 40 + bottomPadding),
               child: Column(
                 children: [
                   // --- CARD 1: HEADER INFO SELESAI ---
@@ -159,32 +176,8 @@ class DetailKasusView extends GetView<DetailKasusController> {
                   ),
                   const SizedBox(height: 16),
 
-                  // --- CARD 3: DETAIL KEJADIAN ---
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Detail Kejadian', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
-                        const SizedBox(height: 20),
-                        _buildDetailItem(Icons.calendar_today_outlined, 'Tanggal', kasus.tanggalDibuat),
-                        const SizedBox(height: 16),
-                        _buildDetailItem(Icons.assignment_outlined, 'Jenis Masalah', kasus.kategoriMasalah),
-                        const SizedBox(height: 16),
-                        // ✅ MENGGUNAKAN DATA LOKASI ASLI
-                        _buildDetailItem(Icons.location_on_outlined, 'Lokasi', kasus.lokasi),
-                        const SizedBox(height: 16),
-                        // ✅ MENGGUNAKAN DATA NAMA PELAPOR ASLI
-                        _buildDetailItem(Icons.person_outline, 'Data Pelapor', kasus.namaPelapor),
-                      ],
-                    ),
-                  ),
+                  // --- CARD 3: DETAIL KEJADIAN & PELAPOR ---
+                  _buildDetailsCard(kasus: kasus, namaLurah: namaLurah),
                   const SizedBox(height: 16),
 
                   // --- CARD 4: KRONOLOGI KEJADIAN ---
@@ -211,9 +204,14 @@ class DetailKasusView extends GetView<DetailKasusController> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          kasus.kronologi,
-                          style: const TextStyle(fontSize: 13, color: Color(0xFF475569), height: 1.6, fontWeight: FontWeight.w400, fontFamily: 'Poppins'),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12)),
+                          child: Text(
+                            kronologiText,
+                            style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B), height: 1.6, fontWeight: FontWeight.w500, fontFamily: 'Poppins'),
+                          ),
                         ),
                       ],
                     ),
@@ -252,6 +250,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
             ),
           ),
         ),
+      ),
       ],
     );
   }
@@ -352,6 +351,65 @@ class DetailKasusView extends GetView<DetailKasusController> {
     );
   }
 
+  Widget _buildDetailsCard({
+    required DetailKasus kasus,
+    required String namaLurah,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Informasi Laporan & Pelapor',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: textPrimary,
+              fontFamily: 'Poppins',
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildDetailItem(Icons.calendar_today_outlined, 'Tanggal & Jam Kejadian', kasus.tanggalKejadian ?? '-'),
+          const SizedBox(height: 16),
+          _buildDetailItem(Icons.location_on_outlined, 'Lokasi Kejadian', kasus.lokasi),
+          const SizedBox(height: 16),
+          _buildDetailItem(Icons.assignment_outlined, 'Jenis Masalah', kasus.kategoriMasalah),
+          const SizedBox(height: 16),
+          const Divider(color: Color(0xFFF1F5F9), thickness: 1),
+          const SizedBox(height: 16),
+          _buildDetailItem(Icons.person_outline, 'Nama Pelapor', kasus.namaPelapor),
+          const SizedBox(height: 16),
+          _buildDetailItem(Icons.badge_outlined, 'NIK Pelapor', kasus.nikPelapor ?? '-'),
+          const SizedBox(height: 16),
+          _buildDetailItem(Icons.phone_outlined, 'No. Telepon Pelapor', kasus.noTelpPelapor ?? '-'),
+          const SizedBox(height: 16),
+          const Divider(color: Color(0xFFF1F5F9), thickness: 1),
+          const SizedBox(height: 16),
+          _buildDetailItem(Icons.domain_outlined, 'Nama Lurah', namaLurah),
+          const SizedBox(height: 16),
+          _buildDetailItem(
+            Icons.gavel_outlined,
+            'Paralegal yang Menangani',
+            kasus.namaParalegal ?? 'Belum ada paralegal yang menangani',
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInfoCol(String label, String value, {Color? color, bool isBold = false}) {
     return Column(
       children: [
@@ -378,65 +436,311 @@ class DetailKasusView extends GetView<DetailKasusController> {
             child: Column(
               children: [
                 Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(24, 32, 24, hasBottomButton ? 24 : 24 + bottomPadding),
+                  child: RefreshIndicator(
+                    onRefresh: () => controller.fetchDetailKasus(silent: true),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                      padding: EdgeInsets.fromLTRB(24, 32, 24, hasBottomButton ? 24 : 24 + bottomPadding),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(20)),
-                                  child: Text(kasus.idKasus, style: const TextStyle(color: Color(0xFF2563EB), fontSize: 11, fontWeight: FontWeight.w700, fontFamily: 'Poppins')),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(kasus.tanggalDibuat, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w500, fontFamily: 'Poppins')),
-                              ],
-                            ),
-                            if (statusKasus == 'dibatalkan')
+                        // 1. Parsing Nama Lurah & Kronologi dari kasus.kronologi
+                        (() {
+                          String namaLurah = '-';
+                          String kronologiText = kasus.kronologi;
+
+                          if (kasus.kronologi.startsWith('Lurah/Kelurahan:') || kasus.kronologi.startsWith('Nama Lurah:')) {
+                            final parts = kasus.kronologi.split('\n\nKronologi:\n');
+                            if (parts.length > 1) {
+                              namaLurah = parts[0]
+                                  .replaceAll('Lurah/Kelurahan: ', '')
+                                  .replaceAll('Nama Lurah: ', '')
+                                  .trim();
+                              kronologiText = parts[1].trim();
+                            }
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // --- CARD 1: RINGKASAN KASUS (Elevated Layout) ---
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
-                                child: const Text('Dibatalkan', style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
-                              )
-                          ],
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.06),
+                                      blurRadius: 16,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            // Case ID Badge
+                                            (() {
+                                              Color idBg;
+                                              Color idTxt;
+                                              if (statusKasus == 'menunggu' || statusKasus == 'pending') {
+                                                idBg = const Color(0xFFFEF3C7);
+                                                idTxt = const Color(0xFFD97706);
+                                              } else if (statusKasus == 'proses' || statusKasus == 'diproses') {
+                                                idBg = const Color(0xFFEFF6FF);
+                                                idTxt = const Color(0xFF3B82F6);
+                                              } else if (statusKasus == 'selesai') {
+                                                idBg = const Color(0xFFECFDF5);
+                                                idTxt = const Color(0xFF10B981);
+                                              } else if (statusKasus == 'dibatalkan' || statusKasus == 'ditolak') {
+                                                idBg = const Color(0xFFFEE2E2);
+                                                idTxt = const Color(0xFFEF4444);
+                                              } else {
+                                                idBg = const Color(0xFFF1F5F9);
+                                                idTxt = const Color(0xFF64748B);
+                                              }
+                                              return Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                decoration: BoxDecoration(
+                                                  color: idBg,
+                                                  borderRadius: BorderRadius.circular(12),
+                                                ),
+                                                child: Text(
+                                                  kasus.idKasus,
+                                                  style: TextStyle(
+                                                    color: idTxt,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w800,
+                                                    fontFamily: 'Monospace',
+                                                  ),
+                                                ),
+                                              );
+                                            }()),
+                                            const SizedBox(width: 8),
+                                            // Status Indicator Badge
+                                            (() {
+                                              String statusLabel;
+                                              Color bg;
+                                              Color txt;
+                                              if (statusKasus == 'menunggu' || statusKasus == 'pending') {
+                                                statusLabel = 'Menunggu';
+                                                bg = const Color(0xFFFEF3C7);
+                                                txt = const Color(0xFFD97706);
+                                              } else if (statusKasus == 'proses' || statusKasus == 'diproses') {
+                                                statusLabel = 'Diproses';
+                                                bg = const Color(0xFFDBEAFE);
+                                                txt = const Color(0xFF2563EB);
+                                              } else if (statusKasus == 'ditolak') {
+                                                statusLabel = 'Ditolak';
+                                                bg = const Color(0xFFFEE2E2);
+                                                txt = const Color(0xFFDC2626);
+                                              } else if (statusKasus == 'dibatalkan') {
+                                                statusLabel = 'Dibatalkan';
+                                                bg = const Color(0xFFF1F5F9);
+                                                txt = const Color(0xFF64748B);
+                                              } else {
+                                                statusLabel = statusKasus.toUpperCase();
+                                                bg = const Color(0xFFF1F5F9);
+                                                txt = const Color(0xFF64748B);
+                                              }
+
+                                              return Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+                                                child: Text(
+                                                  statusLabel.toUpperCase(),
+                                                  style: TextStyle(color: txt, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5, fontFamily: 'Poppins'),
+                                                ),
+                                              );
+                                            }()),
+                                          ],
+                                        ),
+                                        Text(
+                                          kasus.tanggalDibuat,
+                                          style: const TextStyle(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      kasus.judulLaporan,
+                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: textPrimary, height: 1.3, fontFamily: 'Poppins'),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF1F5F9),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.folder_open_rounded, size: 14, color: Color(0xFF475569)),
+                                          const SizedBox(width: 6),
+                                          Flexible(
+                                            child: Text(
+                                              kasus.kategoriMasalah,
+                                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF475569), fontFamily: 'Poppins'),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // --- CARD 2: DETAIL KEJADIAN & PELAPOR ---
+                              _buildDetailsCard(kasus: kasus, namaLurah: namaLurah),
+                              const SizedBox(height: 16),
+
+                              // --- CARD 3: KRONOLOGI KEJADIAN ---
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: const [
+                                        Icon(Icons.assignment_outlined, color: Color(0xFF1E2452), size: 18),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          'Kronologi Kejadian',
+                                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF1E2452), fontFamily: 'Poppins'),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Container(
+                                       width: double.infinity,
+                                       padding: const EdgeInsets.all(16),
+                                       decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12)),
+                                       child: Text(
+                                         kronologiText,
+                                         style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B), height: 1.6, fontWeight: FontWeight.w500, fontFamily: 'Poppins'),
+                                       ),
+                                     ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        }()),
+
+                        const SizedBox(height: 16),
+
+                        // --- CARD 4: STATUS LAPORAN ANDA ---
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: const [
+                                  Icon(Icons.history_rounded, color: Color(0xFF1E2452), size: 18),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Status Laporan Anda',
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF1E2452), fontFamily: 'Poppins'),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              _buildTimelineSection(kasus),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 16),
 
-                        Text(kasus.judulLaporan, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: textPrimary, height: 1.3, fontFamily: 'Poppins')),
-                        const SizedBox(height: 8),
-                        Text(kasus.kategoriMasalah, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: darkBlueColor, fontFamily: 'Poppins')),
-                        const SizedBox(height: 12),
-                        Text(kasus.kronologi, style: const TextStyle(fontSize: 13, color: textSecondary, height: 1.6, fontWeight: FontWeight.w400, fontFamily: 'Poppins')),
-
-                        const SizedBox(height: 32),
-                        const Text('Status Laporan Anda', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
-                        const SizedBox(height: 20),
-                        _buildTimelineSection(kasus),
-
-                        const SizedBox(height: 32),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Berkas & Dokumen', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins')),
-                            Text('${kasus.lampiranUrls.length} File', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: textSecondary, fontFamily: 'Poppins')),
-                          ],
+                        // --- CARD 5: BERKAS & DOKUMEN ---
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: const [
+                                      Icon(Icons.folder_copy_outlined, color: Color(0xFF1E2452), size: 18),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Berkas & Dokumen',
+                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF1E2452), fontFamily: 'Poppins'),
+                                      ),
+                                    ],
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(8)),
+                                    child: Text(
+                                      '${kasus.lampiranUrls.length} File',
+                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textSecondary, fontFamily: 'Poppins'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              if (kasus.lampiranUrls.isEmpty)
+                                const Text('Tidak ada dokumen terlampir.', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontSize: 13, fontFamily: 'Poppins'))
+                              else
+                                _buildDokumenGrid(kasus.lampiranUrls),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 16),
-
-                        if (kasus.lampiranUrls.isEmpty)
-                          const Text('Tidak ada dokumen terlampir.', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic, fontSize: 13, fontFamily: 'Poppins'))
-                        else
-                          _buildDokumenGrid(kasus.lampiranUrls),
                       ],
                     ),
                   ),
                 ),
+              ),
 
                 if (statusKasus == 'diproses')
                   _buildChatButton(bottomPadding)
@@ -456,7 +760,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
 
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.80,
+        crossAxisCount: 2, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.70,
       ),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -476,7 +780,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  flex: 5,
+                  flex: 4,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -500,12 +804,20 @@ class DetailKasusView extends GetView<DetailKasusController> {
                 Expanded(
                   flex: 3,
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(fileName, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textPrimary, fontFamily: 'Poppins'), maxLines: 2, overflow: TextOverflow.ellipsis),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: const [
+                            Icon(Icons.remove_red_eye_outlined, color: Color(0xFF3B82F6), size: 12),
+                            SizedBox(width: 4),
+                            Text('Lihat', style: TextStyle(color: Color(0xFF3B82F6), fontSize: 11, fontWeight: FontWeight.w800, fontFamily: 'Poppins')),
+                          ],
+                        ),
                       ],
                     ),
                   ),

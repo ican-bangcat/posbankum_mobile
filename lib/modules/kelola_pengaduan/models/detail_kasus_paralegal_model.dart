@@ -1,3 +1,5 @@
+import '../../../app/data/services/api_service.dart';
+
 // ✅ Model khusus untuk Timeline
 class ProgresItem {
   final String title;
@@ -7,11 +9,11 @@ class ProgresItem {
   ProgresItem({required this.title, required this.deskripsi, required this.tanggal});
 
   factory ProgresItem.fromJson(Map<String, dynamic> json) {
+    final dateStr = json['created_at'] ?? json['tanggal'];
     return ProgresItem(
       title: json['title']?.toString() ?? 'Update Progres',
       deskripsi: json['deskripsi']?.toString() ?? '',
-      // DB column = 'created_at', bukan 'tanggal'
-      tanggal: json['created_at'] != null ? DateTime.parse(json['created_at']).toLocal() : DateTime.now(),
+      tanggal: dateStr != null ? DateTime.parse(dateStr.toString()).toLocal() : DateTime.now(),
     );
   }
 }
@@ -19,10 +21,31 @@ class ProgresItem {
 // ✅ Model Khusus Lampiran
 class LampiranItem {
   final String namaFile;
-  final String pathFile;
+  final String _pathFile;
   final String? mimeType;
 
-  LampiranItem({required this.namaFile, required this.pathFile, this.mimeType});
+  LampiranItem({
+    required this.namaFile,
+    required String pathFile,
+    this.mimeType,
+  }) : _pathFile = pathFile;
+
+  String get pathFile {
+    if (_pathFile.startsWith('http://localhost') || 
+        _pathFile.startsWith('https://localhost') || 
+        _pathFile.startsWith('http://127.0.0.1') || 
+        _pathFile.startsWith('https://127.0.0.1')) {
+      final baseUri = Uri.parse(ApiService.baseUrl);
+      final fileUri = Uri.parse(_pathFile);
+      final newUri = fileUri.replace(
+        scheme: baseUri.scheme,
+        host: baseUri.host,
+        port: baseUri.port,
+      );
+      return newUri.toString();
+    }
+    return _pathFile;
+  }
 }
 
 // ✅ Model khusus untuk halaman Detail
@@ -68,10 +91,13 @@ class DetailKasusModel {
     String parsedLurah = '-';
     String parsedDeskripsi = rawKronologi;
 
-    if (rawKronologi.startsWith('Lurah/Kelurahan:')) {
+    if (rawKronologi.startsWith('Lurah/Kelurahan:') || rawKronologi.startsWith('Nama Lurah:')) {
       final parts = rawKronologi.split('\n\nKronologi:\n');
       if (parts.length > 1) {
-        parsedLurah = parts[0].replaceAll('Lurah/Kelurahan: ', '').trim();
+        parsedLurah = parts[0]
+            .replaceAll('Lurah/Kelurahan: ', '')
+            .replaceAll('Nama Lurah: ', '')
+            .trim();
         parsedDeskripsi = parts[1].trim();
       }
     }

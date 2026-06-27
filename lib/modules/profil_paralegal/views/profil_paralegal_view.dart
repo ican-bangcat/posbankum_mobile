@@ -267,7 +267,7 @@ class ProfilParalegalView extends GetView<ProfilParalegalController> {
             children: [
               const Text('Riwayat Pengaduan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
               InkWell(
-                onTap: () => Get.toNamed('/daftar-pengaduan'),
+                onTap: () => Get.toNamed(AppRoutes.DAFTAR_PENGADUAN),
                 child: const Text('Lihat Semua', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4A61A8))),
               ),
             ],

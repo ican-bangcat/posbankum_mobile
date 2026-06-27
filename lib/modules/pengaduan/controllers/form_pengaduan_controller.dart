@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:dio/dio.dart' as dio_pkg;
-import '../../../app/data/services/api_service.dart';
+import '../repositories/pengaduan_repository.dart';
 
 class FormPengaduanController extends GetxController {
-  final ApiService _apiService = ApiService();
+  final PengaduanRepository _repository;
   var isLoading = false.obs;
+
+  FormPengaduanController({PengaduanRepository? repository})
+      : _repository = repository ?? PengaduanRepository();
 
   var progressCount = 0.obs;
 
@@ -174,9 +176,7 @@ class FormPengaduanController extends GetxController {
     }
   }
 
-
   Future<void> submitPengaduan() async {
-    // 🚀 VALIDASI 1: Bersihkan spasi gaib dan pastikan tepat 16 digit!
     String nikBersih = nikC.text.trim();
     if (nikBersih.length != 16) {
       Get.snackbar(
@@ -189,7 +189,6 @@ class FormPengaduanController extends GetxController {
       return;
     }
 
-    // 🚀 VALIDASI 2: Cek progress wajib 9/9
     if (progressCount.value < 9) {
       Get.snackbar("Error", "Mohon lengkapi semua data wajib (${progressCount.value}/9 Lengkap)", backgroundColor: Colors.red, colorText: Colors.white);
       return;
@@ -198,20 +197,13 @@ class FormPengaduanController extends GetxController {
     try {
       isLoading.value = true;
 
-      // Ambil data profil pelapor untuk snapshot nama_pelapor
-      final profileRes = await _apiService.dio.get('/profile');
-      if (profileRes.data['status'] != true) {
-        throw profileRes.data['message'] ?? 'Gagal memuat profil pelapor';
-      }
-
-      final userData = profileRes.data['data'];
+      final userData = await _repository.fetchProfile();
       String namaOtomatis = userData['nama_lengkap'] ?? 'Tanpa Nama';
 
       if (userData['role'] != 'warga' || userData['masyarakat'] == null) {
         throw 'Data kependudukan Anda tidak ditemukan. Harap hubungi admin.';
       }
 
-      // Pastikan warga sudah lengkapi profil (id_kelurahan wajib ada untuk filter paralegal)
       final msk = userData['masyarakat'];
       if (msk['id_kelurahan'] == null) {
         throw 'Data kelurahan Anda tidak ditemukan. Silakan lengkapi profil terlebih dahulu.';
@@ -219,13 +211,9 @@ class FormPengaduanController extends GetxController {
 
       String prioritasOtomatis = _determinePriority(selectedKategori!);
       String customId = _generatePengaduanId();
-      String gabunganKronologi = 'Lurah/Kelurahan: ${namaLurahC.text.trim()}\n\nKronologi:\n${kronologiC.text.trim()}';
+      String gabunganKronologi = 'Nama Lurah: ${namaLurahC.text.trim()}\n\nKronologi:\n${kronologiC.text.trim()}';
 
-      // 🔵 TAHAP 1: SIMPAN DATA UTAMA KE TABEL `pengaduan`
-      // CATATAN: Tabel pengaduan TIDAK menyimpan id_posbankum / id_kabupaten /
-      // id_kecamatan / id_kelurahan. Relasi ke posbankum diperoleh secara
-      // dinamis via JOIN: pengaduan.user_id → masyarakat.id_kelurahan → posbankum.id_kelurahan
-      final response = await _apiService.dio.post('/pengaduan', data: {
+      final responseData = await _repository.submitPengaduan({
         'nomor_pengaduan': customId,
         'nama_pelapor': namaOtomatis,
         'nik': nikBersih,
@@ -241,19 +229,12 @@ class FormPengaduanController extends GetxController {
         'prioritas': prioritasOtomatis,
       });
 
-      if (response.data['status'] != true) {
-        throw response.data['message'] ?? 'Gagal menyimpan data pengaduan ke server';
-      }
+      String generatedUuid = responseData['id_pengaduan'].toString();
 
-      // Tangkap UUID pengaduan yang baru dibuat
-      String generatedUuid = response.data['data']['id_pengaduan'].toString();
-
-      // 🔵 TAHAP 2: JIKA ADA FILE, UPLOAD & SIMPAN KE TABEL `pengaduan_lampiran`
       if (selectedFiles.isNotEmpty) {
         await _uploadAndInsertLampiran(generatedUuid);
       }
 
-      // 🔵 TAHAP 3: LEMPAR KE HALAMAN SUKSES
       Get.offNamed(
         '/pengaduan-success',
         arguments: {
@@ -276,30 +257,15 @@ class FormPengaduanController extends GetxController {
     }
   }
 
-  // 🚀 FUNGSI UPLOAD & INSERT KE TABEL LAMPIRAN VIA LARAVEL REST API
   Future<void> _uploadAndInsertLampiran(String idPengaduan) async {
     for (var file in selectedFiles) {
       try {
         final fileExt = file.path.split('.').last.toLowerCase();
         final fileName = 'bukti_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}.$fileExt';
 
-
-
-        dio_pkg.FormData formData = dio_pkg.FormData.fromMap({
-          'file': await dio_pkg.MultipartFile.fromFile(
-            file.path,
-            filename: fileName,
-          ),
-          'jenis_lampiran': 'bukti_awal',
-        });
-
-        final uploadRes = await _apiService.dio.post(
-          '/pengaduan/$idPengaduan/lampiran',
-          data: formData,
-        );
-
-        if (uploadRes.data['status'] != true) {
-          print("❌ Gagal upload file: ${uploadRes.data['message']}");
+        final success = await _repository.uploadLampiran(idPengaduan, file, fileName);
+        if (!success) {
+          print("❌ Gagal upload file: $fileName");
         }
       } catch (e) {
         print("❌ Gagal upload file: $e");
@@ -309,7 +275,6 @@ class FormPengaduanController extends GetxController {
 
   String _generatePengaduanId() { return 'PGN-${DateTime.now().year}-${Random().nextInt(90000) + 10000}'; }
 
-  // 🚀 PRIORITAS VERSI OWNER
   String _determinePriority(String kategori) {
     switch (kategori) {
       case 'Kekerasan & Pelanggaran Fisik': case 'Kejahatan Seksual': case 'Narkotika & Psikotropika': return 'Sangat Tinggi';

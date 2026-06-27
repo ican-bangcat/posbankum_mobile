@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-// ✅ Import Controller yang baru
 import '../controllers/daftar_pengaduan_controller.dart';
 import '../controllers/detail_kasus_controller.dart';
+import '../models/pengaduan_models.dart';
 
-// ✅ Ganti nama class dan generic GetView-nya
 class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
   const DaftarPengaduanView({super.key});
 
@@ -15,153 +14,222 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
 
     return Scaffold(
       backgroundColor: darkBlueColor,
-
-      body: Column(
-        children: [
-          // ============================================================
-          // 1. HEADER AREA
-          // ============================================================
-          Stack(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 650.0),
+          child: Column(
             children: [
-              Positioned(
-                bottom: 0,
-                left: 0,
-                child: Container(width: 50, height: 50, color: whiteBgColor),
-              ),
-              Container(
-                width: double.infinity,
-                clipBehavior: Clip.hardEdge,
-                decoration: const BoxDecoration(
-                  color: darkBlueColor,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(28),
-                    bottomRight: Radius.zero,
+              // ============================================================
+              // 1. HEADER AREA
+              // ============================================================
+              Stack(
+                children: [
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    child: Container(width: 50, height: 50, color: whiteBgColor),
                   ),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      top: -10,
-                      right: -5,
-                      child: Opacity(
-                        opacity: 0.8,
-                        child: Image.asset(
-                          'assets/images/icons/building_illustration3.png',
-                          width: 300,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.location_city, size: 200, color: Colors.white10),
-                        ),
+                  Container(
+                    width: double.infinity,
+                    clipBehavior: Clip.hardEdge,
+                    decoration: const BoxDecoration(
+                      color: darkBlueColor,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(28),
+                        bottomRight: Radius.zero,
                       ),
                     ),
-                    SafeArea(
-                      bottom: false,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
-                        child: Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () => Get.back(),
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.white.withOpacity(0.3)),
-                                  borderRadius: BorderRadius.circular(12),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: -10,
+                          right: -5,
+                          child: Opacity(
+                            opacity: 0.8,
+                            child: Image.asset(
+                              'assets/images/icons/building_illustration3.png',
+                              width: 300,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.location_city,
+                                      size: 200, color: Colors.white10),
+                            ),
+                          ),
+                        ),
+                        SafeArea(
+                          bottom: false,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+                            child: Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () => Get.back(),
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                          color: Colors.white.withOpacity(0.3)),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(Icons.arrow_back_ios_new,
+                                        color: Colors.white, size: 18),
+                                  ),
                                 ),
-                                child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
-                              ),
+                                const SizedBox(width: 16),
+                                const Text(
+                                  'Pengaduan Saya',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 16),
-                            const Text(
-                              'Pengaduan Saya', // ✅ UI diganti jadi Pengaduan Saya
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+
+              // ============================================================
+              // 2. BODY AREA
+              // ============================================================
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: whiteBgColor,
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(28),
+                      topLeft: Radius.zero,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 24),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: _buildSearchBar(),
+                      ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: _buildTabFilter(),
+                      ),
+                      if (MediaQuery.of(context).viewInsets.bottom == 0) ...[
+                        const SizedBox(height: 20),
+                        _buildAjukanPengaduanCard(),
+                      ],
+                      const SizedBox(height: 16),
+
+                      // List Data
+                      Expanded(
+                        child: Obx(() {
+                          if (controller.isLoading.value) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+                          if (controller.groupedItems.isEmpty) {
+                            return _buildEmptyState();
+                          }
+                          final isCompact = controller.isCompactView.value;
+                          return RefreshIndicator(
+                            onRefresh: controller.fetchDaftarPengaduan,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
+                              itemCount: controller.groupedItems.length,
+                              itemBuilder: (context, index) {
+                                final element = controller.groupedItems[index];
+                                if (element is HeaderElement) {
+                                  return _buildSectionHeader(element.title, element.count);
+                                } else if (element is CardElement) {
+                                  return Padding(
+                                    padding: EdgeInsets.only(bottom: isCompact ? 8 : 16),
+                                    child: isCompact
+                                        ? _buildCompactCaseCardFromItem(element.item)
+                                        : _buildCardItemMenarik(element.item),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
-
-          // ============================================================
-          // 2. BODY AREA
-          // ============================================================
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: whiteBgColor,
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(28),
-                  topLeft: Radius.zero,
-                ),
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: _buildSearchBar(),
-                  ),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: _buildTabFilter(),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildAjukanPengaduanCard(),
-                  const SizedBox(height: 16),
-
-                  // List Data
-                  Expanded(
-                    child: Obx(() {
-                      if (controller.isLoading.value) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (controller.filteredItems.isEmpty) {
-                        return _buildEmptyState();
-                      }
-                      return RefreshIndicator(
-                        // ✅ Panggil fungsi fetch yang baru di Controller
-                        onRefresh: controller.fetchDaftarPengaduan,
-                        child: ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
-                          itemCount: controller.filteredItems.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 16),
-                          itemBuilder: (context, index) {
-                            return _buildCardItemMenarik(controller.filteredItems[index]);
-                          },
-                        ),
-                      );
-                    }),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  // --- WIDGET HELPER BAWAHNYA TETAP SAMA SEPERTI YANG KAMU KIRIM ---
-
   Widget _buildSearchBar() {
-    return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
-      child: TextField(
-        onChanged: (val) => controller.searchQuery.value = val,
-        decoration: InputDecoration(hintText: 'Cari Tiket ID atau Judul...', hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14), prefixIcon: Icon(Icons.search_rounded, color: Colors.grey[400]), border: InputBorder.none, contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16)),
-      ),
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4))
+                ]),
+            child: TextField(
+              onChanged: (val) => controller.searchQuery.value = val,
+              decoration: InputDecoration(
+                  hintText: 'Cari Tiket ID atau Judul...',
+                  hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                  prefixIcon: Icon(Icons.search_rounded, color: Colors.grey[400]),
+                  border: InputBorder.none,
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 14, horizontal: 16)),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Layout Toggle Button
+        Obx(() {
+          final isCompact = controller.isCompactView.value;
+          return Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4))
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => controller.isCompactView.toggle(),
+                child: Icon(
+                  isCompact ? Icons.view_agenda_rounded : Icons.view_headline_rounded,
+                  color: const Color(0xFF2A2E5E),
+                  size: 22,
+                ),
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 
@@ -169,30 +237,65 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildTabButton(text: 'Semua', tab: StatusPengaduan.semua, activeColor: const Color(0xFF2A2E5E)),
+        _buildTabButton(
+            text: 'Semua',
+            tab: StatusPengaduan.semua,
+            activeColor: const Color(0xFF2A2E5E)),
         const SizedBox(width: 10),
-        _buildTabButton(text: 'Proses', tab: StatusPengaduan.dalamProses, activeColor: Colors.blue.shade600),
+        _buildTabButton(
+            text: 'Proses',
+            tab: StatusPengaduan.dalamProses,
+            activeColor: Colors.blue.shade600),
         const SizedBox(width: 10),
-        _buildTabButton(text: 'Selesai', tab: StatusPengaduan.selesai, activeColor: Colors.green.shade600),
+        _buildTabButton(
+            text: 'Selesai',
+            tab: StatusPengaduan.selesai,
+            activeColor: Colors.green.shade600),
       ],
     );
   }
 
-  Widget _buildTabButton({required String text, required StatusPengaduan tab, required Color activeColor}) {
+  Widget _buildTabButton(
+      {required String text,
+      required StatusPengaduan tab,
+      required Color activeColor}) {
     return Obx(() {
       final bool isActive = controller.selectedTab.value == tab;
       return Expanded(
         child: GestureDetector(
           onTap: () => controller.changeTab(tab),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300), height: 45, alignment: Alignment.center,
+            duration: const Duration(milliseconds: 300),
+            height: 45,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
               color: isActive ? activeColor : Colors.white,
-              borderRadius: const BorderRadius.only(topRight: Radius.circular(10), bottomLeft: Radius.circular(10), topLeft: Radius.circular(4), bottomRight: Radius.circular(4)),
-              boxShadow: isActive ? [BoxShadow(color: activeColor.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4))] : [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))],
-              border: isActive ? null : Border.all(color: Colors.grey.shade300),
+              borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(10),
+                  bottomLeft: Radius.circular(10),
+                  topLeft: Radius.circular(4),
+                  bottomRight: Radius.circular(4)),
+              boxShadow: isActive
+                  ? [
+                      BoxShadow(
+                          color: activeColor.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4))
+                    ]
+                  : [
+                      BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2))
+                    ],
+              border:
+                  isActive ? null : Border.all(color: Colors.grey.shade300),
             ),
-            child: Text(text, style: TextStyle(fontSize: 12, fontWeight: isActive ? FontWeight.bold : FontWeight.w500, color: isActive ? Colors.white : Colors.grey[600])),
+            child: Text(text,
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                    color: isActive ? Colors.white : Colors.grey[600])),
           ),
         ),
       );
@@ -203,8 +306,17 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
     return GestureDetector(
       onTap: () => Get.toNamed('/form-pengaduan'),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20), padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: const Color(0xFF383C74), borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: const Color(0xFF2A2E5E).withOpacity(0.15), blurRadius: 15, offset: const Offset(0, 8))]),
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+            color: const Color(0xFF383C74),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                  color: const Color(0xFF2A2E5E).withOpacity(0.15),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8))
+            ]),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -212,14 +324,28 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Ajukan Pengaduan', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Text('Ajukan Pengaduan',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
-                  Text('Kami siap membantu masalah hukum\nAnda', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13, height: 1.4)),
+                  Text('Kami siap membantu masalah hukum\nAnda',
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 13,
+                          height: 1.4)),
                 ],
               ),
             ),
             const SizedBox(width: 16),
-            Container(width: 48, height: 48, decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), shape: BoxShape.circle), child: const Icon(Icons.add, color: Colors.white, size: 28)),
+            Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    shape: BoxShape.circle),
+                child: const Icon(Icons.add, color: Colors.white, size: 28)),
           ],
         ),
       ),
@@ -232,17 +358,26 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
     final Color statusColor = _getStatusColor(item.status);
 
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         Get.delete<DetailKasusController>();
-        // 🚀 BUG FIX: Kirim idDb (UUID Asli) ke Controller Detail, BUKAN idTiket
-        Get.toNamed('/detail-kasus', arguments: item.idDb);
+        await Get.toNamed('/detail-kasus', arguments: item.idDb);
+        controller.fetchDaftarPengaduan(silent: true);
       },
       child: Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 6))]),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 15,
+                  offset: const Offset(0, 6))
+            ]),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            decoration: BoxDecoration(border: Border(left: BorderSide(color: statusColor, width: 5))),
+            decoration: BoxDecoration(
+                border: Border(left: BorderSide(color: statusColor, width: 5))),
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,9 +388,22 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
                     Expanded(
                       child: Row(
                         children: [
-                          Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.confirmation_num_rounded, size: 14, color: textSecondary)),
+                          Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                  color: const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: const Icon(Icons.confirmation_num_rounded,
+                                  size: 14, color: textSecondary)),
                           const SizedBox(width: 8),
-                          Expanded(child: Text(item.idTiket, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: textSecondary, fontFamily: 'Monospace'), overflow: TextOverflow.ellipsis)),
+                          Expanded(
+                              child: Text(item.idTiket,
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: textSecondary,
+                                      fontFamily: 'Monospace'),
+                                  overflow: TextOverflow.ellipsis)),
                         ],
                       ),
                     ),
@@ -264,13 +412,22 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
                   ],
                 ),
                 const SizedBox(height: 14),
-                Text(item.judul, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: textPrimary, height: 1.3), maxLines: 2, overflow: TextOverflow.ellipsis),
+                Text(item.judul,
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: textPrimary,
+                        height: 1.3),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 14),
                 Row(
                   children: [
                     _buildIconText(Icons.calendar_month_rounded, item.tanggal),
                     const SizedBox(width: 16),
-                    Expanded(child: _buildIconText(Icons.folder_open_rounded, item.kategoriMasalah)),
+                    Expanded(
+                        child: _buildIconText(
+                            Icons.folder_open_rounded, item.kategoriMasalah)),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -279,12 +436,30 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Expanded(child: Text('Ketuk untuk melihat detail', style: TextStyle(fontSize: 12, color: Colors.black38, fontStyle: FontStyle.italic), overflow: TextOverflow.ellipsis)),
+                    const Expanded(
+                        child: Text('Ketuk untuk melihat detail',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black38,
+                                fontStyle: FontStyle.italic),
+                            overflow: TextOverflow.ellipsis)),
                     const SizedBox(width: 12),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(20)),
-                      child: Row(children: const [Text('Detail', style: TextStyle(color: Color(0xFF2563EB), fontSize: 13, fontWeight: FontWeight.w700)), SizedBox(width: 4), Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF2563EB))]),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Row(children: const [
+                        Text('Detail',
+                            style: TextStyle(
+                                color: Color(0xFF2563EB),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700)),
+                        SizedBox(width: 4),
+                        Icon(Icons.arrow_forward_ios_rounded,
+                            size: 12, color: Color(0xFF2563EB))
+                      ]),
                     ),
                   ],
                 ),
@@ -302,43 +477,117 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
       children: [
         Icon(icon, size: 14, color: const Color(0xFF94A3B8)),
         const SizedBox(width: 6),
-        Flexible(child: Text(text, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
+        Flexible(
+            child: Text(text,
+                style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w500),
+                overflow: TextOverflow.ellipsis)),
       ],
     );
   }
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'selesai': return const Color(0xFF10B981);
+      case 'selesai':
+        return const Color(0xFF10B981);
       case 'proses':
-      case 'diproses': return const Color(0xFF3B82F6);
-      case 'ditolak': return const Color(0xFFEF4444);
-      case 'dibatalkan': return const Color(0xFF94A3B8); // ✅ Abu-abu (Slate)
-      default: return const Color(0xFFF59E0B);
+      case 'diproses':
+        return const Color(0xFF3B82F6);
+      case 'ditolak':
+        return const Color(0xFFEF4444);
+      case 'dibatalkan':
+        return const Color(0xFF94A3B8);
+      default:
+        return const Color(0xFFF59E0B);
     }
   }
 
   Widget _buildStatusBadgeMenarik(String status) {
-    Color bg; Color text; String label = status;
+    Color bg;
+    Color text;
+    String label = status;
 
     switch (status.toLowerCase()) {
       case 'selesai':
-        bg = const Color(0xFFD1FAE5); text = const Color(0xFF059669); break;
+        bg = const Color(0xFFD1FAE5);
+        text = const Color(0xFF059669);
+        break;
       case 'proses':
       case 'diproses':
-        bg = const Color(0xFFDBEAFE); text = const Color(0xFF2563EB); break;
+        bg = const Color(0xFFDBEAFE);
+        text = const Color(0xFF2563EB);
+        break;
       case 'ditolak':
-        bg = const Color(0xFFFEE2E2); text = const Color(0xFFDC2626); break;
-      case 'dibatalkan': // ✅ TAMBAHKAN BLOK INI
-        bg = const Color(0xFFF1F5F9); text = const Color(0xFF64748B); label = 'Dibatalkan'; break;
+        bg = const Color(0xFFFEE2E2);
+        text = const Color(0xFFDC2626);
+        break;
+      case 'dibatalkan':
+        bg = const Color(0xFFF1F5F9);
+        text = const Color(0xFF64748B);
+        label = 'Dibatalkan';
+        break;
       default:
-        bg = const Color(0xFFFEF3C7); text = const Color(0xFFD97706); label = 'Pending';
+        bg = const Color(0xFFFEF3C7);
+        text = const Color(0xFFD97706);
+        label = 'Menunggu';
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
-      child: Text(label.toUpperCase(), style: TextStyle(color: text, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+      decoration:
+          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
+      child: Text(label.toUpperCase(),
+          style: TextStyle(
+              color: text,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5)),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, int count) {
+    const Color darkBlueColor = Color(0xFF2A2E5E);
+    return Padding(
+      padding: const EdgeInsets.only(top: 24, bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+              color: darkBlueColor,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF1E2452),
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '$count',
+              style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade700),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -346,11 +595,19 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final boxWidth = constraints.constrainWidth();
-        const dashWidth = 6.0; const dashHeight = 1.0;
+        const dashWidth = 6.0;
+        const dashHeight = 1.0;
         final dashCount = (boxWidth / (2 * dashWidth)).floor();
         return Flex(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween, direction: Axis.horizontal,
-          children: List.generate(dashCount, (_) => const SizedBox(width: dashWidth, height: dashHeight, child: DecoratedBox(decoration: BoxDecoration(color: Color(0xFFE2E8F0))))),
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          direction: Axis.horizontal,
+          children: List.generate(
+              dashCount,
+              (_) => const SizedBox(
+                  width: dashWidth,
+                  height: dashHeight,
+                  child: DecoratedBox(
+                      decoration: BoxDecoration(color: Color(0xFFE2E8F0))))),
         );
       },
     );
@@ -358,13 +615,194 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.grey[200], shape: BoxShape.circle), child: Icon(Icons.inbox_outlined, size: 40, color: Colors.grey[400])),
-          const SizedBox(height: 16),
-          Text('Belum ada pengaduan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[600])),
-        ],
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                    color: Colors.grey[200], shape: BoxShape.circle),
+                child: Icon(Icons.inbox_outlined,
+                    size: 40, color: Colors.grey[400])),
+            const SizedBox(height: 16),
+            Text('Belum ada pengaduan',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[600])),
+          ],
+        ),
+      ),
+    );
+  }
+  Widget _buildCompactCaseCardFromItem(PengaduanItem item) {
+    String statusText = '';
+    Color statusColor = Colors.grey;
+    Color statusBg = Colors.grey.shade200;
+    IconData statusIcon = Icons.help_outline;
+
+    switch (item.status.toLowerCase()) {
+      case 'selesai':
+        statusText = 'Selesai';
+        statusColor = const Color(0xFF10B981);
+        statusBg = const Color(0xFFECFDF5);
+        statusIcon = Icons.check_circle_outline;
+        break;
+      case 'proses':
+      case 'diproses':
+        statusText = 'Diproses';
+        statusColor = const Color(0xFF3B82F6);
+        statusBg = const Color(0xFFEFF6FF);
+        statusIcon = Icons.autorenew_rounded;
+        break;
+      case 'ditolak':
+        statusText = 'Ditolak';
+        statusColor = const Color(0xFFEF4444);
+        statusBg = const Color(0xFFFEE2E2);
+        statusIcon = Icons.cancel_outlined;
+        break;
+      case 'dibatalkan':
+        statusText = 'Batal';
+        statusColor = const Color(0xFF64748B);
+        statusBg = const Color(0xFFF1F5F9);
+        statusIcon = Icons.cancel_outlined;
+        break;
+      default:
+        statusText = 'Menunggu';
+        statusColor = const Color(0xFFF59E0B);
+        statusBg = const Color(0xFFFEF3C7);
+        statusIcon = Icons.hourglass_empty_rounded;
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        Get.delete<DetailKasusController>();
+        await Get.toNamed('/detail-kasus', arguments: item.idDb);
+        controller.fetchDaftarPengaduan(silent: true);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: statusBg,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(statusIcon, color: statusColor, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        item.idTiket,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF94A3B8),
+                          fontFamily: 'Monospace',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: statusBg,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          statusText.toUpperCase(),
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.3,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.judul,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                      fontFamily: 'Poppins',
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.folder_open_rounded, size: 12, color: Color(0xFF94A3B8)),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          item.kategoriMasalah,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF64748B),
+                            fontFamily: 'Poppins',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  item.tanggal,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF94A3B8),
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFFcbd5e1),
+                  size: 18,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
