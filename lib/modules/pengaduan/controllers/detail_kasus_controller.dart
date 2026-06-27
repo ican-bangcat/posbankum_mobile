@@ -13,7 +13,9 @@ class DetailKasusController extends GetxController {
   final kasus = Rx<DetailKasus?>(null);
   final isLoading = true.obs;
 
-  DetailKasusController({PengaduanRepository? repository})
+  String? kasusId;
+
+  DetailKasusController({PengaduanRepository? repository, this.kasusId})
       : _repository = repository ?? PengaduanRepository();
 
   @override
@@ -25,7 +27,7 @@ class DetailKasusController extends GetxController {
   Future<void> fetchDetailKasus({bool silent = false}) async {
     try {
       if (!silent) isLoading.value = true;
-      final rawId = Get.arguments;
+      final rawId = kasusId ?? Get.arguments;
       if (rawId == null) return;
 
       final pengaduanId = rawId.toString();

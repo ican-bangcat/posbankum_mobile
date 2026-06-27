@@ -9,7 +9,11 @@ import 'kelola_pengaduan_controller.dart';
 import '../models/detail_kasus_paralegal_model.dart';
 
 class DetailKasusParalegalController extends GetxController {
-  final ApiService _apiService = ApiService();
+  final ApiService _apiService;
+  String? kasusId;
+
+  DetailKasusParalegalController({ApiService? apiService, this.kasusId})
+      : _apiService = apiService ?? ApiService();
 
   var isLoading = true.obs;
   var isUpdating = false.obs;
@@ -24,8 +28,9 @@ class DetailKasusParalegalController extends GetxController {
   void onInit() {
     super.onInit();
     final args = Get.arguments;
-    if (args != null && args['id'] != null) {
-      fetchDetailKasus(args['id'].toString());
+    final targetId = kasusId ?? (args != null ? args['id']?.toString() : null);
+    if (targetId != null) {
+      fetchDetailKasus(targetId);
     } else {
       isLoading.value = false;
       errorMessage.value = "ID Kasus hilang karena halaman di-refresh. Silakan kembali.";

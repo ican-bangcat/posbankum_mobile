@@ -4,7 +4,10 @@ import '../../../app/data/services/api_service.dart';
 import '../models/pengaduan_models.dart';
 
 class PengaduanRepository {
-  final ApiService _apiService = ApiService();
+  final ApiService _apiService;
+
+  PengaduanRepository({ApiService? apiService})
+      : _apiService = apiService ?? ApiService();
 
   Future<List<PengaduanItem>> fetchDaftarPengaduan() async {
     final response = await _apiService.dio.get('/pengaduan');

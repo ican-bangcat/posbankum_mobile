@@ -64,6 +64,7 @@ dev_dependencies:
   # App Icon Generator
   flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.4.7
+  mocktail: ^1.0.5
 
 # App Icon Configuration
 flutter_launcher_icons:

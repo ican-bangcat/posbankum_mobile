@@ -16,13 +16,16 @@ class UpdateProgresController extends GetxController {
   final catatanController = TextEditingController();
   var selectedDate = DateTime.now().obs;
 
-  UpdateProgresController({KelolaPengaduanRepository? repository})
-      : _repository = repository ?? KelolaPengaduanRepository();
+  UpdateProgresController({KelolaPengaduanRepository? repository, String? initialKasusId, String? initialNamaKasus})
+      : _repository = repository ?? KelolaPengaduanRepository() {
+    if (initialKasusId != null) kasusId = initialKasusId;
+    if (initialNamaKasus != null) namaKasus = initialNamaKasus;
+  }
 
   @override
   void onInit() {
     super.onInit();
-    if (Get.arguments != null) {
+    if (kasusId.isEmpty && Get.arguments != null) {
       kasusId = Get.arguments['id'] ?? '';
       namaKasus = Get.arguments['judul'] ?? 'Kasus';
     }

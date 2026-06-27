@@ -4,7 +4,10 @@ import '../../../app/data/services/api_service.dart';
 import '../models/kasus_model.dart';
 
 class KelolaPengaduanController extends GetxController {
-  final ApiService _apiService = ApiService();
+  final ApiService _apiService;
+
+  KelolaPengaduanController({ApiService? apiService})
+      : _apiService = apiService ?? ApiService();
 
   var selectedTab = 0.obs;
   var searchQuery = ''.obs;
