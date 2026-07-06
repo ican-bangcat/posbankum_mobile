@@ -27,36 +27,43 @@ class _LoginViewState extends State<LoginView> {
     return Scaffold(
       backgroundColor: bgLight,
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Top & Center Sections
-                    Column(
-                      children: [
-                        _buildHeader(),
-                        const SizedBox(height: 24),
-                        _buildCenterIllustration(),
-                        const SizedBox(height: 24),
-                        _buildTextSection(),
-                        const SizedBox(height: 24),
-                      ],
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 650.0),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
                     ),
-                    
-                    // Bottom Section (White Sheet)
-                    _buildBottomSheet(context),
-                  ],
-                ),
-              ),
-            );
-          },
+                    child: IntrinsicHeight(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Top & Center Sections
+                          Column(
+                            children: [
+                              _buildHeader(),
+                              const SizedBox(height: 24),
+                              _buildCenterIllustration(),
+                              const SizedBox(height: 24),
+                              _buildTextSection(),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                          
+                          // Bottom Section (White Sheet)
+                          _buildBottomSheet(context),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ),
     );

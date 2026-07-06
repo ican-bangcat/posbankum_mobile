@@ -27,69 +27,76 @@ class _RegisterViewState extends State<RegisterView> {
     return Scaffold(
       backgroundColor: bgLight,
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Top, Banner Card, & Features
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 650.0),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildHeader(),
-                          const SizedBox(height: 24),
-                          _buildBannerCard(),
-                          const SizedBox(height: 32),
-                          const Text(
-                            'Keuntungan mendaftar:',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: primaryNavy,
+                          // Top, Banner Card, & Features
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildHeader(),
+                                const SizedBox(height: 24),
+                                _buildBannerCard(),
+                                const SizedBox(height: 32),
+                                const Text(
+                                  'Keuntungan mendaftar:',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: primaryNavy,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                _buildBenefitCard(
+                                  icon: Icons.bolt_outlined,
+                                  iconColor: const Color(0xFFD97706),
+                                  circleColor: const Color(0xFFFEF6E4),
+                                  title: 'Akses Instan',
+                                  subtitle: 'Langsung gunakan semua fitur layanan hukum',
+                                ),
+                                _buildBenefitCard(
+                                  icon: Icons.lock_outline_rounded,
+                                  iconColor: const Color(0xFF2ECC71),
+                                  circleColor: const Color(0xFFE8F8F0),
+                                  title: 'Data Terlindungi',
+                                  subtitle: 'Informasi Anda aman & terenkripsi end-to-end',
+                                ),
+                                _buildBenefitCard(
+                                  icon: Icons.verified_user_outlined,
+                                  iconColor: const Color(0xFF4F46E5),
+                                  circleColor: const Color(0xFFEEF2FF),
+                                  title: 'Layanan Resmi',
+                                  subtitle: 'Terdaftar di Kemenkumham Kanwil Riau',
+                                ),
+                                const SizedBox(height: 24),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          _buildBenefitCard(
-                            icon: Icons.bolt_outlined,
-                            iconColor: const Color(0xFFD97706),
-                            circleColor: const Color(0xFFFEF6E4),
-                            title: 'Akses Instan',
-                            subtitle: 'Langsung gunakan semua fitur layanan hukum',
-                          ),
-                          _buildBenefitCard(
-                            icon: Icons.lock_outline_rounded,
-                            iconColor: const Color(0xFF2ECC71),
-                            circleColor: const Color(0xFFE8F8F0),
-                            title: 'Data Terlindungi',
-                            subtitle: 'Informasi Anda aman & terenkripsi end-to-end',
-                          ),
-                          _buildBenefitCard(
-                            icon: Icons.verified_user_outlined,
-                            iconColor: const Color(0xFF4F46E5),
-                            circleColor: const Color(0xFFEEF2FF),
-                            title: 'Layanan Resmi',
-                            subtitle: 'Terdaftar di Kemenkumham Kanwil Riau',
-                          ),
-                          const SizedBox(height: 24),
+                          
+                          // Bottom Section (White Sheet)
+                          _buildBottomSheet(context),
                         ],
                       ),
                     ),
-                    
-                    // Bottom Section (White Sheet)
-                    _buildBottomSheet(context),
-                  ],
-                ),
-              ),
-            );
-          },
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
