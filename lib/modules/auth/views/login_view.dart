@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../app/routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
 
@@ -252,13 +253,9 @@ class _LoginViewState extends State<LoginView> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Image.asset(
-                              'assets/images/logo/Google Icon.png',
+                            child: SvgPicture.asset(
+                              'assets/images/icons/google.svg',
                               height: 18,
-                              errorBuilder: (c, e, s) => const Icon(
-                                Icons.g_mobiledata,
-                                color: Colors.blue,
-                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
