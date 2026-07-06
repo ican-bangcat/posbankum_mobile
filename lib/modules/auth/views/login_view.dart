@@ -120,6 +120,7 @@ class _LoginViewState extends State<LoginView> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Bantuan Hukum Gratis Badge
           Container(
@@ -156,7 +157,6 @@ class _LoginViewState extends State<LoginView> {
           const SizedBox(height: 16),
           const Text(
             'Keadilan untuk\nSetiap Warga Riau',
-            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w800,
@@ -165,16 +165,12 @@ class _LoginViewState extends State<LoginView> {
             ),
           ),
           const SizedBox(height: 12),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              'Layanan pendampingan hukum resmi dari Kemenkumham, mudah diakses kapan saja.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: textGray,
-                height: 1.4,
-              ),
+          const Text(
+            'Layanan pendampingan hukum resmi dari Kemenkumham, mudah diakses kapan saja.',
+            style: TextStyle(
+              fontSize: 14,
+              color: textGray,
+              height: 1.4,
             ),
           ),
         ],
