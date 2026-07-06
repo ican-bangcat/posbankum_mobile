@@ -370,15 +370,47 @@ class _HomeParalegalViewState extends State<HomeParalegalView>
               String judulKasus = kasus['judul_pengaduan'] ?? 'Update Kasus';
               String statusRaw = (kasus['status']?.toString() ?? 'diproses').toLowerCase();
               
+              String badgeText;
+              Color badgeColor;
+              Color badgeBg;
+
+              switch (statusRaw) {
+                case 'selesai':
+                  badgeText = 'Selesai';
+                  badgeBg = const Color(0xFFD1FAE5);
+                  badgeColor = const Color(0xFF059669);
+                  break;
+                case 'proses':
+                case 'diproses':
+                  badgeText = 'Diproses';
+                  badgeBg = const Color(0xFFDBEAFE);
+                  badgeColor = const Color(0xFF2563EB);
+                  break;
+                case 'ditolak':
+                  badgeText = 'Ditolak';
+                  badgeBg = const Color(0xFFFEE2E2);
+                  badgeColor = const Color(0xFFDC2626);
+                  break;
+                case 'dibatalkan':
+                  badgeText = 'Dibatalkan';
+                  badgeBg = const Color(0xFFF1F5F9);
+                  badgeColor = const Color(0xFF64748B);
+                  break;
+                default:
+                  badgeText = 'Menunggu';
+                  badgeBg = const Color(0xFFFEF3C7);
+                  badgeColor = const Color(0xFFD97706);
+              }
+              
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _buildHistoryCard(
                   icon: Icons.assignment_rounded,
                   title: judulKasus,
                   subtitle: "Nomor: ${kasus['nomor_pengaduan'] ?? '-'}",
-                  badgeText: statusRaw.toUpperCase(),
-                  badgeColor: const Color(0xFF3B82F6),
-                  badgeBg: const Color(0xFFEFF6FF),
+                  badgeText: badgeText,
+                  badgeColor: badgeColor,
+                  badgeBg: badgeBg,
                   timeText: timeStr,
                 ),
               );
