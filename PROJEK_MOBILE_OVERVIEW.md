@@ -68,7 +68,11 @@ Aplikasi Web SIBAPAK bertindak sebagai **Pusat Kontrol (Admin Panel)**, sedangka
 
 ### Progres Saat Ini (Progress Report)
 *   [x] **Autentikasi & Manajemen Akun (PB01):** Integrasi Login & Register via Google OAuth (SSO) secara eksklusif, penyimpanan token sesi (`GetStorage`), dan kerangka dashboard BottomNavigationBar warga.
-*   [x] **Pengajuan & Manajemen Pengaduan (PB02-03):** Slicing form pengaduan dinamis (bukti file & PDF), daftar status pengaduan, dan panel dashboard klaim kasus berbasis wilayah kerja prioritas (*Priority Queue*).
+*   [x] **Redesain Visual Tema Terang Premium (PB01):** Slicing dan redesain total halaman masuk & daftar menggunakan Google Sign-in bertema terang modern (lencana bantuan hukum gratis, ilustrasi gedung pengadilan emas, bottom sheet rounded card, dan ikon vektor Google SVG).
+*   *   [x] **Redesain Halaman Edit Profil (PB01):** Penyelarasan halaman Edit Profil Warga & Paralegal dengan header melengkung (*overlap double-curve*), ilustrasi HD (`icon_halaman_editProfil.png`), input berbayang (*soft shadow*), pembeda visual field read-only (abu-abu redup), dan petunjuk ubah foto profil.
+*   *   [x] **Responsivitas Layanan Tablet & Keyboard HP (PB01):** Pemasangan pembatas lebar maks 650.0 (*Center* + *ConstrainedBox*) agar tidak melar di tablet, dan pengamanan keyboard HP (scroll view + IntrinsicHeight) agar bebas dari layout overflow.
+*   *   [x] **Pengajuan & Manajemen Pengaduan (PB02-03):** Slicing form pengaduan dinamis (bukti file & PDF), daftar status pengaduan, dan panel dashboard klaim kasus berbasis wilayah kerja prioritas (*Priority Queue*).
+*   *   [x] **Penyelarasan Warna Status & Ringkasan Beranda (PB02-03):** Penyelarasan warna badge status kasus (Selesai, Diproses, Ditolak, Dibatalkan, Menunggu) di dashboard warga & paralegal agar seragam dengan daftar pengaduan, serta pemisahan status 'menunggu' dari hitungan kasus diproses.
 *   [x] **Linimasa & Riwayat Penanganan (PB04 - TC-19):** Sinkronisasi log linimasa dinamis dari paralegal ke warga dengan penanganan fallback parsing tanggal serta pembaruan data minim gangguan (*silent reload*) via tarik-segarkan (*pull-to-refresh*).
 *   [x] **Unit Testing Komprehensif (PB02-04):** Pembuatan 29 unit/widget test lengkap dengan inisialisasi context `GetMaterialApp` dan advance fake async timers untuk memvalidasi alur bisnis modul pengaduan.
 *   [x] **Sistem Pengamanan File Privat:** Penyimpanan privat lokal server, verifikasi otorisasi RBAC (warga pemilik, paralegal sewilayah, admin) di backend, dan pemuatan aman di mobile via header token.
