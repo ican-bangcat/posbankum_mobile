@@ -253,7 +253,7 @@ class _LoginViewState extends State<LoginView> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Image.asset(
-                              'assets/images/icons/google.png',
+                              'assets/images/logo/Google Icon.png',
                               height: 18,
                               errorBuilder: (c, e, s) => const Icon(
                                 Icons.g_mobiledata,
