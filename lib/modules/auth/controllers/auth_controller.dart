@@ -7,12 +7,13 @@ import '../repositories/auth_repository.dart';
 
 class AuthController extends GetxController {
   final AuthRepository _authRepository;
-  final _storage = GetStorage();
+  final GetStorage _storage;
   
   var isLoading = false.obs;
 
-  AuthController({AuthRepository? authRepository})
-      : _authRepository = authRepository ?? AuthRepository();
+  AuthController({AuthRepository? authRepository, GetStorage? storage})
+      : _authRepository = authRepository ?? AuthRepository(),
+        _storage = storage ?? GetStorage();
 
   // --- FUNGSI LOGIN MANUAL (EMAIL & PASSWORD) ---
   Future<void> login(String email, String password) async {
