@@ -51,13 +51,13 @@ class EditProfilParalegalView extends GetView<EditProfilParalegalController> {
                     child: Stack(
                       children: [
                         Positioned(
-                          top: -10,
-                          right: -5,
+                          top: 0,
+                          bottom: 0,
+                          right: 10,
                           child: Opacity(
-                            opacity: 0.15,
+                            opacity: 0.25,
                             child: Image.asset(
                               'assets/images/icons/icon_halaman_editProfil.png',
-                              width: 300,
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) => const SizedBox(),
                             ),
