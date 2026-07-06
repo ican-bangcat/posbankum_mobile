@@ -8,11 +8,17 @@ import '../repositories/auth_repository.dart';
 class AuthController extends GetxController {
   final AuthRepository _authRepository;
   final GetStorage _storage;
+
+  /// Jika true, skip snackbar & navigation (untuk unit testing).
+  final bool testMode;
   
   var isLoading = false.obs;
 
-  AuthController({AuthRepository? authRepository, GetStorage? storage})
-      : _authRepository = authRepository ?? AuthRepository(),
+  AuthController({
+    AuthRepository? authRepository,
+    GetStorage? storage,
+    this.testMode = false,
+  })  : _authRepository = authRepository ?? AuthRepository(),
         _storage = storage ?? GetStorage();
 
   // --- FUNGSI LOGIN MANUAL (EMAIL & PASSWORD) ---
@@ -20,9 +26,10 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
       final data = await _authRepository.loginManual(email, password);
-      _saveSessionAndRedirect(data);
+      await saveSession(data);
+      if (!testMode) _showSuccessAndRedirect(data);
     } catch (e) {
-      _handleError('Gagal Login', e);
+      if (!testMode) _handleError('Gagal Login', e);
     } finally {
       isLoading.value = false;
     }
@@ -35,9 +42,10 @@ class AuthController extends GetxController {
       
       isLoading.value = true;
       final data = await _authRepository.registerManual(name, email, password);
-      _saveSessionAndRedirect(data);
+      await saveSession(data);
+      if (!testMode) _showSuccessAndRedirect(data);
     } catch (e) {
-      _handleError('Gagal Registrasi', e);
+      if (!testMode) _handleError('Gagal Registrasi', e);
     } finally {
       isLoading.value = false;
     }
@@ -66,15 +74,17 @@ class AuthController extends GetxController {
       if (idToken == null) throw 'Token ID Google tidak ditemukan.';
 
       final data = await _authRepository.loginWithGoogle(idToken);
-      _saveSessionAndRedirect(data);
+      await saveSession(data);
+      if (!testMode) _showSuccessAndRedirect(data);
     } catch (e) {
-      _handleError('Gagal Google Sign In', e);
+      if (!testMode) _handleError('Gagal Google Sign In', e);
     } finally {
       isLoading.value = false;
     }
   }
 
-  void _saveSessionAndRedirect(Map<String, dynamic> data) async {
+  /// Simpan data sesi ke storage lokal.
+  Future<void> saveSession(Map<String, dynamic> data) async {
     final token = data['token'];
     final user = data['user'];
     final role = user['role'];
@@ -83,6 +93,12 @@ class AuthController extends GetxController {
     await _storage.write('user', user);
     await _storage.write('role', role);
     await _storage.write('is_logged_in', true);
+  }
+
+  /// Tampilkan snackbar sukses dan redirect berdasarkan role.
+  void _showSuccessAndRedirect(Map<String, dynamic> data) {
+    final user = data['user'];
+    final role = user['role'];
 
     Get.snackbar('Berhasil', 'Selamat datang, ${user['nama_lengkap']}',
         backgroundColor: Colors.green, colorText: Colors.white);
@@ -107,18 +123,23 @@ class AuthController extends GetxController {
         } catch (_) {}
       }
 
-      await _storage.remove('token');
-      await _storage.remove('user');
-      await _storage.remove('role');
-      await _storage.write('is_logged_in', false);
+      await clearSession();
 
-      Get.offAllNamed(AppRoutes.LOGIN);
+      if (!testMode) Get.offAllNamed(AppRoutes.LOGIN);
     } catch (e) {
       await _storage.erase();
-      Get.offAllNamed(AppRoutes.LOGIN);
+      if (!testMode) Get.offAllNamed(AppRoutes.LOGIN);
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Hapus data sesi dari storage lokal.
+  Future<void> clearSession() async {
+    await _storage.remove('token');
+    await _storage.remove('user');
+    await _storage.remove('role');
+    await _storage.write('is_logged_in', false);
   }
 
   void _redirectBasedOnRole(String role) {
