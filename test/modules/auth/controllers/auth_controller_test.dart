@@ -12,10 +12,10 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  // Mock path_provider MethodChannel untuk GetStorage
+  // Mock path_provider MethodChannel untuk GetStorage ke folder terisolasi
   const MethodChannel('plugins.flutter.io/path_provider')
       .setMockMethodCallHandler((MethodCall methodCall) async {
-    return '.';
+    return './temp_auth_test_dir';
   });
 
   late MockAuthRepository mockAuthRepository;
