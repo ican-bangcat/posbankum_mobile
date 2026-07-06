@@ -193,10 +193,7 @@ class EditProfileView extends GetView<EditProfileController> {
                                 items: controller.listKabupaten,
                                 idKey: 'id_kabupaten',
                                 isEnabled: true,
-                                onSelected: (id) {
-                                  controller.selectedKabupatenId.value = id;
-                                  controller.fetchKecamatan(id);
-                                },
+                                onTap: () => _showCascadingLocationSheet(context, initialStep: 0),
                               )),
 
                               const SizedBox(height: 20),
@@ -209,10 +206,7 @@ class EditProfileView extends GetView<EditProfileController> {
                                 items: controller.listKecamatan,
                                 idKey: 'id_kecamatan',
                                 isEnabled: controller.selectedKabupatenId.value != null,
-                                onSelected: (id) {
-                                  controller.selectedKecamatanId.value = id;
-                                  controller.fetchKelurahan(id);
-                                },
+                                onTap: () => _showCascadingLocationSheet(context, initialStep: 1),
                               )),
 
                               const SizedBox(height: 20),
@@ -225,9 +219,7 @@ class EditProfileView extends GetView<EditProfileController> {
                                 items: controller.listKelurahan,
                                 idKey: 'id_kelurahan',
                                 isEnabled: controller.selectedKecamatanId.value != null,
-                                onSelected: (id) {
-                                  controller.selectedKelurahanId.value = id;
-                                },
+                                onTap: () => _showCascadingLocationSheet(context, initialStep: 2),
                               )),
 
                               const SizedBox(height: 20),
@@ -452,7 +444,7 @@ class EditProfileView extends GetView<EditProfileController> {
     required List items,
     required String idKey,
     required bool isEnabled,
-    required void Function(String) onSelected,
+    required VoidCallback onTap,
   }) {
     String? selectedName;
     if (selectedId != null) {
@@ -463,7 +455,7 @@ class EditProfileView extends GetView<EditProfileController> {
     }
 
     return GestureDetector(
-      onTap: isEnabled ? () => _showSearchSheet(context, items: items, idKey: idKey, onSelected: onSelected) : null,
+      onTap: isEnabled ? onTap : null,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
@@ -535,37 +527,121 @@ class EditProfileView extends GetView<EditProfileController> {
     ));
   }
 
-  void _showSearchSheet(
-    BuildContext context, {
-    required List items,
-    required String idKey,
-    required void Function(String) onSelected,
-  }) {
+  void _showCascadingLocationSheet(BuildContext context, {int initialStep = 0}) {
+    final activeStep = initialStep.obs;
     final searchCtrl = TextEditingController();
-    final filteredItems = RxList<dynamic>.from(items);
+    final searchQuery = ''.obs;
+
+    List getItemsForStep(int step) {
+      if (step == 0) return controller.listKabupaten;
+      if (step == 1) return controller.listKecamatan;
+      return controller.listKelurahan;
+    }
+
+    String getIdKeyForStep(int step) {
+      if (step == 0) return 'id_kabupaten';
+      if (step == 1) return 'id_kecamatan';
+      return 'id_kelurahan';
+    }
 
     Get.bottomSheet(
       Builder(
         builder: (sheetContext) {
           final double sheetBottomPadding = MediaQuery.of(sheetContext).padding.bottom;
           return Container(
-            height: Get.height * 0.7,
+            height: Get.height * 0.8,
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             ),
             child: Column(
               children: [
+                // Handle bar
                 Container(
                   margin: const EdgeInsets.only(top: 12),
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(color: borderLight, borderRadius: BorderRadius.circular(2)),
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Text('Pilih Lokasi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textDark)),
-                ),
+                const SizedBox(height: 8),
+
+                // Breadcrumbs / Stepper Header
+                Obx(() {
+                  final kabId = controller.selectedKabupatenId.value;
+                  final kecId = controller.selectedKecamatanId.value;
+                  final kelId = controller.selectedKelurahanId.value;
+
+                  String kabName = 'Kabupaten';
+                  if (kabId != null) {
+                    final found = controller.listKabupaten.firstWhereOrNull((e) => e['id_kabupaten'].toString() == kabId);
+                    if (found != null) kabName = found['nama'];
+                  }
+
+                  String kecName = 'Kecamatan';
+                  if (kecId != null) {
+                    final found = controller.listKecamatan.firstWhereOrNull((e) => e['id_kecamatan'].toString() == kecId);
+                    if (found != null) kecName = found['nama'];
+                  }
+
+                  String kelName = 'Kelurahan';
+                  if (kelId != null) {
+                    final found = controller.listKelurahan.firstWhereOrNull((e) => e['id_kelurahan'].toString() == kelId);
+                    if (found != null) kelName = found['nama'];
+                  }
+
+                  final currentStep = activeStep.value;
+
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildStepIndicator(
+                            title: kabName,
+                            isActive: currentStep == 0,
+                            isCompleted: kabId != null,
+                            onTap: () {
+                              searchCtrl.clear();
+                              searchQuery.value = '';
+                              activeStep.value = 0;
+                            },
+                          ),
+                          _buildStepSeparator(),
+                          _buildStepIndicator(
+                            title: kecName,
+                            isActive: currentStep == 1,
+                            isCompleted: kecId != null,
+                            isEnabled: kabId != null,
+                            onTap: () {
+                              searchCtrl.clear();
+                              searchQuery.value = '';
+                              activeStep.value = 1;
+                            },
+                          ),
+                          _buildStepSeparator(),
+                          _buildStepIndicator(
+                            title: kelName,
+                            isActive: currentStep == 2,
+                            isCompleted: kelId != null,
+                            isEnabled: kecId != null,
+                            onTap: () {
+                              searchCtrl.clear();
+                              searchQuery.value = '';
+                              activeStep.value = 2;
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+
+                const Divider(height: 1, color: borderLight),
+                const SizedBox(height: 8),
+
+                // Search Input Field
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Container(
@@ -576,35 +652,101 @@ class EditProfileView extends GetView<EditProfileController> {
                     ),
                     child: TextField(
                       controller: searchCtrl,
-                      onChanged: (q) => filteredItems.value = q.isEmpty
-                          ? items
-                          : items.where((e) => (e['nama'] as String).toLowerCase().contains(q.toLowerCase())).toList(),
-                      decoration: const InputDecoration(
+                      onChanged: (q) => searchQuery.value = q,
+                      decoration: InputDecoration(
                         hintText: 'Cari...',
-                        prefixIcon: Icon(Icons.search, size: 20),
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        suffixIcon: Obx(() => searchQuery.value.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: () {
+                                  searchCtrl.clear();
+                                  searchQuery.value = '';
+                                },
+                              )
+                            : const SizedBox.shrink()),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
+
+                // List Items
                 Expanded(
-                  child: Obx(() => ListView.builder(
-                    padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + sheetBottomPadding),
-                    itemCount: filteredItems.length,
-                    itemBuilder: (ctx, i) {
-                      final item = filteredItems[i];
-                      return ListTile(
-                        title: Text(item['nama'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                        trailing: const Icon(Icons.chevron_right, size: 18),
-                        onTap: () {
-                          onSelected(item[idKey].toString());
-                          Get.back();
-                        },
+                  child: Obx(() {
+                    final step = activeStep.value;
+                    final items = getItemsForStep(step);
+                    final idKey = getIdKeyForStep(step);
+                    final query = searchQuery.value.toLowerCase().trim();
+
+                    final filtered = query.isEmpty
+                        ? items
+                        : items.where((e) => (e['nama'] as String).toLowerCase().contains(query)).toList();
+
+                    if (filtered.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          'Tidak ada data ditemukan',
+                          style: TextStyle(color: textGray, fontSize: 14),
+                        ),
                       );
-                    },
-                  )),
+                    }
+
+                    final selectedId = step == 0
+                        ? controller.selectedKabupatenId.value
+                        : (step == 1 ? controller.selectedKecamatanId.value : controller.selectedKelurahanId.value);
+
+                    return ListView.builder(
+                      padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + sheetBottomPadding),
+                      itemCount: filtered.length,
+                      itemBuilder: (ctx, i) {
+                        final item = filtered[i];
+                        final itemId = item[idKey].toString();
+                        final isSelected = itemId == selectedId;
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 4),
+                          decoration: BoxDecoration(
+                            color: isSelected ? accentBlue.withOpacity(0.08) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ListTile(
+                            title: Text(
+                              item['nama'],
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                color: isSelected ? accentBlue : textDark,
+                              ),
+                            ),
+                            trailing: isSelected
+                                ? const Icon(Icons.check_circle_rounded, color: accentBlue, size: 20)
+                                : const Icon(Icons.chevron_right, size: 18, color: textGray),
+                            onTap: () async {
+                              if (step == 0) {
+                                controller.selectedKabupatenId.value = itemId;
+                                searchCtrl.clear();
+                                searchQuery.value = '';
+                                await controller.fetchKecamatan(itemId);
+                                activeStep.value = 1;
+                              } else if (step == 1) {
+                                controller.selectedKecamatanId.value = itemId;
+                                searchCtrl.clear();
+                                searchQuery.value = '';
+                                await controller.fetchKelurahan(itemId);
+                                activeStep.value = 2;
+                              } else {
+                                controller.selectedKelurahanId.value = itemId;
+                                Get.back();
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    );
+                  }),
                 ),
               ],
             ),
@@ -612,6 +754,72 @@ class EditProfileView extends GetView<EditProfileController> {
         },
       ),
       isScrollControlled: true,
+    );
+  }
+
+  Widget _buildStepIndicator({
+    required String title,
+    required bool isActive,
+    required bool isCompleted,
+    bool isEnabled = true,
+    required VoidCallback onTap,
+  }) {
+    Color textColor = textGray;
+    FontWeight fontWeight = FontWeight.normal;
+
+    if (isActive) {
+      textColor = accentBlue;
+      fontWeight = FontWeight.bold;
+    } else if (isCompleted) {
+      textColor = textDark;
+      fontWeight = FontWeight.w600;
+    }
+
+    return GestureDetector(
+      onTap: isEnabled ? onTap : null,
+      child: Opacity(
+        opacity: isEnabled ? 1.0 : 0.5,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: isActive ? accentBlue : Colors.transparent,
+                width: 2,
+              ),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isCompleted && !isActive)
+                const Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 16)
+              else
+                Icon(
+                  isActive ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+                  color: isActive ? accentBlue : textGray,
+                  size: 16,
+                ),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 13,
+                  fontWeight: fontWeight,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepSeparator() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4),
+      child: Icon(Icons.chevron_right_rounded, color: textGray, size: 16),
     );
   }
 }
