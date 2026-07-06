@@ -13,7 +13,10 @@ class UpdatePasswordController extends GetxController {
   final isConfirmPasswordVisible = false.obs;
   final errorMessage = ''.obs;
 
-  final supabase = Supabase.instance.client;
+  final SupabaseClient supabase;
+
+  UpdatePasswordController({SupabaseClient? supabaseClient})
+      : supabase = supabaseClient ?? Supabase.instance.client;
 
   @override
   void onClose() {

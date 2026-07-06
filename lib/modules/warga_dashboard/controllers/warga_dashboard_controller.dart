@@ -4,8 +4,11 @@ import 'package:get_storage/get_storage.dart';
 import '../../../app/data/services/api_service.dart';
 
 class WargaDashboardController extends GetxController {
-  final ApiService _apiService = ApiService();
+  final ApiService _apiService;
   final _storage = GetStorage();
+
+  WargaDashboardController({ApiService? apiService})
+      : _apiService = apiService ?? ApiService();
 
   // Bikin index default 2 (Home)
   var selectedIndex = 2.obs;

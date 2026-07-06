@@ -4,8 +4,11 @@ import 'package:get_storage/get_storage.dart';
 import '../../../app/data/services/api_service.dart';
 
 class HomeWargaController extends GetxController {
-  final ApiService _apiService = ApiService();
+  final ApiService _apiService;
   final _storage = GetStorage();
+
+  HomeWargaController({ApiService? apiService})
+      : _apiService = apiService ?? ApiService();
 
   var isLoadingData = true.obs;
   var countAktif = 0.obs;

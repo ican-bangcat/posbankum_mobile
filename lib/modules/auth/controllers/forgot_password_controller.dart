@@ -11,7 +11,10 @@ class ForgotPasswordController extends GetxController {
   final isSuccess = false.obs; // Kalau true, UI berubah jadi gambar amplop
 
   // 3. Supabase Client
-  final supabase = Supabase.instance.client;
+  final SupabaseClient supabase;
+
+  ForgotPasswordController({SupabaseClient? supabaseClient})
+      : supabase = supabaseClient ?? Supabase.instance.client;
 
   @override
   void onClose() {
