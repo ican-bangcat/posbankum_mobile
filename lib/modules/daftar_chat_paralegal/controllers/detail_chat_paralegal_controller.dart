@@ -1,11 +1,19 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:intl/intl.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart' as dio_pkg;
+import '../../../app/data/services/api_service.dart';
 
 class ChatMessage {
   final String text;
   final bool isSender; // true = Paralegal (kanan), false = Klien (kiri)
   final String time;
-  final bool isRead; // true = centang biru ganda, false = centang abu tunggal
+  final bool isRead;
 
   ChatMessage({
     required this.text,
@@ -17,55 +25,225 @@ class ChatMessage {
 
 class DetailChatParalegalController extends GetxController {
   final chatInputC = TextEditingController();
+  final scrollController = ScrollController();
+  final ApiService _apiService;
+  final GetStorage _storage;
+  final bool testMode;
 
-  // Data informasi Klien
-  final String namaKlien = "Bapak Budi (Klien)";
+  DetailChatParalegalController({
+    ApiService? apiService,
+    GetStorage? storage,
+    this.testMode = false,
+  })  : _apiService = apiService ?? ApiService(),
+        _storage = storage ?? GetStorage();
+
+  late String idPengaduan;
+  late String judulKasus;
+  late String namaKlien;
   final String statusKlien = "Online";
+  var fotoLawanBicara = ''.obs;
 
-  // Data Dummy Pesan
-  var messages = <ChatMessage>[
-    ChatMessage(
-      text: 'Halo Bapak Budi. Saya paralegal dari Posbankum. Saya telah meninjau laporan Anda terkait kasus penipuan online.',
-      isSender: true,
-      time: '09:41',
-      isRead: true,
-    ),
-    ChatMessage(
-      text: 'Bisa diceritakan lebih detail sejak kapan Anda tidak bisa menarik dana tersebut?',
-      isSender: true,
-      time: '09:42',
-      isRead: true,
-    ),
-    ChatMessage(
-      text: 'Selamat pagi Pak. Sejak tanggal 3 Oktober dana sudah tertahan dan akun saya dibekukan secara sepihak.',
-      isSender: false,
-      time: '09:45',
-    ),
-    ChatMessage(
-      text: 'Saya sudah mencoba menghubungi customer service mereka tapi nomor saya diblokir.',
-      isSender: false,
-      time: '09:46',
-    ),
-  ].obs;
+  var messages = <ChatMessage>[].obs;
+  var isLoading = true.obs;
+  Timer? _pollingTimer;
+  String _currentUserId = '';
+
+  @override
+  void onInit() {
+    super.onInit();
+
+    // Ambil data user yang sedang login
+    final user = _storage.read('user');
+    _currentUserId = (user?['id_user'] ?? '').toString();
+
+    // Ambil parameter arguments
+    final args = Get.arguments as Map<String, dynamic>? ?? {};
+    idPengaduan = args['id_pengaduan']?.toString() ?? '';
+    judulKasus = args['judul_kasus']?.toString() ?? 'Konsultasi Hukum';
+    namaKlien = args['nama_klien']?.toString() ?? 'Klien';
+
+    if (idPengaduan.isNotEmpty) {
+      fetchMessages();
+      fetchLawanBicaraProfile();
+      // Setup Polling tiap 3 detik
+      _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) => fetchMessages(silent: true));
+    } else {
+      isLoading.value = false;
+    }
+  }
 
   @override
   void onClose() {
+    _pollingTimer?.cancel();
     chatInputC.dispose();
+    scrollController.dispose();
     super.onClose();
   }
 
-  // Fungsi dummy buat kirim pesan
-  void kirimPesan() {
-    if (chatInputC.text.trim().isNotEmpty) {
-      messages.add(
-        ChatMessage(
-          text: chatInputC.text.trim(),
-          isSender: true,
-          time: '15:07', // Dummy waktu sekarang
-          isRead: false,
-        ),
-      );
-      chatInputC.clear();
+  // Ambil riwayat pesan dari server
+  Future<void> fetchMessages({bool silent = false}) async {
+    if (idPengaduan.isEmpty) return;
+    try {
+      if (!silent && messages.isEmpty) isLoading.value = true;
+
+      final response = await _apiService.dio.get('/chat/$idPengaduan');
+
+      if (response.data['status'] == true) {
+        final List<dynamic> listPesan = response.data['data'] ?? [];
+        final previousCount = messages.length;
+
+        final mapped = listPesan.map((item) {
+          final text = item['isi_pesan']?.toString() ?? '';
+          final senderId = item['pengirim_id']?.toString() ?? '';
+          final bool isSender = senderId == _currentUserId;
+
+          String formattedTime = '';
+          if (item['created_at'] != null) {
+            try {
+              String rawTime = item['created_at'].toString();
+              if (!rawTime.endsWith('Z') && !rawTime.contains('+')) {
+                rawTime += 'Z'; // Server menyimpan dalam UTC
+              }
+              final dt = DateTime.parse(rawTime).toLocal();
+              formattedTime = DateFormat('HH:mm').format(dt);
+            } catch (_) {}
+          }
+
+          return ChatMessage(
+            text: text,
+            isSender: isSender,
+            time: formattedTime,
+            isRead: true,
+          );
+        }).toList();
+
+        messages.assignAll(mapped);
+
+        // Auto scroll ke bawah jika ada pesan baru
+        if (messages.length > previousCount) {
+          Future.delayed(const Duration(milliseconds: 100), () {
+            _scrollToBottom();
+          });
+        }
+      }
+    } catch (e) {
+      print("❌ Error fetch messages paralegal: $e");
+    } finally {
+      isLoading.value = false;
     }
+  }
+
+  // Mengirim pesan teks ke server
+  Future<void> kirimPesan() async {
+    final isiPesan = chatInputC.text.trim();
+    if (isiPesan.isEmpty || idPengaduan.isEmpty) return;
+
+    chatInputC.clear();
+
+    try {
+      final response = await _apiService.dio.post(
+        '/chat/$idPengaduan',
+        data: {'pesan': isiPesan},
+      );
+
+      if (response.data['status'] == true) {
+        fetchMessages(silent: true);
+      }
+    } catch (e) {
+      if (!testMode) {
+        Get.snackbar("Error", "Gagal mengirim pesan: $e", backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    }
+  }
+
+  // Pilih & Unggah Media (Gambar/PDF)
+  Future<void> pilihDanKirimMedia(bool isCamera) async {
+    if (idPengaduan.isEmpty) return;
+    try {
+      File? file;
+      String? fileName;
+
+      if (isCamera) {
+        final pickedFile = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 70);
+        if (pickedFile != null) {
+          file = File(pickedFile.path);
+          fileName = pickedFile.name;
+        }
+      } else {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+        );
+        if (result != null && result.files.single.path != null) {
+          file = File(result.files.single.path!);
+          fileName = result.files.single.name;
+        }
+      }
+
+      if (file == null || fileName == null) return;
+
+      if (!testMode) {
+        Get.dialog(
+          const Center(child: CircularProgressIndicator(color: Colors.white)),
+          barrierDismissible: false,
+        );
+      }
+
+      // 1. Upload ke API Lampiran
+      final dio_pkg.FormData formData = dio_pkg.FormData.fromMap({
+        'file': await dio_pkg.MultipartFile.fromFile(file.path, filename: fileName),
+        'jenis_lampiran': 'chat',
+      });
+
+      final uploadResponse = await _apiService.dio.post(
+        '/pengaduan/$idPengaduan/lampiran',
+        data: formData,
+      );
+
+      if (!testMode) Get.back(); // Tutup loading dialog
+
+      if (uploadResponse.data['status'] == true) {
+        final uploadData = uploadResponse.data['data'];
+        final secureUrl = uploadData['path_file'] ?? '';
+
+        // 2. Kirim pesan chat dengan format khusus [FILE]
+        final String fileMessage = "[FILE]$fileName|$secureUrl";
+        
+        await _apiService.dio.post(
+          '/chat/$idPengaduan',
+          data: {'pesan': fileMessage},
+        );
+
+        fetchMessages(silent: true);
+      } else {
+        throw uploadResponse.data['message'] ?? 'Gagal mengunggah berkas';
+      }
+    } catch (e) {
+      if (!testMode) {
+        if (Get.isDialogOpen ?? false) Get.back();
+        Get.snackbar("Error Upload", e.toString(), backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    }
+  }
+
+  void _scrollToBottom() {
+    if (scrollController.hasClients) {
+      scrollController.animateTo(
+        scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  Future<void> fetchLawanBicaraProfile() async {
+    if (idPengaduan.isEmpty) return;
+    try {
+      final response = await _apiService.dio.get('/pengaduan/$idPengaduan');
+      if (response.data['status'] == true) {
+        final data = response.data['data'];
+        fotoLawanBicara.value = data['foto_profile_pelapor'] ?? '';
+      }
+    } catch (_) {}
   }
 }

@@ -132,28 +132,48 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                      if (kasus.status == 'diproses')
                        Positioned(
                          bottom: 20 + bottomPadding, left: 20, right: 20,
-                         child: Row(
+                         child: Column(
+                           mainAxisSize: MainAxisSize.min,
                            children: [
-                             Expanded(
-                               flex: 1,
+                             // Button Chat Pelapor
+                             SizedBox(
+                               width: double.infinity,
                                child: _buildButtonAction(
-                                 text: 'Tutup Kasus',
-                                 icon: Icons.lock_outline,
-                                 onPressed: () => _showTutupKasusDialog(context, kasus.id),
-                                 color: Colors.white,
-                                 textColor: const Color(0xFFEF4444),
-                                 isOutline: true,
-                               ),
-                             ),
-                             const SizedBox(width: 12),
-                             Expanded(
-                               flex: 2,
-                               child: _buildButtonAction(
-                                 text: 'Update Progres',
-                                 icon: Icons.assignment_outlined,
-                                 onPressed: () => Get.toNamed(AppRoutes.UPDATE_PROGRES, arguments: {'id': kasus.id, 'judul': kasus.judul}),
+                                 text: 'Chat Pelapor',
+                                 icon: Icons.chat_bubble_outline,
+                                 onPressed: () => Get.toNamed(AppRoutes.DETAIL_CHAT_PARALEGAL, arguments: {
+                                   'id_pengaduan': kasus.id,
+                                   'judul_kasus': kasus.judul,
+                                   'nama_klien': kasus.namaKlien ?? 'Klien',
+                                 }),
                                  color: const Color(0xFF3B4A8D),
                                ),
+                             ),
+                             const SizedBox(height: 10),
+                             Row(
+                               children: [
+                                 Expanded(
+                                   flex: 1,
+                                   child: _buildButtonAction(
+                                     text: 'Tutup Kasus',
+                                     icon: Icons.lock_outline,
+                                     onPressed: () => _showTutupKasusDialog(context, kasus.id),
+                                     color: Colors.white,
+                                     textColor: const Color(0xFFEF4444),
+                                     isOutline: true,
+                                   ),
+                                 ),
+                                 const SizedBox(width: 12),
+                                 Expanded(
+                                   flex: 2,
+                                   child: _buildButtonAction(
+                                     text: 'Update Progres',
+                                     icon: Icons.assignment_outlined,
+                                     onPressed: () => Get.toNamed(AppRoutes.UPDATE_PROGRES, arguments: {'id': kasus.id, 'judul': kasus.judul}),
+                                     color: const Color(0xFF3B4A8D),
+                                   ),
+                                 ),
+                               ],
                              ),
                            ],
                          ),

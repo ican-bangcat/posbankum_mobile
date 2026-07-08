@@ -918,13 +918,20 @@ class DetailKasusView extends GetView<DetailKasusController> {
   }
 
   Widget _buildChatButton(double bottomPadding) {
+    final kasus = controller.kasus.value;
     return Container(
       padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPadding),
       decoration: BoxDecoration(color: whiteBgColor, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, -5))]),
       child: SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: () => Get.snackbar('Info', 'Fitur Chat segera hadir!'),
+          onPressed: () {
+            Get.toNamed('/detail-chat-masyarakat', arguments: {
+              'id_pengaduan': kasus?.id ?? '',
+              'judul_laporan': kasus?.judulLaporan ?? 'Konsultasi Hukum',
+              'nama_paralegal': kasus?.namaParalegal ?? 'Paralegal Posbankum',
+            });
+          },
           style: ElevatedButton.styleFrom(backgroundColor: darkBlueColor, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 18), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
           child: const FittedBox(
             fit: BoxFit.scaleDown,

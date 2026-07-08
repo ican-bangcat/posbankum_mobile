@@ -1,0 +1,1 @@
+{"user":{"nama_lengkap":"Warga Riau","nomor_telepon":"081234567890","role":"warga","masyarakat":{"nik":"1234567890123456","alamat":"Jalan Riau","id_kabupaten":"kab-123","id_kecamatan":"kec-456","id_kelurahan":"kel-789"}}}

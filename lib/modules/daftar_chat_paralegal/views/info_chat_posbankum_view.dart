@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:dio/dio.dart';
 import '../controllers/info_chat_posbankum_controller.dart';
+import '../../../widgets/pdf_viewer_screen.dart';
+import '../../../app/data/services/api_service.dart';
 
 class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
   const InfoChatPosbankumView({super.key});
@@ -9,6 +14,24 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
   final Color primaryBlue = const Color(0xFF2563EB);
   final Color bgColor = const Color(0xFFF4F4F5);
 
+  String _resolveFileUrl(String url) {
+    if (url.isEmpty) return '';
+    
+    // Ganti localhost / 127.0.0.1 dengan domain server asli
+    if (url.contains('localhost') || url.contains('127.0.0.1')) {
+      url = url
+          .replaceAll('http://localhost', 'http://sibapak.pocari.id')
+          .replaceAll('https://localhost', 'http://sibapak.pocari.id')
+          .replaceAll('http://127.0.0.1:8000', 'http://sibapak.pocari.id')
+          .replaceAll('http://127.0.0.1', 'http://sibapak.pocari.id')
+          .replaceAll('https://127.0.0.1', 'http://sibapak.pocari.id');
+    }
+
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const serverBase = 'http://sibapak.pocari.id';
+    return '$serverBase${url.startsWith('/') ? '' : '/'}$url';
+  }
+
   @override
   Widget build(BuildContext context) {
     Get.put(InfoChatPosbankumController());
@@ -16,40 +39,58 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
 
     return Scaffold(
       backgroundColor: darkBlue,
-      body: Column(
-        children: [
-          _buildHeader(context),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator(color: Colors.white));
+        }
+
+        return Column(
+          children: [
+            _buildHeader(context),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
                 ),
-              ),
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(0, 24, 0, bottomPadding + 30),
-                child: Column(
-                  children: [
-                    _buildActionButtons(),
-                    _buildDataKlien(),
-                    _buildKasusTerkait(),
-                    _buildMediaSection(),
-                    _buildSettingsSection(),
-                    _buildClearChat(),
-                  ],
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(0, 24, 0, bottomPadding + 30),
+                  child: Column(
+                    children: [
+                      _buildActionButtons(),
+                      _buildMainDataCard(),
+                      _buildDetailKejadianCard(),
+                      _buildKasusTerkait(),
+                      _buildMediaSection(context),
+                      _buildSettingsSection(),
+                      _buildClearChat(),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      }),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
+    final isWarga = controller.roleUser.value == 'warga';
+    final String displayName = isWarga ? controller.namaParalegal.value : controller.namaKlien.value;
+    final String displayRole = isWarga ? 'Paralegal Posbankum' : 'Pelapor / Klien';
+    
+    // Foto profil url
+    final String rawPhotoUrl = isWarga ? controller.fotoParalegal.value : controller.fotoPelapor.value;
+    final String photoUrl = _resolveFileUrl(rawPhotoUrl);
+
+    final token = GetStorage().read('token');
+    final headers = token != null ? {'Authorization': 'Bearer $token'} : <String, String>{};
+
     return Container(
       width: double.infinity,
       color: darkBlue,
@@ -94,7 +135,7 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text('Info Chat', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                          Text('Online', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          const Text('Online', style: TextStyle(color: Colors.white70, fontSize: 12)),
                         ],
                       ),
                     ],
@@ -109,37 +150,37 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
                       height: 100,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.orange.shade300, width: 2), // Orange border
+                        border: Border.all(color: Colors.orange.shade300, width: 2),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(50),
-                        child: Container(
-                          color: const Color(0xFF1E3A8A), // Inner blue
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Positioned(
-                                top: 20,
-                                child: Container(width: 30, height: 30, decoration: const BoxDecoration(color: Color(0xFFFDE047), shape: BoxShape.circle)),
-                              ),
-                              Positioned(
-                                bottom: -10,
-                                child: Container(width: 70, height: 50, decoration: BoxDecoration(color: const Color(0xFFB45309), borderRadius: BorderRadius.circular(30))),
-                              ),
-                            ],
-                          ),
-                        ),
+                        child: photoUrl.isNotEmpty
+                            ? Image.network(
+                                photoUrl,
+                                headers: headers,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => _buildAvatarFallback(),
+                              )
+                            : _buildAvatarFallback(),
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(6),
                       decoration: const BoxDecoration(color: Color(0xFFF97316), shape: BoxShape.circle),
-                      child: const Icon(Icons.person_outline, color: Colors.white, size: 14),
+                      child: Icon(
+                        isWarga ? Icons.gavel_rounded : Icons.person_outline,
+                        color: Colors.white,
+                        size: 14,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                const Text('Ibu Siti Rahayu', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                Text(
+                  displayName,
+                  style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -157,9 +198,9 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
                         decoration: const BoxDecoration(color: Color(0xFFFDE047), shape: BoxShape.circle),
                       ),
                       const SizedBox(width: 8),
-                      const Text(
-                        'PELAPOR AKTIF',
-                        style: TextStyle(color: Color(0xFFFDE047), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                      Text(
+                        displayRole.toUpperCase(),
+                        style: const TextStyle(color: Color(0xFFFDE047), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
                       ),
                     ],
                   ),
@@ -170,12 +211,38 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
                   children: [
                     Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle)),
                     const SizedBox(width: 6),
-                    const Text('Kelurahan Sukamaju • Bandung Selatan', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                    Flexible(
+                      child: Text(
+                        isWarga ? 'Pos Bantuan Hukum' : controller.alamatPelapor.value,
+                        style: const TextStyle(color: Colors.white54, fontSize: 11),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 32),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatarFallback() {
+    return Container(
+      color: const Color(0xFF1E3A8A),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            top: 20,
+            child: Container(width: 30, height: 30, decoration: const BoxDecoration(color: Color(0xFFFDE047), shape: BoxShape.circle)),
+          ),
+          Positioned(
+            bottom: -10,
+            child: Container(width: 70, height: 50, decoration: BoxDecoration(color: const Color(0xFFB45309), borderRadius: BorderRadius.circular(30))),
           ),
         ],
       ),
@@ -229,31 +296,74 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
     );
   }
 
-  Widget _buildDataKlien() {
+  Widget _buildMainDataCard() {
+    final isWarga = controller.roleUser.value == 'warga';
+    
+    if (isWarga) {
+      // Tampilkan info Paralegal
+      return _buildCard(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Detail Paralegal', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text('Aktif', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF2563EB))),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildDataTile(Icons.person_outline, Colors.blue, 'Nama Paralegal', controller.namaParalegal.value),
+          const SizedBox(height: 12),
+          _buildDataTile(Icons.phone_outlined, Colors.green, 'No. Telepon', controller.noHpParalegal.value),
+        ],
+      );
+    } else {
+      // Tampilkan data Klien
+      return _buildCard(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Data Klien', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text('Terverifikasi', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF2563EB))),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildDataTile(Icons.shield_outlined, Colors.blue, 'NIK', controller.nik.value),
+          const SizedBox(height: 12),
+          _buildDataTile(Icons.phone_outlined, Colors.green, 'No. Telepon', controller.noHp.value),
+          const SizedBox(height: 12),
+          _buildDataTile(Icons.business_outlined, Colors.purple, 'Nama Lurah', controller.namaLurah.value),
+          const SizedBox(height: 12),
+          _buildDataTile(Icons.location_on_outlined, Colors.orange, 'Alamat Domisili', controller.alamatPelapor.value),
+        ],
+      );
+    }
+  }
+
+  Widget _buildDetailKejadianCard() {
     return _buildCard(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Data Klien', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text('Terverifikasi', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF2563EB))),
-            ),
-          ],
-        ),
+        const Text('Detail Kejadian', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
         const SizedBox(height: 16),
-        _buildDataTile(Icons.shield_outlined, Colors.blue, 'NIK', '3271012505900003'),
+        _buildDataTile(Icons.location_on_outlined, Colors.red, 'Lokasi Kejadian', controller.lokasiKejadian.value),
         const SizedBox(height: 12),
-        _buildDataTile(Icons.phone_outlined, Colors.green, 'No. Telepon', '081234567890'),
+        _buildDataTile(Icons.calendar_month_outlined, Colors.orange, 'Tanggal Kejadian', controller.tanggalKejadian.value),
         const SizedBox(height: 12),
-        _buildDataTile(Icons.business_outlined, Colors.purple, 'Nama Lurah', 'Budi Santoso, S.Sos'),
-        const SizedBox(height: 12),
-        _buildDataTile(Icons.location_on_outlined, Colors.orange, 'Alamat', 'Jl. Merdeka No. 45, RT 03/RW 05, Sukan...'),
+        _buildDataTile(Icons.access_time_rounded, Colors.teal, 'Waktu Kejadian', controller.waktuKejadian.value.isNotEmpty ? "${controller.waktuKejadian.value} WIB" : '-'),
       ],
     );
   }
@@ -288,11 +398,10 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
   Widget _buildKasusTerkait() {
     return _buildCard(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Kasus Terkait', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-            const Text('LIHAT SEMUA', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF3B5998))),
+            Text('Kasus Terkait', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
           ],
         ),
         const SizedBox(height: 16),
@@ -318,26 +427,12 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
                       color: const Color(0xFFFFFBEB),
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Text('SEDANG DIPROSES', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFFD97706), letterSpacing: 0.5)),
+                    child: Text(controller.statusKasus.value, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFFD97706), letterSpacing: 0.5)),
                   ),
                   const SizedBox(height: 6),
-                  const Text('Masalah Warisan\nKeluarga', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                  Text(controller.judulKasus.value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
                   const SizedBox(height: 2),
-                  const Text('#K-2023-0345', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Row(
-                children: [
-                  Text('Detail', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_ios, size: 10, color: Color(0xFF64748B)),
+                  Text('#${controller.nomorTiket.value}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
                 ],
               ),
             ),
@@ -347,7 +442,7 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
     );
   }
 
-  Widget _buildMediaSection() {
+  Widget _buildMediaSection(BuildContext context) {
     return _buildCard(
       children: [
         Row(
@@ -360,26 +455,34 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
                 color: Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Text('2 File', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.grey)),
+              child: Text('${controller.listLampiran.length} File', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.grey)),
             ),
           ],
         ),
         const SizedBox(height: 16),
         LayoutBuilder(
           builder: (context, constraints) {
-            // Lebar total dibagi 3, dikurangi spacing
             double itemWidth = (constraints.maxWidth - 24) / 3;
+            final files = controller.listLampiran;
+
+            if (files.isEmpty) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Text('Belum ada berkas terunggah', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                ),
+              );
+            }
+
             return Wrap(
               spacing: 12,
               runSpacing: 12,
-              children: [
-                _buildMediaDocItem(width: itemWidth, color: Colors.blue, filename: 'SALINAN_PUTUSAN.PDF'),
-                _buildMediaDocItem(width: itemWidth, color: Colors.red, filename: 'BERITA_ACARA.PDF', isRed: true),
-                _buildMediaImageItem(width: itemWidth, color: const Color(0xFF2D3360), icon: Icons.menu),
-                _buildMediaImageItem(width: itemWidth, color: const Color(0xFFF97316), icon: Icons.circle),
-                _buildMediaImageItem(width: itemWidth, color: const Color(0xFF059669)),
-                _buildMediaMoreItem(width: itemWidth),
-              ],
+              children: files.map((file) {
+                final name = file['nama_file'] ?? 'File';
+                final path = file['path_file'] ?? '';
+                final mime = file['mime_type'] ?? '';
+                return _buildMediaItem(context, itemWidth, name, path, mime);
+              }).toList(),
             );
           }
         ),
@@ -387,57 +490,127 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
     );
   }
 
-  Widget _buildMediaImageItem({required double width, required Color color, IconData? icon}) {
-    return Container(
-      width: width,
-      height: width,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
+  Widget _buildMediaItem(BuildContext context, double width, String filename, String fileUrl, String mimeType) {
+    final cleanUrl = _resolveFileUrl(fileUrl);
+    final lowerName = filename.toLowerCase();
+    final isImage = lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') || lowerName.endsWith('.png') || mimeType.contains('image');
+
+    if (isImage) {
+      return GestureDetector(
+        onTap: () => _showImagePreview(context, cleanUrl),
+        child: Container(
+          width: width,
+          height: width,
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              cleanUrl,
+              headers: {
+                'Authorization': 'Bearer ${GetStorage().read('token')}',
+              },
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+            ),
+          ),
+        ),
+      );
+    } else {
+      return GestureDetector(
+        onTap: () => _openPdfFile(filename, cleanUrl),
+        child: Container(
+          width: width,
+          height: width,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.red.shade50,
+            border: Border.all(color: Colors.red.shade100),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.picture_as_pdf, color: Colors.red, size: 30),
+              const SizedBox(height: 8),
+              Text(
+                filename,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.red),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showImagePreview(BuildContext context, String fileUrl) {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            InteractiveViewer(
+              child: Image.network(
+                fileUrl,
+                headers: {
+                  'Authorization': 'Bearer ${GetStorage().read('token')}',
+                },
+                errorBuilder: (_, __, ___) => const Center(
+                  child: Text('Gagal menampilkan berkas', style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 0, right: 0,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Get.back(),
+              ),
+            ),
+          ],
+        ),
       ),
-      child: icon != null
-          ? Center(child: Icon(icon, color: Colors.white.withOpacity(0.3), size: 30))
-          : null,
     );
   }
 
-  Widget _buildMediaDocItem({required double width, required Color color, required String filename, bool isRed = false}) {
-    return Container(
-      width: width,
-      height: width,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isRed ? Colors.red.shade50 : Colors.white,
-        border: Border.all(color: isRed ? Colors.red.shade100 : Colors.blue.shade100),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.description_outlined, color: isRed ? Colors.red : Colors.blue, size: 24),
-          const SizedBox(height: 8),
-          Text(filename, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 6, fontWeight: FontWeight.bold, color: isRed ? Colors.red : Colors.blue)),
-        ],
-      ),
-    );
-  }
+  Future<void> _openPdfFile(String fileName, String fileUrl) async {
+    try {
+      Get.dialog(
+        const Center(child: CircularProgressIndicator(color: Colors.white)),
+        barrierDismissible: false,
+      );
 
-  Widget _buildMediaMoreItem({required double width}) {
-    return Container(
-      width: width,
-      height: width,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('+10', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF475569))),
-          Text('lainnya', style: TextStyle(fontSize: 10, color: Colors.grey)),
-        ],
-      ),
-    );
+      final directory = await getTemporaryDirectory();
+      final savePath = "${directory.path}/$fileName";
+
+      await ApiService().dio.download(
+        fileUrl,
+        savePath,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${GetStorage().read('token')}',
+          },
+        ),
+      );
+
+      Get.back();
+
+      Get.to(() => PdfViewerScreen(
+        pdfPath: savePath,
+        title: fileName,
+      ));
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      Get.snackbar("Error", "Gagal mengunduh berkas: $e", backgroundColor: Colors.red, colorText: Colors.white);
+    }
   }
 
   Widget _buildSettingsSection() {
@@ -452,14 +625,14 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
           title: 'Bisukan Notifikasi',
           trailing: Transform.scale(
             scale: 0.8,
-            child: Obx(() => Switch(
+            child: Switch(
               value: controller.isMuted.value,
               onChanged: (v) => controller.toggleMute(v),
               activeColor: Colors.white,
               activeTrackColor: Colors.grey.shade300,
               inactiveThumbColor: Colors.white,
               inactiveTrackColor: Colors.grey.shade300,
-            )),
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -549,5 +722,4 @@ class InfoChatPosbankumView extends GetView<InfoChatPosbankumController> {
       ),
     );
   }
-
 }

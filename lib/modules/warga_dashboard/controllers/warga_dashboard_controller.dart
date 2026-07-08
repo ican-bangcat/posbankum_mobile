@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../app/data/services/api_service.dart';
+import '../../daftar_chat_masyarakat/controllers/daftar_chat_masyarakat_controller.dart';
 
 class WargaDashboardController extends GetxController {
   final ApiService _apiService;
@@ -28,6 +29,15 @@ class WargaDashboardController extends GetxController {
 
   void changeTab(int index) {
     selectedIndex.value = index;
+    if (index == 3) {
+      try {
+        if (Get.isRegistered<DaftarChatMasyarakatController>()) {
+          Get.find<DaftarChatMasyarakatController>().fetchDaftarChatBerjalan();
+        }
+      } catch (e) {
+        // Silently catch if not registered yet
+      }
+    }
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import '../controllers/daftar_chat_masyarakat_controller.dart';
 
 class DaftarChatMasyarakatView extends GetView<DaftarChatMasyarakatController> {
@@ -46,6 +47,11 @@ class DaftarChatMasyarakatView extends GetView<DaftarChatMasyarakatController> {
                     final idPengaduan = kasus['id'] ?? '';
                     final judulLaporan = kasus['judul_laporan'] ?? kasus['kategori_masalah'] ?? 'Tanpa Judul';
                     final namaParalegal = kasus['nama_paralegal_ditugaskan'] ?? 'Mencari Paralegal...';
+                    final lastMessage = kasus['last_message'] ?? 'Klik untuk masuk ke ruang obrolan';
+                    final lastTime = kasus['last_time'] ?? '';
+                    final int unreadCount = kasus['unread_count'] ?? 0;
+                    final bool hasUnread = unreadCount > 0;
+                    final String fotoLawanBicara = kasus['foto_lawan_bicara'] ?? '';
 
                     return GestureDetector(
                       onTap: () => controller.pindahKeDetailChat(idPengaduan, judulLaporan, namaParalegal),
@@ -69,7 +75,19 @@ class DaftarChatMasyarakatView extends GetView<DaftarChatMasyarakatController> {
                             Container(
                               width: 48, height: 48,
                               decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
-                              child: const Icon(Icons.chat_bubble_outline, color: Color(0xFF2563EB), size: 22),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(24),
+                                child: fotoLawanBicara.isNotEmpty
+                                    ? Image.network(
+                                        _resolveFileUrl(fotoLawanBicara),
+                                        headers: {
+                                          'Authorization': 'Bearer ${GetStorage().read('token')}',
+                                        },
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => const Icon(Icons.account_balance_rounded, color: Color(0xFF94A3B8), size: 22),
+                                      )
+                                    : const Icon(Icons.account_balance_rounded, color: Color(0xFF94A3B8), size: 22),
+                              ),
                             ),
                             const SizedBox(width: 14),
                             // Konten Informasi Ruang Chat
@@ -77,10 +95,26 @@ class DaftarChatMasyarakatView extends GetView<DaftarChatMasyarakatController> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    judulLaporan,
-                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
-                                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          judulLaporan,
+                                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (lastTime.isNotEmpty)
+                                        Text(
+                                          lastTime,
+                                          style: TextStyle(
+                                            fontSize: 11, 
+                                            color: hasUnread ? const Color(0xFF2563EB) : const Color(0xFF94A3B8), 
+                                            fontWeight: hasUnread ? FontWeight.bold : FontWeight.w500
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
@@ -91,15 +125,35 @@ class DaftarChatMasyarakatView extends GetView<DaftarChatMasyarakatController> {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      const Text(
-                                        "Klik untuk masuk ke ruang obrolan",
-                                        style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
+                                      Expanded(
+                                        child: Text(
+                                          lastMessage,
+                                          style: TextStyle(
+                                            fontSize: 12, 
+                                            color: hasUnread ? const Color(0xFF0F172A) : Colors.grey, 
+                                            fontWeight: hasUnread ? FontWeight.w600 : FontWeight.normal,
+                                            fontStyle: hasUnread ? FontStyle.normal : FontStyle.italic
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(8)),
-                                        child: const Text('Aktif', style: TextStyle(color: Color(0xFF2563EB), fontSize: 10, fontWeight: FontWeight.bold)),
-                                      )
+                                      const SizedBox(width: 8),
+                                      if (hasUnread)
+                                        Container(
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: const BoxDecoration(color: Color(0xFF2563EB), shape: BoxShape.circle),
+                                          child: Text(
+                                            '$unreadCount',
+                                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                          ),
+                                        )
+                                      else
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(8)),
+                                          child: const Text('Aktif', style: TextStyle(color: Color(0xFF2563EB), fontSize: 10, fontWeight: FontWeight.bold)),
+                                        )
                                     ],
                                   ),
                                 ],
@@ -165,5 +219,22 @@ class DaftarChatMasyarakatView extends GetView<DaftarChatMasyarakatController> {
         ),
       ),
     );
+  }
+
+  String _resolveFileUrl(String url) {
+    if (url.isEmpty) return '';
+
+    if (url.contains('localhost') || url.contains('127.0.0.1')) {
+      url = url
+          .replaceAll('http://localhost', 'http://sibapak.pocari.id')
+          .replaceAll('https://localhost', 'http://sibapak.pocari.id')
+          .replaceAll('http://127.0.0.1:8000', 'http://sibapak.pocari.id')
+          .replaceAll('http://127.0.0.1', 'http://sibapak.pocari.id')
+          .replaceAll('https://127.0.0.1', 'http://sibapak.pocari.id');
+    }
+
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const serverBase = 'http://sibapak.pocari.id';
+    return '$serverBase${url.startsWith('/') ? '' : '/'}$url';
   }
 }

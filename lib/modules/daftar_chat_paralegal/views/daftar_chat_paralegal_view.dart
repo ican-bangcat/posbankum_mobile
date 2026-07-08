@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import '../controllers/daftar_chat_paralegal_controller.dart';
+import '../../../app/routes/app_routes.dart';
 
 class DaftarChatParalegalView extends GetView<DaftarChatParalegalController> {
   const DaftarChatParalegalView({super.key});
@@ -86,6 +88,10 @@ class DaftarChatParalegalView extends GetView<DaftarChatParalegalController> {
                   // List Chat
                   Expanded(
                     child: Obx(() {
+                      if (controller.isLoading.value) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
                       final chats = controller.filteredChat;
                       if (chats.isEmpty) return const Center(child: Text("Tidak ada chat ditemukan", style: TextStyle(color: Colors.grey)));
 
@@ -112,11 +118,16 @@ class DaftarChatParalegalView extends GetView<DaftarChatParalegalController> {
   Widget _buildChatCard(ChatRoomItem chat) {
     bool hasUnread = chat.unreadCount > 0;
 
-    // ✅ BUNGKUS DENGAN GESTURE DETECTOR DI SINI
     return GestureDetector(
       onTap: () {
-        // Navigasi ke halaman detail chat
-        Get.toNamed('/detail-chat-paralegal'); // Pastikan route ini sesuai sama yang di app_routes.dart kamu
+        Get.toNamed(
+          AppRoutes.DETAIL_CHAT_PARALEGAL,
+          arguments: {
+            'id_pengaduan': chat.id,
+            'judul_kasus': chat.judulKasus,
+            'nama_klien': chat.namaLawanBicara,
+          },
+        );
       },
       child: Container(
         decoration: BoxDecoration(
@@ -146,7 +157,7 @@ class DaftarChatParalegalView extends GetView<DaftarChatParalegalController> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Icon Bulat Kiri
+                // Icon Bulat Kiri / Foto Profil Warga
                 Container(
                   width: 48,
                   height: 48,
@@ -155,10 +166,22 @@ class DaftarChatParalegalView extends GetView<DaftarChatParalegalController> {
                     shape: BoxShape.circle,
                     border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
-                  child: const Icon(Icons.account_balance_rounded, color: Color(0xFF94A3B8), size: 24),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: chat.fotoLawanBicara.isNotEmpty
+                        ? Image.network(
+                            _resolveFileUrl(chat.fotoLawanBicara),
+                            headers: {
+                              'Authorization': 'Bearer ${GetStorage().read('token')}',
+                            },
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Color(0xFF94A3B8), size: 24),
+                          )
+                        : const Icon(Icons.person, color: Color(0xFF94A3B8), size: 24),
+                  ),
                 ),
                 const SizedBox(width: 14),
-
+ 
                 // Bagian Tengah (Teks)
                 Expanded(
                   child: Column(
@@ -239,6 +262,23 @@ class DaftarChatParalegalView extends GetView<DaftarChatParalegalController> {
         ),
       ),
     );
+  }
+
+  String _resolveFileUrl(String url) {
+    if (url.isEmpty) return '';
+
+    if (url.contains('localhost') || url.contains('127.0.0.1')) {
+      url = url
+          .replaceAll('http://localhost', 'http://sibapak.pocari.id')
+          .replaceAll('https://localhost', 'http://sibapak.pocari.id')
+          .replaceAll('http://127.0.0.1:8000', 'http://sibapak.pocari.id')
+          .replaceAll('http://127.0.0.1', 'http://sibapak.pocari.id')
+          .replaceAll('https://127.0.0.1', 'http://sibapak.pocari.id');
+    }
+
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const serverBase = 'http://sibapak.pocari.id';
+    return '$serverBase${url.startsWith('/') ? '' : '/'}$url';
   }
 
   Widget _buildStatusBadge(String status) {
