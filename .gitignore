@@ -69,3 +69,6 @@ app.*.map.json
 *.sql
 .agents/
 Api/
+
+# Test generated temporary storage directories
+temp_*/
