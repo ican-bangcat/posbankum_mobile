@@ -7,8 +7,8 @@ import 'home_warga_view.dart';
 import '../../profile/views/profile_view.dart';
 import '../../notifikasi_masyarakat/views/notifikasi_masyarakat_view.dart';
 import '../../notifikasi_masyarakat/controllers/notifikasi_masyarakat_controller.dart';
-import '../../daftar_chat_masyarakat/controllers/daftar_chat_masyarakat_controller.dart';
-import '../../daftar_chat_masyarakat/views/daftar_chat_masyarakat_view.dart';
+import '../../daftar_chat_warga/controllers/daftar_chat_warga_controller.dart';
+import '../../daftar_chat_warga/views/daftar_chat_warga_view.dart';
 import '../../../app/routes/app_routes.dart';
 
 class WargaDashboardView extends GetView<WargaDashboardController> {
@@ -20,7 +20,7 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
       const NotifikasiMasyarakatView(),
       const DaftarPengaduanView(),
       const HomeWargaView(),
-      const DaftarChatMasyarakatView(),
+      const DaftarChatWargaView(),
       const ProfileView(),
     ];
 

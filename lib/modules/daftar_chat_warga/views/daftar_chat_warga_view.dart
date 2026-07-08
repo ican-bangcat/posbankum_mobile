@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import '../controllers/daftar_chat_masyarakat_controller.dart';
+import '../controllers/daftar_chat_warga_controller.dart';
+import '../models/chat_room_warga_model.dart';
 
-class DaftarChatMasyarakatView extends GetView<DaftarChatMasyarakatController> {
-  const DaftarChatMasyarakatView({super.key});
+class DaftarChatWargaView extends GetView<DaftarChatWargaController> {
+  const DaftarChatWargaView({super.key});
 
   final Color darkBlue = const Color(0xFF2A2E5E);
   final Color bgColor = const Color(0xFFF4F6F9);
 
   @override
   Widget build(BuildContext context) {
-    Get.put(DaftarChatMasyarakatController());
+    Get.put(DaftarChatWargaController());
 
     return Scaffold(
       backgroundColor: darkBlue,
@@ -44,14 +45,14 @@ class DaftarChatMasyarakatView extends GetView<DaftarChatMasyarakatController> {
                   itemBuilder: (context, index) {
                     final kasus = controller.acceptedComplaints[index];
 
-                    final idPengaduan = kasus['id'] ?? '';
-                    final judulLaporan = kasus['judul_laporan'] ?? kasus['kategori_masalah'] ?? 'Tanpa Judul';
-                    final namaParalegal = kasus['nama_paralegal_ditugaskan'] ?? 'Mencari Paralegal...';
-                    final lastMessage = kasus['last_message'] ?? 'Klik untuk masuk ke ruang obrolan';
-                    final lastTime = kasus['last_time'] ?? '';
-                    final int unreadCount = kasus['unread_count'] ?? 0;
+                    final idPengaduan = kasus.id;
+                    final judulLaporan = kasus.judulLaporan;
+                    final namaParalegal = kasus.namaParalegalDitugaskan;
+                    final lastMessage = kasus.lastMessage;
+                    final lastTime = kasus.lastTime;
+                    final int unreadCount = kasus.unreadCount;
                     final bool hasUnread = unreadCount > 0;
-                    final String fotoLawanBicara = kasus['foto_lawan_bicara'] ?? '';
+                    final String fotoLawanBicara = kasus.fotoLawanBicara;
 
                     return GestureDetector(
                       onTap: () => controller.pindahKeDetailChat(idPengaduan, judulLaporan, namaParalegal),
@@ -174,25 +175,63 @@ class DaftarChatMasyarakatView extends GetView<DaftarChatMasyarakatController> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(color: darkBlue),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
-          child: Row(
+    return Stack(
+      children: [
+        Positioned(
+          bottom: 0,
+          left: 0,
+          child: Container(width: 50, height: 50, color: bgColor),
+        ),
+        Container(
+          width: double.infinity,
+          clipBehavior: Clip.hardEdge,
+          decoration: BoxDecoration(
+            color: darkBlue,
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(28),
+              bottomRight: Radius.zero,
+            ),
+          ),
+          child: Stack(
             children: [
-              const Icon(Icons.mark_chat_unread_outlined, color: Colors.white, size: 24),
-              const SizedBox(width: 16),
-              const Text(
-                'Konsultasi Hukum',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              Positioned(
+                top: -10,
+                right: -5,
+                child: Opacity(
+                  opacity: 0.8,
+                  child: Image.asset(
+                    'assets/images/icons/building_illustration3.png',
+                    width: 300,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.location_city,
+                            size: 200, color: Colors.white10),
+                  ),
+                ),
+              ),
+              SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'Chat Paralegal',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
         ),
-      ),
+      ],
     );
   }
 

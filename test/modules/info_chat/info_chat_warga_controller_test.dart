@@ -3,7 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:dio/dio.dart' as dio_pkg;
 import 'package:get/get.dart';
 import 'package:posbankum/app/data/services/api_service.dart';
-import 'package:posbankum/modules/daftar_chat_paralegal/controllers/info_chat_posbankum_controller.dart';
+import 'package:posbankum/modules/info_chat/controllers/info_chat_warga_controller.dart';
 
 class MockApiService extends Mock implements ApiService {}
 class MockDio extends Mock implements dio_pkg.Dio {}
@@ -25,8 +25,8 @@ void main() {
     Get.reset();
   });
 
-  group('InfoChatPosbankumController', () {
-    test('loadInfoChatData success parses complaint details and files', () async {
+  group('InfoChatWargaController', () {
+    test('loadInfoChatData success parses client details and files', () async {
       final mockComplaintResponse = {
         'status': true,
         'data': {
@@ -70,7 +70,7 @@ void main() {
         ),
       );
 
-      final controller = InfoChatPosbankumController(apiService: mockApiService);
+      final controller = InfoChatWargaController(apiService: mockApiService);
       controller.onInit();
       await controller.loadInfoChatData();
 
@@ -87,7 +87,7 @@ void main() {
     });
 
     test('toggleMute changes isMuted state', () {
-      final controller = InfoChatPosbankumController(apiService: mockApiService);
+      final controller = InfoChatWargaController(apiService: mockApiService);
       expect(controller.isMuted.value, isFalse);
 
       controller.toggleMute(true);

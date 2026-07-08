@@ -49,12 +49,14 @@ import '../../modules/daftar_chat_paralegal/controllers/daftar_chat_paralegal_co
 import '../../modules/daftar_chat_paralegal/views/daftar_chat_paralegal_view.dart';
 import '../../modules/daftar_chat_paralegal/controllers/detail_chat_paralegal_controller.dart';
 import '../../modules/daftar_chat_paralegal/views/detail_chat_paralegal_view.dart';
-import '../../modules/daftar_chat_paralegal/controllers/info_chat_posbankum_controller.dart';
-import '../../modules/daftar_chat_paralegal/views/info_chat_posbankum_view.dart';
-import '../../modules/daftar_chat_masyarakat/controllers/daftar_chat_masyarakat_controller.dart';
-import '../../modules/daftar_chat_masyarakat/views/daftar_chat_masyarakat_view.dart';
-import '../../modules/daftar_chat_masyarakat/controllers/detail_chat_masyarakat_controller.dart';
-import '../../modules/daftar_chat_masyarakat/views/detail_chat_masyarakat_view.dart';
+import '../../modules/info_chat/controllers/info_chat_posbankum_controller.dart';
+import '../../modules/info_chat/views/info_chat_posbankum_view.dart';
+import '../../modules/info_chat/controllers/info_chat_warga_controller.dart';
+import '../../modules/info_chat/views/info_chat_warga_view.dart';
+import '../../modules/daftar_chat_warga/controllers/daftar_chat_warga_controller.dart';
+import '../../modules/daftar_chat_warga/views/daftar_chat_warga_view.dart';
+import '../../modules/daftar_chat_warga/controllers/detail_chat_warga_controller.dart';
+import '../../modules/daftar_chat_warga/views/detail_chat_warga_view.dart';
 
 
 /// App Pages Configuration
@@ -248,17 +250,24 @@ class AppPages {
       }),
     ),
     GetPage(
-      name: AppRoutes.DAFTAR_CHAT_MASYARAKAT,
-      page: () => const DaftarChatMasyarakatView(),
+      name: AppRoutes.INFO_CHAT_WARGA,
+      page: () => const InfoChatWargaView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<DaftarChatMasyarakatController>(() => DaftarChatMasyarakatController());
+        Get.lazyPut<InfoChatWargaController>(() => InfoChatWargaController());
       }),
     ),
     GetPage(
-      name: AppRoutes.DETAIL_CHAT_MASYARAKAT,
-      page: () => const DetailChatMasyarakatView(),
+      name: AppRoutes.DAFTAR_CHAT_WARGA,
+      page: () => const DaftarChatWargaView(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<DetailChatMasyarakatController>(() => DetailChatMasyarakatController());
+        Get.lazyPut<DaftarChatWargaController>(() => DaftarChatWargaController());
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.DETAIL_CHAT_WARGA,
+      page: () => const DetailChatWargaView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<DetailChatWargaController>(() => DetailChatWargaController());
       }),
     ),
   ];

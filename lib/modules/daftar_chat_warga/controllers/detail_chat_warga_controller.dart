@@ -6,30 +6,21 @@ import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:dio/dio.dart' as dio_pkg;
-import '../../../app/data/services/api_service.dart';
+import '../models/chat_message_warga_model.dart';
+import '../repositories/daftar_chat_warga_repository.dart';
 
-class ChatMessageMasyarakat {
-  final String text;
-  final bool isSender; // true = Masyarakat (Kanan), false = Posbankum (Kiri)
-  final String time;
-  final bool isRead;
-
-  ChatMessageMasyarakat({required this.text, required this.isSender, required this.time, this.isRead = false});
-}
-
-class DetailChatMasyarakatController extends GetxController {
+class DetailChatWargaController extends GetxController {
   final chatInputC = TextEditingController();
   final scrollController = ScrollController();
-  final ApiService _apiService;
+  final DaftarChatWargaRepository _repository;
   final GetStorage _storage;
   final bool testMode;
 
-  DetailChatMasyarakatController({
-    ApiService? apiService,
+  DetailChatWargaController({
+    DaftarChatWargaRepository? repository,
     GetStorage? storage,
     this.testMode = false,
-  })  : _apiService = apiService ?? ApiService(),
+  })  : _repository = repository ?? DaftarChatWargaRepository(),
         _storage = storage ?? GetStorage();
 
   late String idPengaduan;
@@ -37,8 +28,9 @@ class DetailChatMasyarakatController extends GetxController {
   late String namaParalegal;
   final String statusPosbankum = "Online";
   var fotoLawanBicara = ''.obs;
+  var namaLawanBicaraHeader = ''.obs;
 
-  var messages = <ChatMessageMasyarakat>[].obs;
+  var messages = <ChatMessageWarga>[].obs;
   var isLoading = true.obs;
   Timer? _pollingTimer;
   String _currentUserId = '';
@@ -56,6 +48,7 @@ class DetailChatMasyarakatController extends GetxController {
     idPengaduan = args['id_pengaduan']?.toString() ?? '';
     judulLaporan = args['judul_laporan']?.toString() ?? 'Konsultasi Hukum';
     namaParalegal = args['nama_paralegal']?.toString() ?? 'Paralegal Posbankum';
+    namaLawanBicaraHeader.value = namaParalegal;
 
     if (idPengaduan.isNotEmpty) {
       fetchMessages();
@@ -81,45 +74,41 @@ class DetailChatMasyarakatController extends GetxController {
     try {
       if (!silent && messages.isEmpty) isLoading.value = true;
 
-      final response = await _apiService.dio.get('/chat/$idPengaduan');
+      final listPesan = await _repository.fetchMessages(idPengaduan);
+      final previousCount = messages.length;
 
-      if (response.data['status'] == true) {
-        final List<dynamic> listPesan = response.data['data'] ?? [];
-        final previousCount = messages.length;
+      final mapped = listPesan.map((item) {
+        final text = item['isi_pesan']?.toString() ?? '';
+        final senderId = item['pengirim_id']?.toString() ?? '';
+        final bool isSender = senderId == _currentUserId;
 
-        final mapped = listPesan.map((item) {
-          final text = item['isi_pesan']?.toString() ?? '';
-          final senderId = item['pengirim_id']?.toString() ?? '';
-          final bool isSender = senderId == _currentUserId;
-
-          String formattedTime = '';
-          if (item['created_at'] != null) {
-            try {
-              String rawTime = item['created_at'].toString();
-              if (!rawTime.endsWith('Z') && !rawTime.contains('+')) {
-                rawTime += 'Z'; // Server menyimpan dalam UTC
-              }
-              final dt = DateTime.parse(rawTime).toLocal();
-              formattedTime = DateFormat('HH:mm').format(dt);
-            } catch (_) {}
-          }
-
-          return ChatMessageMasyarakat(
-            text: text,
-            isSender: isSender,
-            time: formattedTime,
-            isRead: true, // Backend saat ini tidak tracking read status, default true
-          );
-        }).toList();
-
-        messages.assignAll(mapped);
-
-        // Auto scroll ke bawah jika ada pesan baru
-        if (messages.length > previousCount) {
-          Future.delayed(const Duration(milliseconds: 100), () {
-            _scrollToBottom();
-          });
+        String formattedTime = '';
+        if (item['created_at'] != null) {
+          try {
+            String rawTime = item['created_at'].toString();
+            if (!rawTime.endsWith('Z') && !rawTime.contains('+')) {
+              rawTime += 'Z'; // Server menyimpan dalam UTC
+            }
+            final dt = DateTime.parse(rawTime).toLocal();
+            formattedTime = DateFormat('HH:mm').format(dt);
+          } catch (_) {}
         }
+
+        return ChatMessageWarga(
+          text: text,
+          isSender: isSender,
+          time: formattedTime,
+          isRead: true,
+        );
+      }).toList();
+
+      messages.assignAll(mapped);
+
+      // Auto scroll ke bawah jika ada pesan baru
+      if (messages.length > previousCount) {
+        Future.delayed(const Duration(milliseconds: 100), () {
+          _scrollToBottom();
+        });
       }
     } catch (e) {
       print("❌ Error fetch messages: $e");
@@ -135,17 +124,28 @@ class DetailChatMasyarakatController extends GetxController {
 
     chatInputC.clear();
 
-    try {
-      final response = await _apiService.dio.post(
-        '/chat/$idPengaduan',
-        data: {'pesan': isiPesan},
-      );
+    // 1. Optimistic Update (Tampilkan langsung secara instan di UI lokal)
+    final now = DateTime.now();
+    final formattedTime = DateFormat('HH:mm').format(now);
+    final optimisticMsg = ChatMessageWarga(
+      text: isiPesan,
+      isSender: true,
+      time: formattedTime,
+      isRead: false,
+    );
+    messages.add(optimisticMsg);
+    Future.delayed(const Duration(milliseconds: 50), () => _scrollToBottom());
 
-      if (response.data['status'] == true) {
-        // Refresh langsung setelah mengirim pesan
+    // 2. Kirim pesan ke server di background
+    try {
+      final success = await _repository.sendMessage(idPengaduan, isiPesan);
+      if (success) {
+        // Sinkronisasi dengan database
         fetchMessages(silent: true);
       }
     } catch (e) {
+      // Hapus pesan dari UI jika gagal dikirim ke backend
+      messages.remove(optimisticMsg);
       if (!testMode) {
         Get.snackbar("Error", "Gagal mengirim pesan: $e", backgroundColor: Colors.red, colorText: Colors.white);
       }
@@ -166,7 +166,6 @@ class DetailChatMasyarakatController extends GetxController {
           fileName = pickedFile.name;
         }
       } else {
-        // Tampilkan pilihan picker: Galeri (Foto) atau Document
         final result = await FilePicker.platform.pickFiles(
           type: FileType.custom,
           allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
@@ -187,34 +186,18 @@ class DetailChatMasyarakatController extends GetxController {
       }
 
       // 1. Upload ke API Lampiran
-      final dio_pkg.FormData formData = dio_pkg.FormData.fromMap({
-        'file': await dio_pkg.MultipartFile.fromFile(file.path, filename: fileName),
-        'jenis_lampiran': 'chat',
-      });
-
-      final uploadResponse = await _apiService.dio.post(
-        '/pengaduan/$idPengaduan/lampiran',
-        data: formData,
-      );
+      final uploadData = await _repository.uploadAttachment(idPengaduan, file.path, fileName);
 
       if (!testMode) Get.back(); // Tutup loading dialog
 
-      if (uploadResponse.data['status'] == true) {
-        final uploadData = uploadResponse.data['data'];
-        final secureUrl = uploadData['path_file'] ?? '';
+      final secureUrl = uploadData['path_file'] ?? '';
 
-        // 2. Kirim pesan chat dengan format khusus [FILE]
-        final String fileMessage = "[FILE]$fileName|$secureUrl";
-        
-        await _apiService.dio.post(
-          '/chat/$idPengaduan',
-          data: {'pesan': fileMessage},
-        );
+      // 2. Kirim pesan chat dengan format khusus [FILE]
+      final String fileMessage = "[FILE]$fileName|$secureUrl";
+      
+      await _repository.sendMessage(idPengaduan, fileMessage);
 
-        fetchMessages(silent: true);
-      } else {
-        throw uploadResponse.data['message'] ?? 'Gagal mengunggah berkas';
-      }
+      fetchMessages(silent: true);
     } catch (e) {
       if (!testMode) {
         if (Get.isDialogOpen ?? false) Get.back();
@@ -236,10 +219,17 @@ class DetailChatMasyarakatController extends GetxController {
   Future<void> fetchLawanBicaraProfile() async {
     if (idPengaduan.isEmpty) return;
     try {
-      final response = await _apiService.dio.get('/pengaduan/$idPengaduan');
-      if (response.data['status'] == true) {
-        final data = response.data['data'];
-        fotoLawanBicara.value = data['foto_profile_paralegal'] ?? '';
+      final data = await _repository.fetchComplaintDetails(idPengaduan);
+      fotoLawanBicara.value = data['foto_profile_paralegal'] ?? '';
+
+      final String wilayah = data['wilayah_posbankum']?.toString() ?? '';
+      if (wilayah.isNotEmpty) {
+        namaLawanBicaraHeader.value = "Paralegal $wilayah";
+      } else {
+        final String namaDb = data['nama_paralegal']?.toString() ?? '';
+        if (namaDb.isNotEmpty) {
+          namaLawanBicaraHeader.value = namaDb;
+        }
       }
     } catch (_) {}
   }

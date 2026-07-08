@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../controllers/daftar_chat_paralegal_controller.dart';
+import '../models/chat_room_paralegal_model.dart';
 import '../../../app/routes/app_routes.dart';
 
 class DaftarChatParalegalView extends GetView<DaftarChatParalegalController> {
@@ -42,13 +43,6 @@ class DaftarChatParalegalView extends GetView<DaftarChatParalegalController> {
                         padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
                         child: Row(
                           children: [
-                            // Tombol Back (Opsional, karena ini tab navbar bisa dihilangkan kalau mau)
-                            Container(
-                              width: 40, height: 40,
-                              decoration: BoxDecoration(border: Border.all(color: Colors.white.withOpacity(0.3)), borderRadius: BorderRadius.circular(12)),
-                              child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
-                            ),
-                            const SizedBox(width: 16),
                             const Text('Daftar Chat Kasus', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
                           ],
                         ),

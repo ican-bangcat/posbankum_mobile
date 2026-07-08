@@ -5,7 +5,8 @@ import 'package:dio/dio.dart' as dio_pkg;
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:posbankum/app/data/services/api_service.dart';
-import 'package:posbankum/modules/daftar_chat_masyarakat/controllers/detail_chat_masyarakat_controller.dart';
+import 'package:posbankum/modules/daftar_chat_warga/controllers/detail_chat_warga_controller.dart';
+import 'package:posbankum/modules/daftar_chat_warga/repositories/daftar_chat_warga_repository.dart';
 
 class MockApiService extends Mock implements ApiService {}
 class MockDio extends Mock implements dio_pkg.Dio {}
@@ -13,16 +14,20 @@ class MockDio extends Mock implements dio_pkg.Dio {}
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const containerName = 'detail_chat_masyarakat_test_storage';
+  const containerName = 'detail_chat_warga_test_storage';
 
-  const MethodChannel('plugins.flutter.io/path_provider')
-      .setMockMethodCallHandler((MethodCall methodCall) async {
-    return './temp_detail_chat_masyarakat_test';
-  });
+  // Mocking path provider MethodChannel to avoid deprecated setMockMethodCallHandler check
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+    const MethodChannel('plugins.flutter.io/path_provider'),
+    (MethodCall methodCall) async {
+      return './temp_detail_chat_warga_test';
+    },
+  );
 
   late MockApiService mockApiService;
   late MockDio mockDio;
   late GetStorage testStorage;
+  late DaftarChatWargaRepository repository;
 
   setUpAll(() async {
     await GetStorage.init(containerName);
@@ -33,6 +38,7 @@ void main() {
     mockApiService = MockApiService();
     mockDio = MockDio();
     when(() => mockApiService.dio).thenReturn(mockDio);
+    repository = DaftarChatWargaRepository(apiService: mockApiService);
 
     testStorage = GetStorage(containerName);
     testStorage.erase();
@@ -50,7 +56,7 @@ void main() {
     Get.reset();
   });
 
-  group('DetailChatMasyarakatController', () {
+  group('DetailChatWargaController', () {
     test('onInit retrieves arguments and loads messages', () async {
       final mockMessagesResponse = {
         'status': true,
@@ -78,8 +84,8 @@ void main() {
         ),
       );
 
-      final controller = DetailChatMasyarakatController(
-        apiService: mockApiService,
+      final controller = DetailChatWargaController(
+        repository: repository,
         storage: testStorage,
         testMode: true,
       );
@@ -112,8 +118,8 @@ void main() {
         ),
       );
 
-      final controller = DetailChatMasyarakatController(
-        apiService: mockApiService,
+      final controller = DetailChatWargaController(
+        repository: repository,
         storage: testStorage,
         testMode: true,
       );

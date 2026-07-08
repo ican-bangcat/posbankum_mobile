@@ -3,11 +3,10 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../app/data/services/api_service.dart';
 
-class InfoChatPosbankumController extends GetxController {
+class InfoChatWargaController extends GetxController {
   final ApiService _apiService;
-  final _storage = GetStorage();
 
-  InfoChatPosbankumController({ApiService? apiService})
+  InfoChatWargaController({ApiService? apiService})
       : _apiService = apiService ?? ApiService();
 
   late String idPengaduan;
@@ -15,7 +14,6 @@ class InfoChatPosbankumController extends GetxController {
   // States
   var isMuted = false.obs;
   var isLoading = true.obs;
-  var roleUser = 'warga'.obs; // 'warga' atau 'paralegal'
 
   // Data Klien (Warga/Pelapor)
   var namaKlien = 'Masyarakat (Klien)'.obs;
@@ -24,11 +22,6 @@ class InfoChatPosbankumController extends GetxController {
   var namaLurah = '-'.obs;
   var alamatPelapor = '-'.obs;
   var fotoPelapor = ''.obs;
-
-  // Data Paralegal
-  var namaParalegal = 'Paralegal Posbankum'.obs;
-  var noHpParalegal = '-'.obs;
-  var fotoParalegal = ''.obs;
 
   // Data Kejadian & Kasus
   var judulKasus = 'Kasus Hukum'.obs;
@@ -44,11 +37,6 @@ class InfoChatPosbankumController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    
-    // Deteksi role user login saat ini
-    final user = _storage.read('user');
-    roleUser.value = (user?['role'] ?? 'warga').toString().toLowerCase();
-
     idPengaduan = Get.arguments?.toString() ?? '';
     if (idPengaduan.isNotEmpty) {
       loadInfoChatData();
@@ -65,7 +53,7 @@ class InfoChatPosbankumController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 1. Ambil detail pengaduan (dengan join backend yang baru)
+      // 1. Ambil detail pengaduan
       final response = await _apiService.dio.get('/pengaduan/$idPengaduan');
 
       if (response.data['status'] == true) {
@@ -77,11 +65,6 @@ class InfoChatPosbankumController extends GetxController {
         noHp.value = data['nomor_telepon'] ?? '-';
         alamatPelapor.value = data['alamat_pelapor'] ?? '-';
         fotoPelapor.value = data['foto_profile_pelapor'] ?? '';
-
-        // Data Paralegal
-        namaParalegal.value = data['nama_paralegal'] ?? 'Paralegal Posbankum';
-        noHpParalegal.value = data['nomor_telepon_paralegal'] ?? '-';
-        fotoParalegal.value = data['foto_profile_paralegal'] ?? '';
 
         // Data Kasus & Kejadian
         judulKasus.value = data['judul_pengaduan'] ?? data['jenis_masalah'] ?? 'Kasus Hukum';
@@ -129,7 +112,7 @@ class InfoChatPosbankumController extends GetxController {
         }
       }
     } catch (e) {
-      print("❌ Error load info chat data: $e");
+      print("❌ Error load info chat warga data: $e");
     } finally {
       isLoading.value = false;
     }

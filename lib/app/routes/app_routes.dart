@@ -63,8 +63,9 @@ class AppRoutes {
   static const DAFTAR_CHAT_PARALEGAL = '/daftar-chat-paralegal';
   static const DETAIL_CHAT_PARALEGAL = '/detail-chat-paralegal';
   static const INFO_CHAT_POSBANKUM = '/info-chat-posbankum';
+  static const INFO_CHAT_WARGA = '/info-chat-warga';
 
-  //Fitur chat pov masyarakat
-  static const DAFTAR_CHAT_MASYARAKAT = '/daftar-chat-masyarakat';
-  static const DETAIL_CHAT_MASYARAKAT = '/detail-chat-masyarakat';
+  //Fitur chat pov warga
+  static const DAFTAR_CHAT_WARGA = '/daftar-chat-warga';
+  static const DETAIL_CHAT_WARGA = '/detail-chat-warga';
 }

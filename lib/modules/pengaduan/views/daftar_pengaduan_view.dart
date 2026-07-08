@@ -62,21 +62,6 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
                             padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
                             child: Row(
                               children: [
-                                GestureDetector(
-                                  onTap: () => Get.back(),
-                                  child: Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                          color: Colors.white.withOpacity(0.3)),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Icon(Icons.arrow_back_ios_new,
-                                        color: Colors.white, size: 18),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
                                 const Text(
                                   'Pengaduan Saya',
                                   style: TextStyle(

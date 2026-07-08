@@ -5,8 +5,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:flutter/foundation.dart';
 
 class ApiService {
-  // 🚀 Menggunakan HTTP karena HTTPS belum siap di server
-  static const String baseUrl = 'http://sibapak.pocari.id/api';
+  // 🚀 Menggunakan HTTPS karena server sudah siap mendukung HTTPS
+  static const String baseUrl = 'https://sibapak.pocari.id/api';
   late Dio _dio;
   final _storage = GetStorage();
 
@@ -14,8 +14,10 @@ class ApiService {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        followRedirects: true,
+        maxRedirects: 5,
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
