@@ -57,7 +57,6 @@ class DaftarChatWargaView extends GetView<DaftarChatWargaController> {
                     return GestureDetector(
                       onTap: () => controller.pindahKeDetailChat(idPengaduan, judulLaporan, namaParalegal),
                       child: Container(
-                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
@@ -69,98 +68,112 @@ class DaftarChatWargaView extends GetView<DaftarChatWargaController> {
                             )
                           ],
                         ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Icon Avatar Room
-                            Container(
-                              width: 48, height: 48,
-                              decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(24),
-                                child: fotoLawanBicara.isNotEmpty
-                                    ? Image.network(
-                                        _resolveFileUrl(fotoLawanBicara),
-                                        headers: {
-                                          'Authorization': 'Bearer ${GetStorage().read('token')}',
-                                        },
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => const Icon(Icons.account_balance_rounded, color: Color(0xFF94A3B8), size: 22),
-                                      )
-                                    : const Icon(Icons.account_balance_rounded, color: Color(0xFF94A3B8), size: 22),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                left: BorderSide(
+                                  color: hasUnread ? const Color(0xFF2563EB) : Colors.transparent,
+                                  width: 4,
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 14),
-                            // Konten Informasi Ruang Chat
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Icon Avatar Room
+                                Container(
+                                  width: 48, height: 48,
+                                  decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(24),
+                                    child: fotoLawanBicara.isNotEmpty
+                                        ? Image.network(
+                                            _resolveFileUrl(fotoLawanBicara),
+                                            headers: {
+                                              'Authorization': 'Bearer ${GetStorage().read('token')}',
+                                            },
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => const Icon(Icons.account_balance_rounded, color: Color(0xFF94A3B8), size: 22),
+                                          )
+                                        : const Icon(Icons.account_balance_rounded, color: Color(0xFF94A3B8), size: 22),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                // Konten Informasi Ruang Chat
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Expanded(
-                                        child: Text(
-                                          judulLaporan,
-                                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
-                                          maxLines: 1, overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      if (lastTime.isNotEmpty)
-                                        Text(
-                                          lastTime,
-                                          style: TextStyle(
-                                            fontSize: 11, 
-                                            color: hasUnread ? const Color(0xFF2563EB) : const Color(0xFF94A3B8), 
-                                            fontWeight: hasUnread ? FontWeight.bold : FontWeight.w500
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              judulLaporan,
+                                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
-                                        ),
+                                          if (lastTime.isNotEmpty)
+                                            Text(
+                                              lastTime,
+                                              style: TextStyle(
+                                                fontSize: 11, 
+                                                color: hasUnread ? const Color(0xFF2563EB) : const Color(0xFF94A3B8), 
+                                                fontWeight: hasUnread ? FontWeight.bold : FontWeight.w500
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "Paralegal: $namaParalegal",
+                                        style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              lastMessage,
+                                              style: TextStyle(
+                                                fontSize: 12, 
+                                                color: hasUnread ? const Color(0xFF0F172A) : Colors.grey, 
+                                                fontWeight: hasUnread ? FontWeight.w600 : FontWeight.normal,
+                                                fontStyle: hasUnread ? FontStyle.normal : FontStyle.italic
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          if (hasUnread)
+                                            Container(
+                                              padding: const EdgeInsets.all(6),
+                                              decoration: const BoxDecoration(color: Color(0xFF2563EB), shape: BoxShape.circle),
+                                              child: Text(
+                                                '$unreadCount',
+                                                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                              ),
+                                            )
+                                          else
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(8)),
+                                              child: const Text('Aktif', style: TextStyle(color: Color(0xFF2563EB), fontSize: 10, fontWeight: FontWeight.bold)),
+                                            )
+                                        ],
+                                      ),
                                     ],
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "Paralegal: $namaParalegal",
-                                    style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          lastMessage,
-                                          style: TextStyle(
-                                            fontSize: 12, 
-                                            color: hasUnread ? const Color(0xFF0F172A) : Colors.grey, 
-                                            fontWeight: hasUnread ? FontWeight.w600 : FontWeight.normal,
-                                            fontStyle: hasUnread ? FontStyle.normal : FontStyle.italic
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      if (hasUnread)
-                                        Container(
-                                          padding: const EdgeInsets.all(6),
-                                          decoration: const BoxDecoration(color: Color(0xFF2563EB), shape: BoxShape.circle),
-                                          child: Text(
-                                            '$unreadCount',
-                                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                          ),
-                                        )
-                                      else
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(8)),
-                                          child: const Text('Aktif', style: TextStyle(color: Color(0xFF2563EB), fontSize: 10, fontWeight: FontWeight.bold)),
-                                        )
-                                    ],
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     );
