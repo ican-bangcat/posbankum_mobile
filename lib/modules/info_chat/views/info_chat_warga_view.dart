@@ -20,15 +20,19 @@ class InfoChatWargaView extends GetView<InfoChatWargaController> {
     // Ganti localhost / 127.0.0.1 dengan domain server asli
     if (url.contains('localhost') || url.contains('127.0.0.1')) {
       url = url
-          .replaceAll('http://localhost', 'http://sibapak.pocari.id')
-          .replaceAll('https://localhost', 'http://sibapak.pocari.id')
-          .replaceAll('http://127.0.0.1:8000', 'http://sibapak.pocari.id')
-          .replaceAll('http://127.0.0.1', 'http://sibapak.pocari.id')
-          .replaceAll('https://127.0.0.1', 'http://sibapak.pocari.id');
+          .replaceAll('http://localhost', 'https://sibapak.pocari.id')
+          .replaceAll('https://localhost', 'https://sibapak.pocari.id')
+          .replaceAll('http://127.0.0.1:8000', 'https://sibapak.pocari.id')
+          .replaceAll('http://127.0.0.1', 'https://sibapak.pocari.id')
+          .replaceAll('https://127.0.0.1', 'https://sibapak.pocari.id');
+    }
+
+    if (url.startsWith('http://sibapak.pocari.id')) {
+      url = url.replaceFirst('http://sibapak.pocari.id', 'https://sibapak.pocari.id');
     }
 
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    const serverBase = 'http://sibapak.pocari.id';
+    const serverBase = 'https://sibapak.pocari.id';
     return '$serverBase${url.startsWith('/') ? '' : '/'}$url';
   }
 

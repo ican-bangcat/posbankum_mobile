@@ -1,12 +1,16 @@
-import 'package:flutter/material.dart'; // ✅ Wajib ditambah buat manggil Colors
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import '../../../app/data/services/api_service.dart';
+import '../models/kegiatan_model.dart';
+import '../repositories/kegiatan_repository.dart';
 
 class DetailKegiatanController extends GetxController {
-  final ApiService _apiService = ApiService();
+  final KegiatanRepository _repository;
   var isLoading = true.obs;
-  var kegiatanData = {}.obs;
+  var kegiatanData = Rxn<KegiatanItem>();
+
+  DetailKegiatanController({KegiatanRepository? repository})
+      : _repository = repository ?? KegiatanRepository();
 
   @override
   void onInit() {
@@ -24,26 +28,8 @@ class DetailKegiatanController extends GetxController {
         return;
       }
 
-      final response = await _apiService.dio.get('/kegiatan/$id');
-
-      if (response.data['status'] == true) {
-        final Map<String, dynamic> data = Map<String, dynamic>.from(response.data['data']);
-
-        // ✅ Pastikan URL gambar jadi full HTTP sebelum masuk ke View
-        String? finalImageUrl = data['thumbnail_path'];
-        if (finalImageUrl != null && finalImageUrl.isNotEmpty && !finalImageUrl.startsWith('http')) {
-          if (finalImageUrl.startsWith('/')) {
-            data['thumbnail_path'] = 'http://sibapak.pocari.id$finalImageUrl';
-          } else {
-            data['thumbnail_path'] = 'http://sibapak.pocari.id/$finalImageUrl';
-          }
-        }
-
-        kegiatanData.value = data;
-      } else {
-        throw response.data['message'] ?? 'Gagal memuat detail kegiatan';
-      }
-
+      final item = await _repository.fetchDetailKegiatan(id);
+      kegiatanData.value = item;
     } catch (e) {
       print("Error fetch detail: $e");
       Get.snackbar("Error", "Gagal memuat detail kegiatan");
@@ -56,7 +42,6 @@ class DetailKegiatanController extends GetxController {
   String getFormattedDate(String? rawDate) {
     if (rawDate == null) return '-';
     final dt = DateTime.parse(rawDate).toLocal();
-    // ✅ Format jam dibuang karena kita pakai pure tanggal
     return DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(dt);
   }
 

@@ -1,71 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import '../../../app/data/services/api_service.dart';
-
-class KegiatanItem {
-  final String id;
-  final String judul;
-  final String tanggal;
-  final String lokasi;
-  final String? imageUrl;
-  final String status;
-  final int jumlahAnggota; // ✅ Tambahan hitung anggota otomatis
-
-  KegiatanItem({
-    required this.id,
-    required this.judul,
-    required this.tanggal,
-    required this.lokasi,
-    this.imageUrl,
-    required this.status,
-    required this.jumlahAnggota,
-  });
-
-  factory KegiatanItem.fromJson(Map<String, dynamic> json) {
-    String formattedDate = '-';
-
-    if (json['tgl_mulai'] != null) {
-      final dt = DateTime.parse(json['tgl_mulai']).toLocal();
-      formattedDate = DateFormat('dd MMM yyyy').format(dt);
-    }
-
-    String? finalImageUrl = json['thumbnail_path'];
-    if (finalImageUrl != null && finalImageUrl.isNotEmpty && !finalImageUrl.startsWith('http')) {
-      if (finalImageUrl.startsWith('/')) {
-        finalImageUrl = 'http://sibapak.pocari.id$finalImageUrl';
-      } else {
-        finalImageUrl = 'http://sibapak.pocari.id/$finalImageUrl';
-      }
-    }
-
-    // ✅ Hitung jumlah orang yang ada di dalam array JSONB atau List
-    int hitungAnggota = 0;
-    if (json['anggota_terlibat'] != null) {
-      if (json['anggota_terlibat'] is List) {
-        hitungAnggota = (json['anggota_terlibat'] as List).length;
-      } else if (json['anggota_terlibat'] is String) {
-        // Jika data string representation dari list
-        try {
-          // fallback jika datanya string list JSON
-        } catch (_) {}
-      }
-    }
-
-    return KegiatanItem(
-      id: json['id_kegiatan'].toString(),
-      judul: json['judul'] ?? '',
-      tanggal: formattedDate,
-      lokasi: json['lokasi'] ?? '',
-      imageUrl: finalImageUrl,
-      status: json['status'] ?? 'draft',
-      jumlahAnggota: hitungAnggota,
-    );
-  }
-}
+import '../models/kegiatan_model.dart';
+import '../repositories/kegiatan_repository.dart';
 
 class KelolaKegiatanController extends GetxController {
-  final ApiService _apiService = ApiService();
+  final KegiatanRepository _repository;
   var searchQuery = ''.obs;
   var isLoading = true.obs;
 
@@ -73,6 +13,9 @@ class KelolaKegiatanController extends GetxController {
   var selectedFilterDate = Rxn<DateTime>();
 
   var allKegiatan = <KegiatanItem>[].obs;
+
+  KelolaKegiatanController({KegiatanRepository? repository})
+      : _repository = repository ?? KegiatanRepository();
 
   @override
   void onInit() {
@@ -83,13 +26,8 @@ class KelolaKegiatanController extends GetxController {
   Future<void> fetchKegiatan() async {
     try {
       isLoading.value = true;
-
-      final response = await _apiService.dio.get('/kegiatan');
-
-      if (response.data['status'] == true) {
-        final List<dynamic> data = response.data['data'];
-        allKegiatan.value = data.map((e) => e is Map<String, dynamic> ? KegiatanItem.fromJson(e) : KegiatanItem.fromJson(Map<String, dynamic>.from(e))).toList();
-      }
+      final list = await _repository.fetchKegiatan();
+      allKegiatan.value = list;
     } catch (e) {
       print("Error Fetch Kegiatan: $e");
     } finally {

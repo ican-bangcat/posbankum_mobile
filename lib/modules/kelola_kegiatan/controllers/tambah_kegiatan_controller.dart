@@ -4,12 +4,12 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:dio/dio.dart' as dio_pkg;
-import '../../../app/data/services/api_service.dart';
+import '../repositories/kegiatan_repository.dart';
 import 'kelola_kegiatan_controller.dart';
 import '../../../app/routes/app_routes.dart';
 
 class TambahKegiatanController extends GetxController {
-  final ApiService _apiService = ApiService();
+  final KegiatanRepository _repository;
   final judulCtrl = TextEditingController();
   final lokasiCtrl = TextEditingController();
   final deskripsiCtrl = TextEditingController();
@@ -26,6 +26,9 @@ class TambahKegiatanController extends GetxController {
 
   final ImagePicker _picker = ImagePicker();
 
+  TambahKegiatanController({KegiatanRepository? repository})
+      : _repository = repository ?? KegiatanRepository();
+
   @override
   void onInit() {
     super.onInit();
@@ -34,21 +37,15 @@ class TambahKegiatanController extends GetxController {
 
   Future<void> fetchDataAwal() async {
     try {
-      final response = await _apiService.dio.get('/profile');
-      if (response.data['status'] == true) {
-        final userData = response.data['data'];
-        idPosbankumAsli.value = userData['id_posbankum']?.toString() ?? '';
+      final userData = await _repository.fetchProfile();
+      idPosbankumAsli.value = userData['id_posbankum']?.toString() ?? '';
 
-        if (idPosbankumAsli.value.isNotEmpty) {
-          final posbankumResponse = await _apiService.dio.get('/posbankum/${idPosbankumAsli.value}');
-          if (posbankumResponse.data['status'] == true) {
-            final posbankumData = posbankumResponse.data['data'];
-            final List<dynamic> listParalegalRaw = posbankumData['paralegals'] ?? posbankumData['members'] ?? [];
-            paralegalList.value = listParalegalRaw.map<String>((p) {
-              return (p['nama_lengkap'] ?? p['nama_paralegal'] ?? p['name'] ?? '-').toString();
-            }).toList();
-          }
-        }
+      if (idPosbankumAsli.value.isNotEmpty) {
+        final posbankumData = await _repository.fetchPosbankum(idPosbankumAsli.value);
+        final List<dynamic> listParalegalRaw = posbankumData['paralegals'] ?? posbankumData['members'] ?? [];
+        paralegalList.value = listParalegalRaw.map<String>((p) {
+          return (p['nama_lengkap'] ?? p['nama_paralegal'] ?? p['name'] ?? '-').toString();
+        }).toList();
       }
     } catch (e) {
       print("Error fetch paralegal: $e");
@@ -115,15 +112,15 @@ class TambahKegiatanController extends GetxController {
 
       final formData = dio_pkg.FormData.fromMap(dataMap);
 
-      final response = await _apiService.dio.post('/kegiatan', data: formData);
+      final success = await _repository.simpanKegiatan(formData);
 
-      if (response.data['status'] == true) {
+      if (success) {
         if (Get.isRegistered<KelolaKegiatanController>()) {
           Get.find<KelolaKegiatanController>().fetchKegiatan();
         }
         Get.offNamed(AppRoutes.KONFIRMASI_KEGIATAN);
       } else {
-        throw response.data['message'] ?? 'Gagal menyimpan kegiatan';
+        throw 'Gagal menyimpan kegiatan';
       }
     } catch (e) {
       Get.snackbar("Error", "Gagal menyimpan kegiatan: $e");

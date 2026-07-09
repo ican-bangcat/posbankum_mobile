@@ -31,7 +31,10 @@ class EditKegiatanView extends GetView<EditKegiatanController> {
                 return SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
                   physics: const BouncingScrollPhysics(),
-                  child: Column(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 650),
+                      child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // --- FOTO SAMPUL ---
@@ -90,6 +93,8 @@ class EditKegiatanView extends GetView<EditKegiatanController> {
                       const SizedBox(height: 40),
                     ],
                   ),
+                    ),
+                  ),
                 );
               }),
             ),
@@ -121,9 +126,9 @@ class EditKegiatanView extends GetView<EditKegiatanController> {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: darkBlueColor.withOpacity(0.1),
+                  color: darkBlueColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: darkBlueColor.withOpacity(0.3)),
+                  border: Border.all(color: darkBlueColor.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -215,7 +220,7 @@ class EditKegiatanView extends GetView<EditKegiatanController> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,7 +337,7 @@ class EditKegiatanView extends GetView<EditKegiatanController> {
                         onTap: () => Get.back(),
                         child: Container(
                           padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(border: Border.all(color: Colors.white.withOpacity(0.3)), borderRadius: BorderRadius.circular(12)),
+                          decoration: BoxDecoration(border: Border.all(color: Colors.white.withValues(alpha: 0.3)), borderRadius: BorderRadius.circular(12)),
                           child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 16),
                         ),
                       ),

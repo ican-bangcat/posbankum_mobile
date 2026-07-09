@@ -1,12 +1,13 @@
 import 'package:get/get.dart';
 import '../controllers/tambah_kegiatan_controller.dart';
+import '../repositories/kegiatan_repository.dart';
 
 class TambahKegiatanBinding extends Bindings {
   @override
   void dependencies() {
-    // Daftarin controller tambah kegiatan ke memori
+    Get.lazyPut<KegiatanRepository>(() => KegiatanRepository());
     Get.lazyPut<TambahKegiatanController>(
-          () => TambahKegiatanController(),
+      () => TambahKegiatanController(repository: Get.find<KegiatanRepository>()),
     );
   }
 }

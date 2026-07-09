@@ -27,7 +27,10 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
               ),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
-                child: Column(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 650),
+                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text("Foto Sampul (Opsional)", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
@@ -77,6 +80,8 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
                     const SizedBox(height: 40),
                   ],
                 ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -91,7 +96,7 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,9 +156,9 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: darkBlueColor.withOpacity(0.1),
+                  color: darkBlueColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: darkBlueColor.withOpacity(0.3)),
+                  border: Border.all(color: darkBlueColor.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -296,7 +301,7 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 16),

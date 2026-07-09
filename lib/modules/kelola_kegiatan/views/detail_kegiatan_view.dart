@@ -9,6 +9,7 @@ import 'package:printing/printing.dart';
 import '../controllers/detail_kegiatan_controller.dart';
 import '../../../app/routes/app_routes.dart';
 import 'package:share_plus/share_plus.dart';
+import '../models/kegiatan_model.dart';
 
 class DetailKegiatanView extends GetView<DetailKegiatanController> {
   DetailKegiatanView({super.key});
@@ -39,14 +40,17 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final data = controller.kegiatanData;
-                if (data.isEmpty) {
+                final data = controller.kegiatanData.value;
+                if (data == null) {
                   return const Center(child: Text("Data tidak ditemukan"));
                 }
 
                 return SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  child: Column(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 650),
+                      child: Column(
                     children: [
                       // ═════════════════════════════════════════════════════════════════
                       // AREA YANG AKAN DI-SCREENSHOT (Dibungkus RepaintBoundary)
@@ -61,7 +65,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                             children: [
 
                               // ✅ KOTAK MERAH PENOLAKAN (MUNCUL KALAU STATUS DITOLAK)
-                              if (data['status'] == 'ditolak' && data['catatan'] != null && data['catatan'].toString().trim().isNotEmpty) ...[
+                              if (data.status == 'ditolak' && data.catatan != null && data.catatan!.trim().isNotEmpty) ...[
                                 Container(
                                   margin: const EdgeInsets.only(bottom: 24),
                                   padding: const EdgeInsets.all(16),
@@ -85,7 +89,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        'Catatan: ${data['catatan']}',
+                                        'Catatan: ${data.catatan}',
                                         style: TextStyle(color: Colors.red.shade900, fontSize: 14, height: 1.4),
                                       ),
                                     ],
@@ -99,7 +103,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(16),
                                     child: Image.network(
-                                      data['thumbnail_path'] ?? '',
+                                      data.imageUrl ?? '',
                                       height: 250,
                                       width: double.infinity,
                                       fit: BoxFit.cover,
@@ -117,11 +121,11 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                       decoration: BoxDecoration(
-                                          color: controller.getStatusColor(data['status']),
+                                          color: controller.getStatusColor(data.status),
                                           borderRadius: BorderRadius.circular(8)
                                       ),
                                       child: Text(
-                                          (data['status'] ?? 'draft').toString().toUpperCase(),
+                                          data.status.toUpperCase(),
                                           style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5)
                                       ),
                                     ),
@@ -132,7 +136,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
 
                               // 2. Judul
                               Text(
-                                data['judul'] ?? 'Tanpa Judul',
+                                data.judul,
                                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: textPrimary, height: 1.3),
                               ),
                               const SizedBox(height: 24),
@@ -141,7 +145,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                               _buildInfoRow(
                                 icon: Icons.calendar_today_outlined,
                                 label: "TANGGAL KEGIATAN",
-                                value: controller.getFormattedDate(data['tgl_mulai']),
+                                value: controller.getFormattedDate(data.tglMulai),
                               ),
                               const SizedBox(height: 20),
 
@@ -149,7 +153,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                               _buildInfoRow(
                                 icon: Icons.location_on_outlined,
                                 label: "LOKASI KEGIATAN",
-                                value: data['lokasi'] ?? '-',
+                                value: data.lokasi,
                               ),
                               const SizedBox(height: 24),
                               const Divider(color: Color(0xFFF1F5F9), thickness: 1.5),
@@ -158,14 +162,14 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                               // ✅ 4.5 Info Anggota Terlibat
                               const Text('Anggota Terlibat', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: textPrimary)),
                               const SizedBox(height: 12),
-                              _buildAnggotaList(data['anggota_terlibat']),
+                              _buildAnggotaList(data.anggotaTerlibat),
                               const SizedBox(height: 24),
 
                               // 5. Deskripsi
                               const Text('Deskripsi Kegiatan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: textPrimary)),
                               const SizedBox(height: 12),
                               Text(
-                                data['deskripsi'] ?? 'Tidak ada deskripsi untuk kegiatan ini.',
+                                data.deskripsi ?? 'Tidak ada deskripsi untuk kegiatan ini.',
                                 style: const TextStyle(fontSize: 14, color: textSecondary, height: 1.6),
                               ),
                             ],
@@ -178,9 +182,11 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                       // ═════════════════════════════════════════════════════════════════
                       Padding(
                         padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
-                        child: _buildActionButtons(),
+                        child: _buildActionButtons(data),
                       ),
                     ],
+                  ),
+                    ),
                   ),
                 );
               }),
@@ -215,12 +221,12 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(KegiatanItem data) {
     return Column(
       children: [
         ElevatedButton(
           onPressed: () {
-            Get.toNamed(AppRoutes.EDIT_KEGIATAN, arguments: controller.kegiatanData['id_kegiatan']);
+            Get.toNamed(AppRoutes.EDIT_KEGIATAN, arguments: data.id);
           },
           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), minimumSize: const Size(double.infinity, 56), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
           child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.edit_outlined, color: Colors.white, size: 20), SizedBox(width: 10), Text('Edit Kegiatan', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700))]),
@@ -228,7 +234,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
         const SizedBox(height: 16),
         OutlinedButton(
           onPressed: () {
-            _showShareBottomSheet(controller.kegiatanData);
+            _showShareBottomSheet(data);
           },
           style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5), minimumSize: const Size(double.infinity, 56), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
           child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.share_outlined, color: textPrimary, size: 20), SizedBox(width: 10), Text('Bagikan Detail', style: TextStyle(color: textPrimary, fontSize: 15, fontWeight: FontWeight.w700))]),
@@ -237,7 +243,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
     );
   }
 
-  void _showShareBottomSheet(Map data) {
+  void _showShareBottomSheet(KegiatanItem data) {
     Get.bottomSheet(
       Container(
         padding: const EdgeInsets.all(24),
@@ -265,8 +271,8 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
               subtitle: const Text("Kirim rangkuman singkat kegiatan", style: TextStyle(fontSize: 12, color: textSecondary)),
               onTap: () {
                 Get.back();
-                final textToShare = '*${data['judul']}*\n📍 ${data['lokasi']}\n🗓️ ${controller.getFormattedDate(data['tgl_mulai'])}\n\n${data['deskripsi']}\n\n🔗 Link: https://posbankum.app/kegiatan/${data['id_kegiatan']}';
-                Share.share(textToShare);
+                final textToShare = '*${data.judul}*\n📍 ${data.lokasi}\n🗓️ ${controller.getFormattedDate(data.tglMulai)}\n\n${data.deskripsi}\n\n🔗 Link: https://posbankum.app/kegiatan/${data.id}';
+                SharePlus.instance.share(ShareParams(text: textToShare));
               },
             ),
             const Divider(height: 15, color: Color(0xFFF1F5F9)),
@@ -300,7 +306,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
               subtitle: const Text("Salin link untuk dibuka di aplikasi", style: TextStyle(fontSize: 12, color: textSecondary)),
               onTap: () {
                 Get.back();
-                final dummyLink = "https://posbankum.app/kegiatan/${data['id_kegiatan']}";
+                final dummyLink = "https://posbankum.app/kegiatan/${data.id}";
                 Clipboard.setData(ClipboardData(text: dummyLink));
                 Get.snackbar("Berhasil", "Tautan disalin: $dummyLink", backgroundColor: const Color(0xFF10B981), colorText: Colors.white, snackPosition: SnackPosition.BOTTOM, margin: const EdgeInsets.all(16));
               },
@@ -313,7 +319,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
   }
 
   // LOGIKA BARU: MEMFOTO LAYAR JADI PDF
-  Future<void> _generateAndSharePDF(Map data) async {
+  Future<void> _generateAndSharePDF(KegiatanItem data) async {
     Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
 
     try {
@@ -340,7 +346,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
       final pdfBytes = await pdf.save();
       Get.back();
 
-      await Printing.sharePdf(bytes: pdfBytes, filename: 'Kegiatan_${data['judul'] ?? 'Posbankum'}.pdf');
+      await Printing.sharePdf(bytes: pdfBytes, filename: 'Kegiatan_${data.judul}.pdf');
     } catch (e) {
       Get.back();
       Get.snackbar("Error", "Gagal memproses PDF: $e", backgroundColor: Colors.red, colorText: Colors.white);
@@ -418,7 +424,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                         onTap: () => Get.back(),
                         child: Container(
                           width: 40, height: 40,
-                          decoration: BoxDecoration(border: Border.all(color: Colors.white.withOpacity(0.3)), borderRadius: BorderRadius.circular(12)),
+                          decoration: BoxDecoration(border: Border.all(color: Colors.white.withValues(alpha: 0.3)), borderRadius: BorderRadius.circular(12)),
                           child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
                         ),
                       ),

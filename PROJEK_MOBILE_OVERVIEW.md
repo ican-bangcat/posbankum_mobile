@@ -80,8 +80,8 @@ Aplikasi Web SIBAPAK bertindak sebagai **Pusat Kontrol (Admin Panel)**, sedangka
 *   [x] **In-App PDF Viewer:** Widget pembaca PDF internal dengan layout yang aman dari tabrakan tombol navigasi sistem Android/iOS.
 *   [x] **Pemberantasan Bug Update Status:** Perbaikan error 500 saat "Ambil Kasus" yang disebabkan oleh ketidakcocokan kolom `updated_at` pada tabel `pengaduan_timeline` di server Laravel.
 *   [x] **Uji Coba Alur Kasus End-to-End:** Memastikan transisi status berjalan mulus dari dibuat (`menunggu`) $\rightarrow$ diklaim (`diproses` + pencatatan log timeline) $\rightarrow$ penyusunan progres kegiatan $\rightarrow$ diselesaikan secara formal (`selesai` / `dibatalkan` disertai catatan internal penolakan kasus).
+*   [x] **Komunikasi & Chat Konsultasi (PB05):** Ruang obrolan/chat room real-time per kasus antara warga dengan paralegal pendamping. Dilengkapi penyesuaian visual bubble chat (WhatsApp style), indicator unread blue border, input box ramping, dan pemisah visual halaman Info Chat (POV Warga vs POV Paralegal).
 
 ### Rencana Selanjutnya (Next Steps)
-*   [ ] **Komunikasi & Chat Konsultasi (PB05):** Membuat ruang obrolan/chat room real-time per kasus antara warga dengan paralegal pendamping.
+*   [/] **Laporan Kegiatan Lapangan (PB07):** Pembuatan form laporan kegiatan lapangan paralegal (penyuluhan/sosialisasi) disertai kamera picker dan approval verifikasi admin (sedang dikembangkan).
 *   [ ] **Notifikasi Sistem (PB06):** Membuat Pusat Notifikasi (Notification Center) aplikasi dan integrasi Push Notification SDK (Firebase Cloud Messaging).
-*   [ ] **Laporan Kegiatan Lapangan (PB07):** Pembuatan form laporan kegiatan lapangan paralegal (penyuluhan/sosialisasi) disertai kamera picker dan approval verifikasi admin.

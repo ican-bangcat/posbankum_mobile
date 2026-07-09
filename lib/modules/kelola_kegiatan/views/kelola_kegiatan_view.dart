@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../controllers/kelola_kegiatan_controller.dart';
+import '../models/kegiatan_model.dart';
 import '../../../app/routes/app_routes.dart';
 
 class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
@@ -18,8 +19,11 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
 
     return Scaffold(
       backgroundColor: darkBlueColor,
-      body: Column(
-        children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 650.0),
+          child: Column(
+            children: [
           // ── HEADER (Tanpa Tombol Back) ──
           _buildHeader(),
 
@@ -112,6 +116,8 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }
@@ -213,7 +219,7 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
             end: Alignment.bottomRight,
           ),
           boxShadow: [
-            BoxShadow(color: darkBlueColor.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8)),
+            BoxShadow(color: darkBlueColor.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
           ],
         ),
         child: Container(
@@ -258,7 +264,7 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -307,7 +313,9 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
                   children: [
                     const Icon(Icons.calendar_month_outlined, size: 16, color: textSecondary),
                     const SizedBox(width: 8),
-                    Text(item.tanggal, style: const TextStyle(fontSize: 13, color: textSecondary, fontWeight: FontWeight.w500)),
+                    Expanded(
+                      child: Text(item.tanggal, style: const TextStyle(fontSize: 13, color: textSecondary, fontWeight: FontWeight.w500)),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -315,7 +323,9 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
                   children: [
                     const Icon(Icons.location_on_outlined, size: 16, color: textSecondary),
                     const SizedBox(width: 8),
-                    Text(item.lokasi, style: const TextStyle(fontSize: 13, color: textSecondary, fontWeight: FontWeight.w500)),
+                    Expanded(
+                      child: Text(item.lokasi, style: const TextStyle(fontSize: 13, color: textSecondary, fontWeight: FontWeight.w500)),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
