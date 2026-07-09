@@ -44,11 +44,11 @@ class KegiatanItem {
       if (finalImageUrl.startsWith('http://sibapak.pocari.id')) {
         finalImageUrl = finalImageUrl.replaceFirst('http://sibapak.pocari.id', 'https://sibapak.pocari.id');
       } else if (!finalImageUrl.startsWith('http')) {
-        if (finalImageUrl.startsWith('/')) {
-          finalImageUrl = 'https://sibapak.pocari.id$finalImageUrl';
-        } else {
-          finalImageUrl = 'https://sibapak.pocari.id/$finalImageUrl';
+        String cleanPath = finalImageUrl.startsWith('/') ? finalImageUrl.substring(1) : finalImageUrl;
+        if (!cleanPath.startsWith('storage/')) {
+          cleanPath = 'storage/$cleanPath';
         }
+        finalImageUrl = 'https://sibapak.pocari.id/$cleanPath';
       }
     }
 

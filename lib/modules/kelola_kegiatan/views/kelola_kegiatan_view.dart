@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:get_storage/get_storage.dart';
 import '../controllers/kelola_kegiatan_controller.dart';
 import '../models/kegiatan_model.dart';
 import '../../../app/routes/app_routes.dart';
@@ -274,6 +275,9 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
             children: [
               Image.network(
                 item.imageUrl ?? '',
+                headers: {
+                  'Authorization': 'Bearer ${GetStorage().read('token')}',
+                },
                 height: 140,
                 width: double.infinity,
                 fit: BoxFit.cover,

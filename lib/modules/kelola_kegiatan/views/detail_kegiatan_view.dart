@@ -9,6 +9,7 @@ import 'package:printing/printing.dart';
 import '../controllers/detail_kegiatan_controller.dart';
 import '../../../app/routes/app_routes.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:get_storage/get_storage.dart';
 import '../models/kegiatan_model.dart';
 
 class DetailKegiatanView extends GetView<DetailKegiatanController> {
@@ -104,6 +105,9 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                                     borderRadius: BorderRadius.circular(16),
                                     child: Image.network(
                                       data.imageUrl ?? '',
+                                      headers: {
+                                        'Authorization': 'Bearer ${GetStorage().read('token')}',
+                                      },
                                       height: 250,
                                       width: double.infinity,
                                       fit: BoxFit.cover,
