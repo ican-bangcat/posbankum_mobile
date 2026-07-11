@@ -145,7 +145,7 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
                 bottom: false,
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(24, 20, 20, 30),
-                  child: Text('Kelola Kegiatan', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+                  child: Text('Kelola Kegiatan', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
                 ),
               ),
             ],

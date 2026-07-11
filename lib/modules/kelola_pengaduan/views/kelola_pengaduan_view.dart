@@ -52,22 +52,10 @@ class KelolaPengaduanView extends GetView<KelolaPengaduanController> {
                         SafeArea(
                           bottom: false,
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+                            padding: const EdgeInsets.fromLTRB(24, 20, 20, 30),
                             child: Row(
-                              children: [
-                                GestureDetector(
-                                  onTap: () => Get.back(),
-                                  child: Container(
-                                    width: 40, height: 40,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.white.withOpacity(0.3)),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                const Text(
+                              children: const [
+                                Text(
                                   'Kelola Data Kasus',
                                   style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 0.5),
                                 ),
