@@ -55,60 +55,64 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
                   const SizedBox(height: 24),
 
                   Expanded(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // ── GRADIENT BUTTON ──
-                          _buildGradientButton(),
-                          const SizedBox(height: 32),
+                    child: RefreshIndicator(
+                      onRefresh: () => controller.fetchKegiatan(),
+                      color: darkBlueColor,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ── GRADIENT BUTTON ──
+                            _buildGradientButton(),
+                            const SizedBox(height: 32),
 
-                          // ── HEADER LIST ──
-                          Obx(() {
-                            String label = 'DAFTAR KEGIATAN';
-                            if (controller.selectedFilterDate.value != null) {
-                              label = 'KEGIATAN: ${DateFormat('MMMM yyyy', 'id_ID').format(controller.selectedFilterDate.value!).toUpperCase()}';
-                            }
-                            return Text(
-                              label,
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 1.0),
-                            );
-                          }),
-                          const SizedBox(height: 16),
-
-                          // ── LIST KARTU KEGIATAN ──
-                          Obx(() {
-                            if (controller.isLoading.value) {
-                              return const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(40),
-                                  child: CircularProgressIndicator(),
-                                ),
+                            // ── HEADER LIST ──
+                            Obx(() {
+                              String label = 'DAFTAR KEGIATAN';
+                              if (controller.selectedFilterDate.value != null) {
+                                label = 'KEGIATAN: ${DateFormat('dd MMMM yyyy', 'id_ID').format(controller.selectedFilterDate.value!).toUpperCase()}';
+                              }
+                              return Text(
+                                label,
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 1.0),
                               );
-                            }
+                            }),
+                            const SizedBox(height: 16),
 
-                            final items = controller.filteredKegiatan;
+                            // ── LIST KARTU KEGIATAN ──
+                            Obx(() {
+                              if (controller.isLoading.value) {
+                                return const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(40),
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                );
+                              }
 
-                            if (items.isEmpty) {
-                              return const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(40),
-                                  child: Text("Tidak ada kegiatan yang ditemukan", style: TextStyle(color: Colors.grey)),
-                                ),
+                              final items = controller.filteredKegiatan;
+
+                              if (items.isEmpty) {
+                                return const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(40),
+                                    child: Text("Tidak ada kegiatan yang ditemukan", style: TextStyle(color: Colors.grey)),
+                                  ),
+                                );
+                              }
+
+                              return Column(
+                                children: items.map((item) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 20),
+                                  child: _buildKegiatanCard(item),
+                                )).toList(),
                               );
-                            }
-
-                            return Column(
-                              children: items.map((item) => Padding(
-                                padding: const EdgeInsets.only(bottom: 20),
-                                child: _buildKegiatanCard(item),
-                              )).toList(),
-                            );
-                          }),
-                          const SizedBox(height: 100),
-                        ],
+                            }),
+                            const SizedBox(height: 100),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -336,27 +340,8 @@ class KelolaKegiatanView extends GetView<KelolaKegiatanController> {
 
                 // Footer Card
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    // ✅ Chip Jumlah Anggota Dinamis (Menggantikan Avatar)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.people_alt_outlined, size: 14, color: textSecondary),
-                          const SizedBox(width: 6),
-                          Text(
-                              '${item.jumlahAnggota} Terlibat',
-                              style: const TextStyle(fontSize: 12, color: textSecondary, fontWeight: FontWeight.w600)
-                          ),
-                        ],
-                      ),
-                    ),
-
                     ElevatedButton(
                       onPressed: () {
                         Get.toNamed(AppRoutes.DETAIL_KEGIATAN, arguments: item.id);

@@ -177,32 +177,59 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(color: darkBlueColor),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: Row(
+    return Stack(
+      children: [
+        Positioned(bottom: 0, left: 0, child: Container(width: 50, height: 50, color: bgLight)),
+        Container(
+          width: double.infinity,
+          clipBehavior: Clip.hardEdge,
+          decoration: const BoxDecoration(
+            color: darkBlueColor,
+            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(28)),
+          ),
+          child: Stack(
             children: [
-              GestureDetector(
-                onTap: () => Get.back(),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                    borderRadius: BorderRadius.circular(12),
+              Positioned(
+                top: -10, right: -5,
+                child: Opacity(
+                  opacity: 0.8,
+                  child: Image.asset(
+                    'assets/images/icons/building_illustration3.png',
+                    width: 300, fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const SizedBox(),
                   ),
-                  child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 16),
                 ),
               ),
-              const SizedBox(width: 16),
-              const Text('Tambah Kegiatan', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+              SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Get.back(),
+                        child: Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Text(
+                        'Tambah Laporan Kegiatan',
+                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-      ),
+      ],
     );
   }
 }

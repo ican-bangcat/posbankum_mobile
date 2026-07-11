@@ -15,6 +15,12 @@ class KegiatanItem {
   final List<String>? anggotaTerlibat;
   final String? catatan;
   final String? hasilKegiatan;
+  final String? namaPosbankum;
+  final String? namaPelapor;
+  final String? kecamatan;
+  final String? kabupaten;
+  final String? idPosbankum;
+  final String? createdBy;
 
   KegiatanItem({
     required this.id,
@@ -31,6 +37,12 @@ class KegiatanItem {
     this.anggotaTerlibat,
     this.catatan,
     this.hasilKegiatan,
+    this.namaPosbankum,
+    this.namaPelapor,
+    this.kecamatan,
+    this.kabupaten,
+    this.idPosbankum,
+    this.createdBy,
   });
 
   factory KegiatanItem.fromJson(Map<String, dynamic> json) {
@@ -60,11 +72,6 @@ class KegiatanItem {
       if (json['anggota_terlibat'] is List) {
         anggotaList = (json['anggota_terlibat'] as List).map((e) => e.toString()).toList();
         hitungAnggota = anggotaList.length;
-      } else if (json['anggota_terlibat'] is String) {
-        // Fallback jika berupa JSON string ter-encode
-        try {
-          // parse jika string list
-        } catch (_) {}
       }
     }
 
@@ -85,6 +92,12 @@ class KegiatanItem {
       anggotaTerlibat: anggotaList,
       catatan: json['catatan'] ?? json['catatan_internal'] ?? json['alasan_penolakan'] ?? json['keterangan'],
       hasilKegiatan: json['hasil_kegiatan'] ?? json['hasil'] ?? '',
+      namaPosbankum: json['nama_posbankum'] ?? json['posbankum_nama'] ?? json['posbankum']?['nama'] ?? json['posbankum']?['nama_posbankum'],
+      namaPelapor: json['nama_pelapor'] ?? json['pelapor_nama'] ?? json['nama_lengkap'] ?? json['user']?['nama_lengkap'] ?? json['created_by_user']?['nama_lengkap'],
+      kecamatan: json['kecamatan'] ?? json['posbankum']?['kecamatan'],
+      kabupaten: json['kabupaten'] ?? json['posbankum']?['kabupaten'],
+      idPosbankum: json['id_posbankum']?.toString(),
+      createdBy: json['created_by']?.toString() ?? json['id_user']?.toString(),
     );
   }
 
@@ -102,6 +115,10 @@ class KegiatanItem {
       'anggota_terlibat': anggotaTerlibat,
       'catatan': catatan,
       'hasil_kegiatan': hasilKegiatan,
+      'nama_posbankum': namaPosbankum,
+      'nama_pelapor': namaPelapor,
+      'kecamatan': kecamatan,
+      'kabupaten': kabupaten,
     };
   }
 }

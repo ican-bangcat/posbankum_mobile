@@ -41,15 +41,21 @@ class KelolaKegiatanController extends GetxController {
 
     // 1. Filter Pencarian Judul
     if (searchQuery.value.isNotEmpty) {
-      items = items.where((e) => e.judul.toLowerCase().contains(searchQuery.value.toLowerCase())).toList();
+      items = items.where((e) =>
+        e.judul.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
+        e.lokasi.toLowerCase().contains(searchQuery.value.toLowerCase())
+      ).toList();
     }
 
-    // 2. Filter Berdasarkan Bulan & Tahun
+    // 2. Filter Berdasarkan Tanggal Spesifik
     if (selectedFilterDate.value != null) {
-      // Ubah target jadi misal "Mei 2026"
-      final targetMonthYear = DateFormat('MMM yyyy').format(selectedFilterDate.value!);
-      items = items.where((e) => e.tanggal.contains(targetMonthYear)).toList();
+      final targetDateStr = DateFormat('dd MMM yyyy').format(selectedFilterDate.value!);
+      items = items.where((e) => e.tanggal == targetDateStr).toList();
     }
+
+    // Force reactivity by touching both observables
+    searchQuery.value;
+    selectedFilterDate.value;
 
     return items;
   }

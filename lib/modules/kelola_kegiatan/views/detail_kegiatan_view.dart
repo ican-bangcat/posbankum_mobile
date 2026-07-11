@@ -46,12 +46,15 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                   return const Center(child: Text("Data tidak ditemukan"));
                 }
 
-                return SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 650),
-                      child: Column(
+                return RefreshIndicator(
+                  onRefresh: () => controller.fetchDetailKegiatan(),
+                  color: darkBlueColor,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 650),
+                        child: Column(
                     children: [
                       // ═════════════════════════════════════════════════════════════════
                       // AREA YANG AKAN DI-SCREENSHOT (Dibungkus RepaintBoundary)
@@ -143,6 +146,25 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                                 data.judul,
                                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: textPrimary, height: 1.3),
                               ),
+                              const SizedBox(height: 6),
+                              // Sub-header: Nama Posbankum • Kecamatan, Kabupaten
+                              Obx(() {
+                                final name = controller.namaPosbankum.value;
+                                final kec = controller.kecamatan.value;
+                                final kab = controller.kabupaten.value;
+                                String subtitle = name.isNotEmpty ? name : 'Posbankum';
+                                if (kec.isNotEmpty && kab.isNotEmpty) {
+                                  subtitle = "$subtitle • $kec, $kab";
+                                } else if (kec.isNotEmpty) {
+                                  subtitle = "$subtitle • $kec";
+                                } else if (kab.isNotEmpty) {
+                                  subtitle = "$subtitle • $kab";
+                                }
+                                return Text(
+                                  subtitle,
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textSecondary),
+                                );
+                              }),
                               const SizedBox(height: 24),
 
                               // 3. Info Tanggal
@@ -162,11 +184,11 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                               const SizedBox(height: 20),
 
                               // 4.5 Info Pelapor
-                              _buildInfoRow(
+                              Obx(() => _buildInfoRow(
                                 icon: Icons.person_outline,
                                 label: "NAMA PELAPOR",
-                                value: "${GetStorage().read('user')?['nama_lengkap'] ?? 'Paralegal'} (${GetStorage().read('user')?['posbankum']?['nama_posbankum'] ?? 'Posbankum'})",
-                              ),
+                                value: "${controller.namaPelapor.value} (${controller.namaPosbankum.value.isNotEmpty ? controller.namaPosbankum.value : 'Posbankum'})",
+                              )),
                               const SizedBox(height: 24),
                               const Divider(color: Color(0xFFF1F5F9), thickness: 1.5),
                               const SizedBox(height: 24),
@@ -195,16 +217,20 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                       // ═════════════════════════════════════════════════════════════════
                       // AREA TOMBOL (Di luar Screenshot biar tombolnya gak ikut ke-PDF)
                       // ═════════════════════════════════════════════════════════════════
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
-                        child: _buildActionButtons(data),
+                      SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                          child: _buildActionButtons(data),
+                        ),
                       ),
                     ],
                   ),
-                    ),
-                  ),
-                );
-              }),
+                ),
+              ),
+            ),
+          );
+        }),
             ),
           ),
         ],
@@ -237,16 +263,19 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
   }
 
   Widget _buildActionButtons(KegiatanItem data) {
+    final isEditable = data.status.toLowerCase() != 'disetujui';
     return Column(
       children: [
-        ElevatedButton(
-          onPressed: () {
-            Get.toNamed(AppRoutes.EDIT_KEGIATAN, arguments: data.id);
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), minimumSize: const Size(double.infinity, 56), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
-          child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.edit_outlined, color: Colors.white, size: 20), SizedBox(width: 10), Text('Edit Kegiatan', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700))]),
-        ),
-        const SizedBox(height: 16),
+        if (isEditable) ...[
+          ElevatedButton(
+            onPressed: () {
+              Get.toNamed(AppRoutes.EDIT_KEGIATAN, arguments: data.id);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2A2E5E), minimumSize: const Size(double.infinity, 56), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
+            child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.edit_outlined, color: Colors.white, size: 20), SizedBox(width: 10), Text('Edit Kegiatan', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700))]),
+          ),
+          const SizedBox(height: 16),
+        ],
         OutlinedButton(
           onPressed: () {
             _showShareBottomSheet(data);
@@ -286,7 +315,26 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
               subtitle: const Text("Kirim rangkuman singkat kegiatan", style: TextStyle(fontSize: 12, color: textSecondary)),
               onTap: () {
                 Get.back();
-                final textToShare = '*${data.judul}*\n📍 ${data.lokasi}\n🗓️ ${controller.getFormattedDate(data.tglMulai)}\n\n${data.deskripsi}\n\n🔗 Link: https://posbankum.app/kegiatan/${data.id}';
+                final posbankum = controller.namaPosbankum.value.isNotEmpty ? controller.namaPosbankum.value : 'Posbankum';
+                final pelapor = controller.namaPelapor.value.isNotEmpty ? controller.namaPelapor.value : 'Paralegal';
+                final kec = controller.kecamatan.value;
+                final kab = controller.kabupaten.value;
+                final wilayah = [kec, kab].where((e) => e.isNotEmpty).join(', ');
+
+                final textToShare = '''📋 *LAPORAN KEGIATAN*
+
+*${data.judul}*
+🏛️ $posbankum${wilayah.isNotEmpty ? ' • $wilayah' : ''}
+
+👤 Pelapor: $pelapor ($posbankum)
+📍 Lokasi: ${data.lokasi}
+🗓️ Tanggal: ${controller.getFormattedDate(data.tglMulai)}
+
+📝 *Deskripsi:*
+${data.deskripsi ?? '-'}
+
+📊 *Hasil Kegiatan:*
+${data.hasilKegiatan?.isNotEmpty == true ? data.hasilKegiatan : '-'}''';
                 SharePlus.instance.share(ShareParams(text: textToShare));
               },
             ),
@@ -305,25 +353,6 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
               onTap: () {
                 Get.back();
                 _generateAndSharePDF(data);
-              },
-            ),
-            const Divider(height: 15, color: Color(0xFFF1F5F9)),
-
-            // Opsi 3: Copy Link
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.link_rounded, color: Color(0xFF3B82F6)),
-              ),
-              title: const Text("Salin Tautan", style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-              subtitle: const Text("Salin link untuk dibuka di aplikasi", style: TextStyle(fontSize: 12, color: textSecondary)),
-              onTap: () {
-                Get.back();
-                final dummyLink = "https://posbankum.app/kegiatan/${data.id}";
-                Clipboard.setData(ClipboardData(text: dummyLink));
-                Get.snackbar("Berhasil", "Tautan disalin: $dummyLink", backgroundColor: const Color(0xFF10B981), colorText: Colors.white, snackPosition: SnackPosition.BOTTOM, margin: const EdgeInsets.all(16));
               },
             ),
             const SizedBox(height: 10),
