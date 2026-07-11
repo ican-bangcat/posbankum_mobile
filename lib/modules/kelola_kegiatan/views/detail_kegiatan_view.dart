@@ -178,6 +178,15 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                                 data.deskripsi ?? 'Tidak ada deskripsi untuk kegiatan ini.',
                                 style: const TextStyle(fontSize: 14, color: textSecondary, height: 1.6),
                               ),
+                              const SizedBox(height: 24),
+
+                              // 6. Hasil Kegiatan
+                              const Text('Hasil Kegiatan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: textPrimary)),
+                              const SizedBox(height: 12),
+                              Text(
+                                (data.hasilKegiatan?.isNotEmpty == true) ? data.hasilKegiatan! : 'Belum ada hasil kegiatan yang dilaporkan.',
+                                style: const TextStyle(fontSize: 14, color: textSecondary, height: 1.6),
+                              ),
                             ],
                           ),
                         ),

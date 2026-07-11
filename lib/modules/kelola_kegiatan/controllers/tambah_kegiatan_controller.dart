@@ -13,6 +13,7 @@ class TambahKegiatanController extends GetxController {
   final judulCtrl = TextEditingController();
   final lokasiCtrl = TextEditingController();
   final deskripsiCtrl = TextEditingController();
+  final hasilCtrl = TextEditingController();
 
   var selectedDate = Rxn<DateTime>();
   var selectedImage = Rxn<File>();
@@ -62,6 +63,7 @@ class TambahKegiatanController extends GetxController {
         'judul': judulCtrl.text,
         'deskripsi': deskripsiCtrl.text,
         'lokasi': lokasiCtrl.text,
+        'hasil_kegiatan': hasilCtrl.text,
         'status': 'menunggu',
         'tgl_mulai': formattedDate,
         'jumlah_peserta': null,

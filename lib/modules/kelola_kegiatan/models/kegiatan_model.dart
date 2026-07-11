@@ -14,6 +14,7 @@ class KegiatanItem {
   final int? jumlahPeserta;
   final List<String>? anggotaTerlibat;
   final String? catatan;
+  final String? hasilKegiatan;
 
   KegiatanItem({
     required this.id,
@@ -29,6 +30,7 @@ class KegiatanItem {
     this.jumlahPeserta,
     this.anggotaTerlibat,
     this.catatan,
+    this.hasilKegiatan,
   });
 
   factory KegiatanItem.fromJson(Map<String, dynamic> json) {
@@ -82,6 +84,7 @@ class KegiatanItem {
           : (json['target_peserta'] != null ? int.tryParse(json['target_peserta'].toString()) : null),
       anggotaTerlibat: anggotaList,
       catatan: json['catatan'] ?? json['catatan_internal'] ?? json['alasan_penolakan'] ?? json['keterangan'],
+      hasilKegiatan: json['hasil_kegiatan'] ?? json['hasil'] ?? '',
     );
   }
 
@@ -98,6 +101,7 @@ class KegiatanItem {
       'jumlah_peserta': jumlahPeserta,
       'anggota_terlibat': anggotaTerlibat,
       'catatan': catatan,
+      'hasil_kegiatan': hasilKegiatan,
     };
   }
 }

@@ -17,6 +17,7 @@ class EditKegiatanController extends GetxController {
   final judulCtrl = TextEditingController();
   final lokasiCtrl = TextEditingController();
   final deskripsiCtrl = TextEditingController();
+  final hasilCtrl = TextEditingController();
 
   var selectedDate = Rxn<DateTime>();
   var selectedImage = Rxn<File>();
@@ -43,6 +44,7 @@ class EditKegiatanController extends GetxController {
       judulCtrl.text = item.judul;
       lokasiCtrl.text = item.lokasi;
       deskripsiCtrl.text = item.deskripsi ?? '';
+      hasilCtrl.text = item.hasilKegiatan ?? '';
       existingImageUrl.value = item.imageUrl ?? '';
 
       if (item.tglMulai != null) {
@@ -95,6 +97,7 @@ class EditKegiatanController extends GetxController {
         'tgl_mulai': formattedDate,
         'lokasi': lokasiCtrl.text,
         'deskripsi': deskripsiCtrl.text,
+        'hasil_kegiatan': hasilCtrl.text,
         'jumlah_peserta': null,
         'anggota_terlibat': null,
         'thumbnail_path': existingImageUrl.value,

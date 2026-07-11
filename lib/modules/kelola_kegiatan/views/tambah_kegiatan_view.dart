@@ -68,7 +68,7 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
                     Obx(() => ElevatedButton(
                       onPressed: controller.isLoading.value ? null : controller.simpanKegiatan,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2563EB),
+                        backgroundColor: const Color(0xFF2A2E5E),
                         minimumSize: const Size(double.infinity, 56),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         elevation: 0,
@@ -123,6 +123,10 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
           const SizedBox(height: 20),
           _buildFieldLabel("Deskripsi Kegiatan"),
           _buildTextField(controller.deskripsiCtrl, "Jelaskan detail agenda kegiatan...", isMultiLine: true),
+
+          const SizedBox(height: 20),
+          _buildFieldLabel("Hasil Kegiatan"),
+          _buildTextField(controller.hasilCtrl, "Jelaskan hasil/capaian kegiatan...", isMultiLine: true),
         ],
       ),
     );
@@ -138,11 +142,11 @@ class TambahKegiatanView extends GetView<TambahKegiatanController> {
     );
   }
 
-  Widget _buildTextField(TextEditingController ctrl, String hint, {IconData? icon, bool isMultiLine = false, TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField(TextEditingController ctrl, String hint, {IconData? icon, bool isMultiLine = false, TextInputType? keyboardType}) {
     return TextField(
       controller: ctrl,
       maxLines: isMultiLine ? 5 : 1,
-      keyboardType: keyboardType,
+      keyboardType: keyboardType ?? (isMultiLine ? TextInputType.multiline : TextInputType.text),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
