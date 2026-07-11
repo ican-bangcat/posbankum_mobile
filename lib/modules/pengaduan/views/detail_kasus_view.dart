@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../controllers/detail_kasus_controller.dart';
 import '../models/pengaduan_models.dart';
+import '../../../app/routes/app_routes.dart';
 
 class DetailKasusView extends GetView<DetailKasusController> {
   const DetailKasusView({super.key});
@@ -926,7 +927,7 @@ class DetailKasusView extends GetView<DetailKasusController> {
         width: double.infinity,
         child: ElevatedButton(
           onPressed: () {
-            Get.toNamed('/detail-chat-masyarakat', arguments: {
+            Get.toNamed(AppRoutes.DETAIL_CHAT_WARGA, arguments: {
               'id_pengaduan': kasus?.id ?? '',
               'judul_laporan': kasus?.judulLaporan ?? 'Konsultasi Hukum',
               'nama_paralegal': kasus?.namaParalegal ?? 'Paralegal Posbankum',
