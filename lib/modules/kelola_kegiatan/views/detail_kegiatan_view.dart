@@ -159,14 +159,16 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
                                 label: "LOKASI KEGIATAN",
                                 value: data.lokasi,
                               ),
+                              const SizedBox(height: 20),
+
+                              // 4.5 Info Pelapor
+                              _buildInfoRow(
+                                icon: Icons.person_outline,
+                                label: "NAMA PELAPOR",
+                                value: "${GetStorage().read('user')?['nama_lengkap'] ?? 'Paralegal'} (${GetStorage().read('user')?['posbankum']?['nama_posbankum'] ?? 'Posbankum'})",
+                              ),
                               const SizedBox(height: 24),
                               const Divider(color: Color(0xFFF1F5F9), thickness: 1.5),
-                              const SizedBox(height: 24),
-
-                              // ✅ 4.5 Info Anggota Terlibat
-                              const Text('Anggota Terlibat', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: textPrimary)),
-                              const SizedBox(height: 12),
-                              _buildAnggotaList(data.anggotaTerlibat),
                               const SizedBox(height: 24),
 
                               // 5. Deskripsi
@@ -357,42 +359,7 @@ class DetailKegiatanView extends GetView<DetailKegiatanController> {
     }
   }
 
-  // ✅ HELPER UNTUK MENAMPILKAN ANGGOTA TERLIBAT
-  Widget _buildAnggotaList(dynamic anggotaData) {
-    if (anggotaData == null) {
-      return const Text('Tidak ada anggota yang dicantumkan.', style: TextStyle(fontSize: 14, color: textSecondary));
-    }
 
-    List<String> anggotaList = [];
-    if (anggotaData is List) {
-      anggotaList = anggotaData.map((e) => e.toString()).toList();
-    }
-
-    if (anggotaList.isEmpty) {
-      return const Text('Tidak ada anggota yang dicantumkan.', style: TextStyle(fontSize: 14, color: textSecondary));
-    }
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: anggotaList.map((nama) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.person_outline, size: 14, color: Color(0xFF64748B)),
-            const SizedBox(width: 6),
-            Text(nama, style: const TextStyle(fontSize: 13, color: textPrimary, fontWeight: FontWeight.w600)),
-          ],
-        ),
-      )).toList(),
-    );
-  }
 
   Widget _buildHeader() {
     return Stack(

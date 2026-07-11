@@ -13,52 +13,17 @@ class TambahKegiatanController extends GetxController {
   final judulCtrl = TextEditingController();
   final lokasiCtrl = TextEditingController();
   final deskripsiCtrl = TextEditingController();
-  final jmlPesertaCtrl = TextEditingController();
 
   var selectedDate = Rxn<DateTime>();
   var selectedImage = Rxn<File>();
   var isLoading = false.obs;
-
-  // VARIABEL UNTUK MULTI-SELECT PARALEGAL
-  var idPosbankumAsli = ''.obs;
-  var paralegalList = <String>[].obs;
-  var selectedParalegals = <String>[].obs;
 
   final ImagePicker _picker = ImagePicker();
 
   TambahKegiatanController({KegiatanRepository? repository})
       : _repository = repository ?? KegiatanRepository();
 
-  @override
-  void onInit() {
-    super.onInit();
-    fetchDataAwal();
-  }
 
-  Future<void> fetchDataAwal() async {
-    try {
-      final userData = await _repository.fetchProfile();
-      idPosbankumAsli.value = userData['id_posbankum']?.toString() ?? '';
-
-      if (idPosbankumAsli.value.isNotEmpty) {
-        final posbankumData = await _repository.fetchPosbankum(idPosbankumAsli.value);
-        final List<dynamic> listParalegalRaw = posbankumData['paralegals'] ?? posbankumData['members'] ?? [];
-        paralegalList.value = listParalegalRaw.map<String>((p) {
-          return (p['nama_lengkap'] ?? p['nama_paralegal'] ?? p['name'] ?? '-').toString();
-        }).toList();
-      }
-    } catch (e) {
-      print("Error fetch paralegal: $e");
-    }
-  }
-
-  void toggleParalegal(String nama) {
-    if (selectedParalegals.contains(nama)) {
-      selectedParalegals.remove(nama);
-    } else {
-      selectedParalegals.add(nama);
-    }
-  }
 
   // ✅ KOMPRESI GAMBAR ALA WHATSAPP
   Future<void> pickImage() async {
@@ -99,8 +64,8 @@ class TambahKegiatanController extends GetxController {
         'lokasi': lokasiCtrl.text,
         'status': 'menunggu',
         'tgl_mulai': formattedDate,
-        'jumlah_peserta': jmlPesertaCtrl.text.isNotEmpty ? int.tryParse(jmlPesertaCtrl.text) : null,
-        'anggota_terlibat': selectedParalegals.toList(),
+        'jumlah_peserta': null,
+        'anggota_terlibat': null,
       };
 
       if (selectedImage.value != null) {
