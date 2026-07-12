@@ -178,9 +178,17 @@ class NotificationHelper {
       final targetId = idPengaduan.isNotEmpty ? idPengaduan : refId;
       if (targetId.isNotEmpty) {
         if (role == 'paralegal') {
-          Get.toNamed(AppRoutes.DETAIL_CHAT_PARALEGAL, arguments: targetId);
+          Get.toNamed(AppRoutes.DETAIL_CHAT_PARALEGAL, arguments: {
+            'id_pengaduan': targetId,
+            'judul_kasus': 'Konsultasi Hukum',
+            'nama_klien': 'Klien',
+          });
         } else {
-          Get.toNamed(AppRoutes.DETAIL_CHAT_WARGA, arguments: targetId);
+          Get.toNamed(AppRoutes.DETAIL_CHAT_WARGA, arguments: {
+            'id_pengaduan': targetId,
+            'judul_laporan': 'Konsultasi Hukum',
+            'nama_paralegal': 'Paralegal Posbankum',
+          });
         }
       }
       return;

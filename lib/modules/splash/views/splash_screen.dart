@@ -11,19 +11,27 @@ class SplashScreen extends GetView<SplashController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Obx(() {
-        if (controller.showStep1.value) {
-          return _buildStep1();
-        }
-        
-        if (controller.showStep2.value || 
-            controller.showStep3.value || 
-            controller.showStep4.value) {
-          return _buildNavyBackground();
-        }
-
-        return Container(color: Colors.white);
-      }),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 650),
+            child: Obx(() {
+              if (controller.showStep1.value) {
+                return _buildStep1();
+              }
+              
+              if (controller.showStep2.value || 
+                  controller.showStep3.value || 
+                  controller.showStep4.value) {
+                return _buildNavyBackground();
+              }
+      
+              return Container(color: Colors.white);
+            }),
+          ),
+        ),
+      ),
     );
   }
 
