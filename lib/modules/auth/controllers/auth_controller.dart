@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../app/data/services/notification_helper.dart';
 import '../repositories/auth_repository.dart';
 
 class AuthController extends GetxController {
@@ -93,6 +94,9 @@ class AuthController extends GetxController {
     await _storage.write('user', user);
     await _storage.write('role', role);
     await _storage.write('is_logged_in', true);
+
+    // Sinkronisasi token FCM ke backend agar terdaftar di user yang baru login
+    NotificationHelper.instance.syncTokenToServer();
   }
 
   /// Tampilkan snackbar sukses dan redirect berdasarkan role.

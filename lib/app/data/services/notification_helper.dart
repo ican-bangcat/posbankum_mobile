@@ -253,4 +253,12 @@ class NotificationHelper {
       // Fail silently agar tidak mengganggu operasional app utama
     }
   }
+
+  // Mengirim ulang token FCM ke backend secara manual (misal setelah login)
+  Future<void> syncTokenToServer() async {
+    final token = GetStorage().read('fcm_token');
+    if (token != null) {
+      await _sendTokenToBackend(token);
+    }
+  }
 }
