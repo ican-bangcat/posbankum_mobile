@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:posbankum/firebase_options.dart';
 import '../../../app/routes/app_routes.dart';
 import 'api_service.dart';
 
@@ -20,9 +21,10 @@ class NotificationHelper {
     if (_initialized) return;
 
     try {
-      // 1. Inisialisasi Firebase (jika file google-services.json tersedia)
-      // Dibungkus try-catch agar jika file config Firebase belum dipasang oleh pengguna, aplikasi tidak crash.
-      await Firebase.initializeApp();
+      // 1. Inisialisasi Firebase menggunakan opsi konfigurasi multiplatform (Android/iOS)
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
       
       // Inisialisasi FirebaseMessaging setelah FirebaseApp berhasil terbuat
       _fcm = FirebaseMessaging.instance;

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "875255274019",
+    "project_id": "posbankumsibapak",
+    "storage_bucket": "posbankumsibapak.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:875255274019:android:565874c0df8f8a69516f96",
+        "android_client_info": {
+          "package_name": "io.posbankum.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBri9Dur0YiG0ScPp-QfuPpzw-OIOhPVJc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
