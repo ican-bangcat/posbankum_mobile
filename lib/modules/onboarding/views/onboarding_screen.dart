@@ -14,24 +14,29 @@ class OnboardingScreen extends GetView<OnboardingController> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildSkipButton(),
-            Expanded(
-              child: PageView.builder(
-                controller: controller.pageController,
-                physics: const BouncingScrollPhysics(),
-                itemCount: controller.totalPages,
-                onPageChanged: (index) => controller.currentPage.value = index,
-                itemBuilder: (context, index) => _OnboardingPage(
-                  data: controller.pages[index],
-                  pageIndex: index,
-                  currentPage: controller.currentPage,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 650),
+            child: Column(
+              children: [
+                _buildSkipButton(),
+                Expanded(
+                  child: PageView.builder(
+                    controller: controller.pageController,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: controller.totalPages,
+                    onPageChanged: (index) => controller.currentPage.value = index,
+                    itemBuilder: (context, index) => _OnboardingPage(
+                      data: controller.pages[index],
+                      pageIndex: index,
+                      currentPage: controller.currentPage,
+                    ),
+                  ),
                 ),
-              ),
+                _buildBottomSection(),
+              ],
             ),
-            _buildBottomSection(),
-          ],
+          ),
         ),
       ),
     );

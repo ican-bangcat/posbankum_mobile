@@ -5,8 +5,8 @@ import '../../pengaduan/controllers/daftar_pengaduan_controller.dart';
 import '../../pengaduan/views/daftar_pengaduan_view.dart';
 import 'home_warga_view.dart';
 import '../../profile/views/profile_view.dart';
-import '../../notifikasi_masyarakat/views/notifikasi_masyarakat_view.dart';
-import '../../notifikasi_masyarakat/controllers/notifikasi_masyarakat_controller.dart';
+import '../../notifikasi/views/warga/notifikasi_warga_view.dart';
+import '../../notifikasi/controllers/notifikasi_warga_controller.dart';
 import '../../daftar_chat_warga/controllers/daftar_chat_warga_controller.dart';
 import '../../daftar_chat_warga/views/daftar_chat_warga_view.dart';
 import '../../../app/routes/app_routes.dart';
@@ -17,7 +17,7 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      const NotifikasiMasyarakatView(),
+      const NotifikasiWargaView(),
       const DaftarPengaduanView(),
       const HomeWargaView(),
       const DaftarChatWargaView(),
@@ -54,7 +54,7 @@ class WargaDashboardView extends GetView<WargaDashboardController> {
                 children: [
                   _buildNavItem(
                     icon: Icons.notifications_none_outlined,
-                    label: 'Notification',
+                    label: 'Notifikasi',
                     index: 0,
                   ),
                   _buildNavItem(

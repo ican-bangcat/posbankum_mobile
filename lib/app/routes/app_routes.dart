@@ -42,6 +42,7 @@ class AppRoutes {
 
   // Other
   static const String NOTIFICATION = '/notification';
+  static const String NOTIFIKASI_PARALEGAL = '/notifikasi-paralegal';
   static const String HELP = '/help';
   static const String ABOUT = '/about';
   static const String TERMS = '/terms';

@@ -7,6 +7,7 @@ import 'app/routes/app_pages.dart';
 import 'app/themes/app_colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'modules/auth/controllers/auth_controller.dart';
+import 'app/data/services/notification_helper.dart';
 
 void main() async {
   // Memastikan inisialisasi binding Flutter selesai sebelum menjalankan asinkronus
@@ -14,6 +15,9 @@ void main() async {
 
   // Menginisialisasi modul GetStorage untuk penyimpanan data lokal
   await GetStorage.init();
+
+  // Menginisialisasi Firebase Cloud Messaging & Local Notifications (secara asinkronus agar tidak memblokir startup app)
+  NotificationHelper.instance.initialize();
 
   // Mengatur pelokalan format penanggalan ke standar Indonesia
   await initializeDateFormatting('id_ID', null);

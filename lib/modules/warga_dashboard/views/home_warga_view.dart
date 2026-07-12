@@ -7,6 +7,8 @@ import '../../auth/controllers/auth_controller.dart';
 // Import Controller Dashboard Masyarakat
 import '../controllers/home_warga_controller.dart';
 import '../controllers/warga_dashboard_controller.dart';
+import '../../notifikasi/controllers/notifikasi_warga_controller.dart';
+import '../../profile/controllers/profile_controller.dart';
 
 class HomeWargaView extends StatefulWidget {
   const HomeWargaView({super.key});
@@ -44,67 +46,6 @@ class _HomeWargaViewState extends State<HomeWargaView>
     );
 
     _animationController.forward();
-  }
-
-  Future<void> _handleLogout() async {
-    _confirmLogout();
-  }
-
-  void _showProfileOptions() {
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-            const SizedBox(height: 20),
-            const Text('Menu Profil', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.person, color: Color(0xFF1E3A5F)),
-              title: const Text('Lihat Profil'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                Get.back();
-                Get.toNamed(AppRoutes.PROFILE);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Logout', style: TextStyle(color: Colors.red)),
-              onTap: () {
-                Get.back();
-                _confirmLogout();
-              },
-            ),
-            const SizedBox(height: 10),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _confirmLogout() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Konfirmasi Logout'),
-        content: const Text('Apakah Anda yakin ingin keluar?'),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
-          ElevatedButton(
-            onPressed: () { 
-              Get.back(); 
-              authC.logout(); 
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Logout', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -189,11 +130,32 @@ class _HomeWargaViewState extends State<HomeWargaView>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     GestureDetector(
-                      onTap: _showProfileOptions,
+                      onTap: () => Get.find<WargaDashboardController>().changeTab(4),
                       child: Container(
                         width: 52, height: 52,
-                        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white.withOpacity(0.3), width: 2), color: Colors.white.withOpacity(0.1)),
-                        child: const Icon(Icons.person, color: Colors.white, size: 30),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                          color: Colors.white.withOpacity(0.1),
+                        ),
+                        child: ClipOval(
+                          child: Obx(() {
+                            String avatar = '';
+                            if (Get.isRegistered<ProfileController>()) {
+                              avatar = Get.find<ProfileController>().avatarUrl.value;
+                            } else {
+                              avatar = GetStorage().read('user')?['foto_profile']?.toString() ?? '';
+                            }
+                            if (avatar.isNotEmpty) {
+                              return Image.network(
+                                avatar,
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) => const Icon(Icons.person, color: Colors.white, size: 30),
+                              );
+                            }
+                            return const Icon(Icons.person, color: Colors.white, size: 30);
+                          }),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -212,12 +174,43 @@ class _HomeWargaViewState extends State<HomeWargaView>
                         ],
                       ),
                     ),
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(width: 42, height: 42, decoration: BoxDecoration(color: Colors.white.withOpacity(0.12), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 22)),
-                        Positioned(right: 8, top: 8, child: Container(width: 9, height: 9, decoration: const BoxDecoration(color: Color(0xFFFF4444), shape: BoxShape.circle))),
-                      ],
+                    GestureDetector(
+                      onTap: () => Get.find<WargaDashboardController>().changeTab(0),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 22),
+                          ),
+                          Obx(() {
+                            if (!Get.isRegistered<NotifikasiWargaController>()) {
+                              Get.put(NotifikasiWargaController());
+                            }
+                            final hasUnread = Get.find<NotifikasiWargaController>()
+                                .allNotifications
+                                .any((e) => !e.isRead);
+                            if (!hasUnread) return const SizedBox.shrink();
+                            return Positioned(
+                              right: 8,
+                              top: 8,
+                              child: Container(
+                                width: 9,
+                                height: 9,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFFF4444),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
                     ),
                   ],
                 ),

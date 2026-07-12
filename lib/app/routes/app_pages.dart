@@ -43,8 +43,10 @@ import '../../modules/profil_paralegal/bindings/profil_paralegal_binding.dart';
 import '../../modules/profil_paralegal/views/profil_paralegal_view.dart';
 import '../../modules/profil_paralegal/bindings/edit_profil_paralegal_binding.dart';
 import '../../modules/profil_paralegal/views/edit_profil_paralegal_view.dart';
-import '../../modules/notifikasi_masyarakat/views/notifikasi_masyarakat_view.dart';
-import '../../modules/notifikasi_masyarakat/bindings/notifikasi_masyarakat_binding.dart';
+import '../../modules/notifikasi/views/warga/notifikasi_warga_view.dart';
+import '../../modules/notifikasi/bindings/notifikasi_warga_binding.dart';
+import '../../modules/notifikasi/views/paralegal/notifikasi_paralegal_view.dart';
+import '../../modules/notifikasi/bindings/notifikasi_paralegal_binding.dart';
 import '../../modules/daftar_chat_paralegal/controllers/daftar_chat_paralegal_controller.dart';
 import '../../modules/daftar_chat_paralegal/views/daftar_chat_paralegal_view.dart';
 import '../../modules/daftar_chat_paralegal/controllers/detail_chat_paralegal_controller.dart';
@@ -224,8 +226,14 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.NOTIFICATION,
-      page: () => const NotifikasiMasyarakatView(),
-      binding: NotifikasiMasyarakatBinding(),
+      page: () => const NotifikasiWargaView(),
+      binding: NotifikasiWargaBinding(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.NOTIFIKASI_PARALEGAL,
+      page: () => const NotifikasiParalegalView(),
+      binding: NotifikasiParalegalBinding(),
       transition: Transition.rightToLeft,
     ),
     GetPage(
