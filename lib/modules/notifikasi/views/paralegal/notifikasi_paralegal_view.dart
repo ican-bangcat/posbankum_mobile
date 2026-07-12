@@ -19,112 +19,114 @@ class NotifikasiParalegalView extends GetView<NotifikasiParalegalController> {
 
     return Scaffold(
       backgroundColor: darkBlueColor,
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 650),
-          child: Column(
-            children: [
-          // ── HEADER (Dengan Tombol Kembali) ──
-          _buildHeader(),
-
-          // ── KONTEN UTAMA ──
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF2F4FB),
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(28),
-                  topLeft: Radius.zero,
-                ),
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 24),
-                  
-                  // Filter Chips & Mark All Read
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 650),
+            child: Column(
+              children: [
+                // ── HEADER (Dengan Tombol Kembali) ──
+                _buildHeader(),
+      
+                // ── KONTEN UTAMA ──
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF2F4FB),
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(28),
+                        topLeft: Radius.zero,
+                      ),
+                    ),
+                    child: Column(
                       children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            child: Obx(() => Row(
-                                  children: [
-                                    _buildFilterChip('Semua', 0),
-                                    const SizedBox(width: 8),
-                                    _buildFilterChip('Belum Dibaca', 1),
-                                    const SizedBox(width: 8),
-                                    _buildFilterChip('Sudah Dibaca', 2),
-                                  ],
-                                )),
+                        const SizedBox(height: 24),
+                        
+                        // Filter Chips & Mark All Read
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  physics: const BouncingScrollPhysics(),
+                                  child: Obx(() => Row(
+                                        children: [
+                                          _buildFilterChip('Semua', 0),
+                                          const SizedBox(width: 8),
+                                          _buildFilterChip('Belum Dibaca', 1),
+                                          const SizedBox(width: 8),
+                                          _buildFilterChip('Sudah Dibaca', 2),
+                                        ],
+                                      )),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.done_all_rounded, color: darkBlueColor),
+                                tooltip: 'Tandai semua dibaca',
+                                onPressed: () => controller.markAllAsRead(),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(Icons.done_all_rounded, color: darkBlueColor),
-                          tooltip: 'Tandai semua dibaca',
-                          onPressed: () => controller.markAllAsRead(),
+                        const SizedBox(height: 16),
+      
+                        // List Notifikasi
+                        Expanded(
+                          child: Obx(() {
+                            if (controller.isLoading.value && controller.allNotifications.isEmpty) {
+                              return const Center(child: CircularProgressIndicator());
+                            }
+      
+                            final items = controller.filteredNotifications;
+      
+                            if (items.isEmpty) {
+                              return RefreshIndicator(
+                                onRefresh: () => controller.fetchNotifications(),
+                                color: darkBlueColor,
+                                child: ListView(
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  children: const [
+                                    SizedBox(height: 100),
+                                    Center(
+                                      child: Text(
+                                        "Tidak ada notifikasi",
+                                        style: TextStyle(color: textSecondary, fontWeight: FontWeight.w500),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+      
+                            return RefreshIndicator(
+                              onRefresh: () => controller.fetchNotifications(),
+                              color: darkBlueColor,
+                              child: ListView.builder(
+                                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                itemCount: items.length,
+                                itemBuilder: (context, index) {
+                                  final item = items[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: _buildNotificationCard(item),
+                                  );
+                                },
+                              ),
+                            );
+                          }),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-
-                  // List Notifikasi
-                  Expanded(
-                    child: Obx(() {
-                      if (controller.isLoading.value && controller.allNotifications.isEmpty) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      final items = controller.filteredNotifications;
-
-                      if (items.isEmpty) {
-                        return RefreshIndicator(
-                          onRefresh: () => controller.fetchNotifications(),
-                          color: darkBlueColor,
-                          child: ListView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            children: const [
-                              SizedBox(height: 100),
-                              Center(
-                                child: Text(
-                                  "Tidak ada notifikasi",
-                                  style: TextStyle(color: textSecondary, fontWeight: FontWeight.w500),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return RefreshIndicator(
-                        onRefresh: () => controller.fetchNotifications(),
-                        color: darkBlueColor,
-                        child: ListView.builder(
-                          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                          itemCount: items.length,
-                          itemBuilder: (context, index) {
-                            final item = items[index];
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _buildNotificationCard(item),
-                            );
-                          },
-                        ),
-                      );
-                    }),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ),
-            ],
           ),
         ),
       ),

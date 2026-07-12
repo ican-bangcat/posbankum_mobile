@@ -37,7 +37,16 @@ class NotifikasiItem {
 
     if (rawDate.isNotEmpty) {
       try {
-        final dt = DateTime.parse(rawDate).toLocal();
+        String dateToParse = rawDate;
+        // Jika format MySQL standard yyyy-MM-dd HH:mm:ss tanpa offset, ubah ke ISO8601 UTC
+        if (!dateToParse.contains('Z') && !dateToParse.contains('+') && dateToParse.contains(' ')) {
+          dateToParse = dateToParse.replaceAll(' ', 'T') + 'Z';
+        } else if (!dateToParse.contains('Z') && !dateToParse.contains('+') && !dateToParse.contains('T')) {
+          dateToParse = dateToParse + 'Z';
+        } else if (!dateToParse.contains('Z') && !dateToParse.contains('+') && dateToParse.contains('T')) {
+          dateToParse = dateToParse + 'Z';
+        }
+        final dt = DateTime.parse(dateToParse).toLocal();
         final diff = DateTime.now().difference(dt);
 
         if (diff.inMinutes < 60) {
