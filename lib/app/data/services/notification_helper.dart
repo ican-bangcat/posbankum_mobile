@@ -177,17 +177,19 @@ class NotificationHelper {
     if (type == 'chat' || refTable == 'chat') {
       final targetId = idPengaduan.isNotEmpty ? idPengaduan : refId;
       if (targetId.isNotEmpty) {
+        final senderName = data['sender_name']?.toString() ?? 'Lawan Bicara';
+        final judulLaporan = data['judul_laporan']?.toString() ?? 'Konsultasi Hukum';
         if (role == 'paralegal') {
           Get.toNamed(AppRoutes.DETAIL_CHAT_PARALEGAL, arguments: {
             'id_pengaduan': targetId,
-            'judul_kasus': 'Konsultasi Hukum',
-            'nama_klien': 'Klien',
+            'judul_kasus': judulLaporan,
+            'nama_klien': senderName,
           });
         } else {
           Get.toNamed(AppRoutes.DETAIL_CHAT_WARGA, arguments: {
             'id_pengaduan': targetId,
-            'judul_laporan': 'Konsultasi Hukum',
-            'nama_paralegal': 'Paralegal Posbankum',
+            'judul_laporan': judulLaporan,
+            'nama_paralegal': senderName,
           });
         }
       }
