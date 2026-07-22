@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:dio/dio.dart' as dio_pkg;
 import '../../../app/data/services/api_service.dart';
 
 class KelolaPengaduanRepository {
@@ -6,7 +8,8 @@ class KelolaPengaduanRepository {
   KelolaPengaduanRepository({ApiService? apiService})
       : _apiService = apiService ?? ApiService();
 
-  Future<void> simpanProgresTimeline({
+  /// Simpan progres timeline dan kembalikan id_timeline untuk upload lampiran.
+  Future<String> simpanProgresTimeline({
     required String kasusId,
     required String title,
     required String deskripsi,
@@ -23,6 +26,27 @@ class KelolaPengaduanRepository {
     if (response.data['status'] != true) {
       throw response.data['message'] ?? 'Gagal menyimpan progres timeline';
     }
+    // Ambil id_timeline dari response backend
+    return response.data['data']['id_timeline']?.toString() ?? '';
+  }
+
+  /// Upload lampiran progres (gambar/PDF) yang terhubung ke entry timeline tertentu.
+  Future<bool> uploadLampiranProgres({
+    required String kasusId,
+    required String idTimeline,
+    required File file,
+    required String fileName,
+  }) async {
+    dio_pkg.FormData formData = dio_pkg.FormData.fromMap({
+      'file': await dio_pkg.MultipartFile.fromFile(file.path, filename: fileName),
+      'jenis_lampiran': 'progress',
+      'id_timeline': idTimeline,
+    });
+    final response = await _apiService.dio.post(
+      '/pengaduan/$kasusId/lampiran',
+      data: formData,
+    );
+    return response.data['status'] == true;
   }
 
   Future<void> updateStatusKasus({
@@ -42,3 +66,4 @@ class KelolaPengaduanRepository {
     }
   }
 }
+

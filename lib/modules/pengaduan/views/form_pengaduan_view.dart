@@ -118,6 +118,7 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
                             controller: controller.nikC,
                             keyboardType: TextInputType.number,
                             showDigitCount: true,
+                            bottomText: 'Otomatis terisi dari profil (dapat disesuaikan)',
                             inputFormatters: [
                               LengthLimitingTextInputFormatter(16),
                               FilteringTextInputFormatter.digitsOnly, // 🚀 ANTI SPASI & SIMBOL
@@ -127,8 +128,9 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
 
                           _buildTextField(
                             label: 'Nama Lurah',
+                            optionalText: '(Opsional)',
                             icon: Icons.domain,
-                            hint: 'Masukkan nama lurah',
+                            hint: 'Masukkan nama lurah (jika tahu)',
                             controller: controller.namaLurahC,
                           ),
                           const SizedBox(height: 20),
@@ -212,8 +214,8 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
       ),
       child: Obx(() {
         final count = controller.progressCount.value;
-        final displayCount = count > 9 ? 9 : count;
-        final progress = (displayCount / 9.0).clamp(0.0, 1.0);
+        final displayCount = count > 8 ? 8 : count;
+        final progress = (displayCount / 8.0).clamp(0.0, 1.0);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,7 +230,7 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
                     fontSize: 13, fontWeight: FontWeight.w700,
                     color: primaryBlue,
                   ),
-                  child: Text('$displayCount/9 Lengkap'),
+                  child: Text('$displayCount/8 Lengkap'),
                 ),
               ],
             ),
@@ -284,6 +286,7 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
     TextInputType keyboardType = TextInputType.text,
     int? maxLines = 1,
     String? bottomText,
+    String? optionalText,
     bool showDigitCount = false,
     bool showCharacterCount = false,
     List<TextInputFormatter>? inputFormatters,
@@ -291,7 +294,7 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildLabelWithIcon(icon, label),
+        _buildLabelWithIcon(icon, label, optionalText: optionalText),
         const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
@@ -788,7 +791,7 @@ class FormPengaduanScreen extends GetView<FormPengaduanController> {
     return SizedBox(
       width: double.infinity, height: 54,
       child: Obx(() {
-        final isComplete = controller.progressCount.value >= 9;
+        final isComplete = controller.progressCount.value >= 8;
         return ElevatedButton(
           onPressed: (isComplete && !controller.isLoading.value)
               ? () => controller.submitPengaduan()

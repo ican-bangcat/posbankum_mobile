@@ -33,6 +33,7 @@ class PengaduanRepository {
     if (response.data['status'] == true) {
       return (response.data['data'] as List)
           .map((e) => LampiranItem(
+                idTimeline: e['id_timeline']?.toString(),
                 namaFile: e['nama_file'].toString(),
                 pathFile: e['path_file'].toString(),
                 mimeType: e['mime_type']?.toString(),

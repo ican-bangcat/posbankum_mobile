@@ -13,10 +13,13 @@ class NotifikasiWargaView extends GetView<NotifikasiWargaController> {
 
   @override
   Widget build(BuildContext context) {
-    // Pastikan controller terinisialisasi
-    if (!Get.isRegistered<NotifikasiWargaController>()) {
-      Get.put(NotifikasiWargaController());
-    }
+    final NotifikasiWargaController controller = Get.isRegistered<NotifikasiWargaController>()
+        ? Get.find<NotifikasiWargaController>()
+        : Get.put(NotifikasiWargaController());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.fetchNotifications();
+    });
 
     return Scaffold(
       backgroundColor: darkBlueColor,

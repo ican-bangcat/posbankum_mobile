@@ -121,7 +121,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                                  text: 'Ambil Kasus',
                                  icon: Icons.assignment_turned_in,
                                  onPressed: () => controller.ambilKasus(kasus.id),
-                                 color: const Color(0xFF3B4A8D),
+                                 color: darkBlue,
                                  isLoading: controller.isUpdating.value,
                                ),
                              ),
@@ -146,7 +146,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                                    'judul_kasus': kasus.judul,
                                    'nama_klien': kasus.namaKlien ?? 'Klien',
                                  }),
-                                 color: const Color(0xFF3B4A8D),
+                                 color: darkBlue,
                                ),
                              ),
                              const SizedBox(height: 10),
@@ -170,7 +170,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                                      text: 'Update Progres',
                                      icon: Icons.assignment_outlined,
                                      onPressed: () => Get.toNamed(AppRoutes.UPDATE_PROGRES, arguments: {'id': kasus.id, 'judul': kasus.judul}),
-                                     color: const Color(0xFF3B4A8D),
+                                     color: darkBlue,
                                    ),
                                  ),
                                ],
@@ -186,7 +186,7 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                           text: 'Kembali ke Beranda',
                           icon: Icons.home_outlined,
                           onPressed: () => Get.back(),
-                          color: const Color(0xFF3B4A8D),
+                          color: darkBlue,
                         ),
                       ),
                   ],
@@ -756,26 +756,40 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                 bool isLast = index == controller.listProgres.length - 1;
                 String tglStr = "${progres.tanggal.day.toString().padLeft(2, '0')} ${_getMonth(progres.tanggal.month)} ${progres.tanggal.year}";
 
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      children: [
-                        Container(
-                            margin: const EdgeInsets.only(top: 4),
-                            width: 14, height: 14,
-                            decoration: BoxDecoration(color: index == 0 ? const Color(0xFF1E2452) : const Color(0xFFCBD5E1), shape: BoxShape.circle)
+                return IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 4),
+                            Container(
+                              width: 14, height: 14,
+                              decoration: BoxDecoration(
+                                color: index == 0 ? const Color(0xFF1E2452) : const Color(0xFFCBD5E1),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            if (!isLast)
+                              Expanded(
+                                child: Container(
+                                  width: 2,
+                                  color: const Color(0xFFCBD5E1),
+                                  margin: const EdgeInsets.symmetric(vertical: 4),
+                                ),
+                              ),
+                          ],
                         ),
-                        if (!isLast) Container(width: 2, height: 80, color: const Color(0xFFE2E8F0)),
-                      ],
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 24),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16)),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: isLast ? 0 : 20),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16)),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -789,19 +803,99 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
                               if (progres.deskripsi.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 Text(progres.deskripsi, style: TextStyle(color: textSecondary, height: 1.5, fontSize: 13)),
-                              ]
+                              ],
+                              if (progres.lampiranList.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                GestureDetector(
+                                  onTap: () => _showProgresLampiranBottomSheet(progres.title, progres.lampiranList),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEFF6FF),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: const Color(0xFFBFDBFE)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.attach_file, size: 16, color: Color(0xFF2563EB)),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          '${progres.lampiranList.length} File Lampiran • Klik untuk lihat',
+                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF2563EB), fontFamily: 'Poppins'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
                       ),
                     ),
                   ],
-                );
-              }).toList(),
+                ),
+              );
+            }).toList(),
           ],
         ),
       );
     });
+  }
+
+  void _showProgresLampiranBottomSheet(String title, List<LampiranItem> lampiranList) {
+    Get.bottomSheet(
+      Container(
+        constraints: BoxConstraints(maxHeight: Get.height * 0.75),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.attach_file, color: Color(0xFF1E2452), size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Lampiran: $title',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1E2452), fontFamily: 'Poppins'),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: lampiranList.map((file) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _buildLampiranCard(file),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
   }
 
   // ✅ UI LIST LAMPIRAN

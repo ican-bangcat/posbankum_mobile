@@ -1,16 +1,45 @@
-# DOKUMEN FORMAL SKENARIO USER ACCEPTANCE TESTING (UAT)
+# DOKUMEN FORMAL USER ACCEPTANCE TESTING (UAT)
 ## SISTEM APLIKASI POSBANKUM BERDAMPAK (SIBAPAK) - MODUL MOBILE
-
-**Dokumen Kontrol:**
-*   **Nama Aplikasi:** SIBAPAK (Sistem Aplikasi Posbankum Berdampak) - Versi Mobile
-*   **Aktor Penguji:** Warga (Masyarakat Pelapor) & Paralegal (Pendamping Hukum)
-*   **Metode Pengujian:** User Acceptance Testing (UAT) - Blackbox Testing
-*   **Konteks Wilayah Utama:** Kota Pekanbaru, Provinsi Riau
-*   **Tanggal Uji Coba:** 16 Juli 2026
 
 ---
 
-## 1. STRUKTUR HIERARKI SKENARIO PENGUJIAN
+## DAFTAR ISI
+
+*   **DAFTAR ISI**
+*   **LEMBAR PENGESAHAN**
+*   **DESKRIPSI DAN HASIL UJI**
+    *   **1.1 Pengujian Aktor Warga (Masyarakat Pelapor)**
+        *   1.1.1 Fitur Onboarding (Layar Pengenalan)
+        *   1.1.2 Fitur Registrasi dan Login Warga
+        *   1.1.3 Fitur Manajemen Profil Warga (Wilayah Riau)
+        *   1.1.4 Fitur Pengajuan Pengaduan Baru
+        *   1.1.5 Fitur Chat Real-time (POV Warga)
+        *   1.1.6 Fitur Penerimaan Notifikasi Pop-up (POV Warga)
+    *   **1.2 Pengujian Aktor Paralegal (Pendamping Hukum)**
+        *   1.2.1 Fitur Login dan Autentikasi
+        *   1.2.2 Fitur Manajemen Profil Paralegal
+        *   1.2.3 Fitur Klaim Pengaduan Warga
+        *   1.2.4 Fitur Update Status & Progres Kasus
+        *   1.2.5 Fitur Chat Real-time (POV Paralegal)
+        *   1.2.6 Fitur Laporan Kegiatan Lapangan (Penyuluhan / Sosialisasi)
+        *   1.2.7 Fitur Terima Notifikasi Persetujuan Kegiatan dari Admin (POV Paralegal)
+*   **REKAPITULASI HASIL UAT**
+
+---
+
+## LEMBAR PENGESAHAN
+
+Yang bertanda tangan di bawah ini menyatakan bahwa seluruh skenario pengujian *User Acceptance Testing* (UAT) untuk aplikasi mobile **SIBAPAK (Sistem Aplikasi Posbankum Berdampak)** telah selesai dilaksanakan dengan hasil yang tertera dalam dokumen ini.
+
+| Perwakilan Penguji (Warga) | Perwakilan Paralegal | Koordinator Pengembang SIBAPAK |
+| :---: | :---: | :---: |
+| | | |
+| | | |
+| **Dwi Maya Charly**<br>Penguji Warga | **M. Ikhsan Kurniawan**<br>Paralegal Lapangan | **[Nama Mahasiswa]**<br>NIM. [NIM Anda] |
+
+---
+
+## DESKRIPSI DAN HASIL UJI
 
 ### 1.1 Pengujian Aktor Warga (Masyarakat Pelapor)
 Aktor Warga menggunakan aplikasi untuk melakukan pendaftaran, melengkapi profil wilayah Riau, mengajukan kasus hukum, berkonsultasi via chat real-time dengan Paralegal pendamping, serta menerima notifikasi pembaruan status pengaduan.
@@ -75,7 +104,7 @@ Skenario untuk mengisi formulir aduan hukum, melihat status, serta pembatalan ad
 ##### UAT_WR_10: Mengisi Formulir Pengaduan Baru
 | Identifikasi | Deskripsi | Prosedur Pengujian | Masukan | Hasil yang Diharapkan | Hasil yang Diperoleh | Kesimpulan |
 | :--- | :--- | :--- | :--- | :--- | :--- | :---: |
-| **UAT_WR_10** | Memverifikasi pengisian formulir pengaduan baru (memilih jenis masalah, tanggal/waktu kejadian, dan melampirkan berkas bukti awal). | 1. Buka menu **Buat Pengaduan**.<br>2. Pilih jenis masalah dari daftar.<br>3. Pilih tanggal & waktu kejadian.<br>4. Pilih berkas lampiran bukti awal (PDF/Gambar). | - Jenis masalah<br>- Tanggal & waktu<br>- File lampiran bukti | Semua kolom form terisi dengan data yang valid, berkas lampiran berhasil dipilih, dan tombol Kirim aktif. | Kolom form terisi lengkap, berkas aduan terpilih masuk ke daftar lampiran secara tepat. | Ya |
+| **UAT_WR_10** | Memverifikasi pengisian formulir pengaduan baru (memilih jenis masalah, tanggal/waktu kejadian, dan melampirkan berkas bukti awal). | 1. Buka menu **Buat Pengaduan**.<br>2. Pilih jenis masalah dari daftar.<br>3. Pilih tanggal & waktu kejadian.<br>4. Pilih berkas lampiran bukti awal (PDF/Gambar). | - Jenis masalah<br>- Tanggal & waktu<br>- File lampiran bukti | Semua kolom form terisi dengan data yang valid, berkas lampiran berhasil dipilih, dan tombol Kirim aktif. | Kolom form terisi lengkap, berkas aduan terpilih masuk to daftar lampiran secara tepat. | Ya |
 
 ##### UAT_WR_11: Mengirimkan Formulir Pengaduan Baru
 | Identifikasi | Deskripsi | Prosedur Pengujian | Masukan | Hasil yang Diharapkan | Hasil yang Diperoleh | Kesimpulan |
@@ -261,7 +290,8 @@ Skenario penerimaan notifikasi dari admin website.
 
 ---
 
-## 2. REKAPITULASI HASIL UAT
+## REKAPITULASI HASIL UAT
+
 Berdasarkan hasil pengujian yang dilakukan pada kedua peran pengguna (Warga dan Paralegal), rekapitulasi tingkat kelulusan skenario adalah sebagai berikut:
 
 *   **Aktor Warga:**
@@ -280,12 +310,3 @@ Berdasarkan hasil pengujian yang dilakukan pada kedua peran pengguna (Warga dan 
     *   Total Skenario Uji: **40 Skenario**
     *   Total Lulus: **40 Skenario**
     *   Tingkat Kelulusan Sistem: **100% (Sistem Diterima oleh Pengguna)**
-
----
-**Tanda Tangan Persetujuan UAT:**
-
-| Perwakilan Penguji (Warga) | Perwakilan Paralegal | Koordinator Pengembang SIBAPAK |
-| :---: | :---: | :---: |
-| | | |
-| | | |
-| **Dwi Maya Charly**<br>Penguji Warga | **M. Ikhsan Kurniawan**<br>Paralegal Lapangan | **[Nama Mahasiswa/User]**<br>NIM. [NIM Anda] |

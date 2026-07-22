@@ -83,12 +83,23 @@ class DetailKasusController extends GetxController {
                   ),
                 ),
                 Positioned(
-                  top: 0, right: 0,
-                  child: IconButton(
-                    icon: const Icon(Icons.cancel, color: Colors.white, size: 36),
-                    onPressed: () => Get.back(),
+                  top: 12, right: 12,
+                  child: GestureDetector(
+                    onTap: () => Get.back(),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E2452),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: const [
+                          BoxShadow(color: Colors.black38, blurRadius: 6, offset: Offset(0, 2)),
+                        ],
+                      ),
+                      child: const Icon(Icons.close, color: Colors.white, size: 20),
+                    ),
                   ),
-                )
+                ),
               ],
             ),
           ),

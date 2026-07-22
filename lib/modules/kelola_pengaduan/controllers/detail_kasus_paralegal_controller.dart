@@ -7,6 +7,8 @@ import '../../../widgets/pdf_viewer_screen.dart';
 import '../../../app/data/services/api_service.dart';
 import 'kelola_pengaduan_controller.dart';
 import '../models/detail_kasus_paralegal_model.dart';
+import '../../notifikasi/controllers/notifikasi_warga_controller.dart';
+import '../../notifikasi/controllers/notifikasi_paralegal_controller.dart';
 
 class DetailKasusParalegalController extends GetxController {
   final ApiService _apiService;
@@ -65,7 +67,13 @@ class DetailKasusParalegalController extends GetxController {
         List<ProgresItem> fetchedProgres = [];
         if (progresResponse.data['status'] == true) {
           final List<dynamic> progresData = progresResponse.data['data'];
-          fetchedProgres = progresData.map((data) => ProgresItem.fromJson(data)).toList();
+          fetchedProgres = progresData.map((data) {
+            final tId = data['id_timeline']?.toString();
+            final tLampiran = (kasus != null && tId != null && tId.isNotEmpty)
+                ? kasus!.lampiranList.where((l) => l.idTimeline == tId).toList()
+                : <LampiranItem>[];
+            return ProgresItem.fromJson(data, lampiranList: tLampiran);
+          }).toList();
         }
 
         // Tambahkan progres awal "Pengaduan diajukan" secara dinamis berdasarkan tanggal dibuat
@@ -234,6 +242,12 @@ class DetailKasusParalegalController extends GetxController {
       if (Get.isRegistered<KelolaPengaduanController>()) {
         Get.find<KelolaPengaduanController>().fetchPengaduan();
       }
+      if (Get.isRegistered<NotifikasiWargaController>()) {
+        Get.find<NotifikasiWargaController>().fetchNotifications();
+      }
+      if (Get.isRegistered<NotifikasiParalegalController>()) {
+        Get.find<NotifikasiParalegalController>().fetchNotifications();
+      }
     } catch (e) {
       Get.snackbar('Gagal', 'Terjadi kesalahan: $e', backgroundColor: const Color(0xFFEF4444), colorText: Colors.white);
     } finally {
@@ -287,12 +301,23 @@ class DetailKasusParalegalController extends GetxController {
                   ),
                 ),
                 Positioned(
-                  top: 0, right: 0,
-                  child: IconButton(
-                    icon: const Icon(Icons.cancel, color: Colors.white, size: 36),
-                    onPressed: () => Get.back(),
+                  top: 12, right: 12,
+                  child: GestureDetector(
+                    onTap: () => Get.back(),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E2452),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: const [
+                          BoxShadow(color: Colors.black38, blurRadius: 6, offset: Offset(0, 2)),
+                        ],
+                      ),
+                      child: const Icon(Icons.close, color: Colors.white, size: 20),
+                    ),
                   ),
-                )
+                ),
               ],
             ),
           ),

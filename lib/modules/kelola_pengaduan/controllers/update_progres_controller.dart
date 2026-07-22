@@ -1,9 +1,15 @@
+import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:open_filex/open_filex.dart';
 import '../repositories/kelola_pengaduan_repository.dart';
 import 'kelola_pengaduan_controller.dart';
 import 'detail_kasus_paralegal_controller.dart';
 import '../../paralegal_dashboard/controllers/home_paralegal_controller.dart';
+import '../../notifikasi/controllers/notifikasi_warga_controller.dart';
+import '../../notifikasi/controllers/notifikasi_paralegal_controller.dart';
 
 class UpdateProgresController extends GetxController {
   final KelolaPengaduanRepository _repository;
@@ -14,7 +20,8 @@ class UpdateProgresController extends GetxController {
 
   final judulController = TextEditingController();
   final catatanController = TextEditingController();
-  var selectedDate = DateTime.now().obs;
+  final selectedDate = Rxn<DateTime>();
+  var selectedFiles = <File>[].obs;
 
   UpdateProgresController({KelolaPengaduanRepository? repository, String? initialKasusId, String? initialNamaKasus})
       : _repository = repository ?? KelolaPengaduanRepository() {
@@ -41,17 +48,60 @@ class UpdateProgresController extends GetxController {
   Future<void> pilihTanggal(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate.value,
+      initialDate: selectedDate.value ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != selectedDate.value) {
+    if (picked != null) {
       selectedDate.value = picked;
+    }
+  }
+
+  Future<void> pickFiles() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+        allowMultiple: true,
+      );
+      if (result != null) {
+        for (var file in result.files) {
+          if (file.size > 5 * 1024 * 1024) {
+            Get.snackbar("Gagal", "File ${file.name} melebihi 5 MB.",
+                backgroundColor: Colors.orange, colorText: Colors.white);
+            continue;
+          }
+          if (file.path != null) selectedFiles.add(File(file.path!));
+        }
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Gagal mengambil file", backgroundColor: Colors.red, colorText: Colors.white);
+    }
+  }
+
+  void removeFileAt(int index) {
+    selectedFiles.removeAt(index);
+  }
+
+  Future<void> bukaFileLokal(String path) async {
+    try {
+      final result = await OpenFilex.open(path);
+      if (result.type != ResultType.done) {
+        Get.snackbar("Info", "Tidak ada aplikasi untuk membuka file ini.");
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Gagal membuka file.");
     }
   }
 
   Future<void> simpanProgres({required bool isSelesai}) async {
     if (isLoading.value) return;
+
+    if (selectedDate.value == null) {
+      Get.snackbar('Peringatan', 'Tanggal pendampingan belum dipilih!',
+          backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
 
     if (judulController.text.trim().isEmpty || catatanController.text.trim().isEmpty) {
       Get.snackbar('Peringatan', 'Judul dan Catatan progres tidak boleh kosong!',
@@ -62,15 +112,33 @@ class UpdateProgresController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 1. Simpan progres ke timeline via Repository
-      await _repository.simpanProgresTimeline(
+      // 1. Simpan progres ke timeline via Repository → dapat id_timeline
+      final idTimeline = await _repository.simpanProgresTimeline(
         kasusId: kasusId,
         title: judulController.text.trim(),
         deskripsi: catatanController.text.trim(),
-        tanggal: selectedDate.value.toIso8601String(),
+        tanggal: selectedDate.value!.toIso8601String(),
       );
 
-      // 2. Jika diselesaikan, update status pengaduan via Repository
+      // 2. Upload lampiran yang terhubung ke id_timeline ini
+      if (selectedFiles.isNotEmpty && idTimeline.isNotEmpty) {
+        for (var file in selectedFiles) {
+          try {
+            final ext = file.path.split('.').last.toLowerCase();
+            final fileName = 'progres_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}.$ext';
+            await _repository.uploadLampiranProgres(
+              kasusId: kasusId,
+              idTimeline: idTimeline,
+              file: file,
+              fileName: fileName,
+            );
+          } catch (e) {
+            print('❌ Gagal upload lampiran progres: $e');
+          }
+        }
+      }
+
+      // 3. Jika diselesaikan, update status pengaduan via Repository
       if (isSelesai) {
         await _repository.updateStatusKasus(
           kasusId: kasusId,
@@ -79,15 +147,16 @@ class UpdateProgresController extends GetxController {
         );
       }
 
-      // 1. Kosongkan form biar bersih
+      // 4. Kosongkan form
       judulController.clear();
       catatanController.clear();
-      selectedDate.value = DateTime.now();
+      selectedDate.value = null;
+      selectedFiles.clear();
 
-      // 2. 🚀 TENDANG BALIK DULUAN (Biar nutup halaman form)
+      // 5. Tendang balik
       Get.back();
 
-      // 3. Munculkan Notif (Akan muncul di atas layar Detail Kasus)
+      // 6. Notif
       Get.snackbar(
         'Berhasil',
         isSelesai ? 'Kasus telah diselesaikan!' : 'Laporan progres berhasil disimpan!',
@@ -97,7 +166,7 @@ class UpdateProgresController extends GetxController {
         duration: const Duration(seconds: 2),
       );
 
-      // 4. Refresh data tanpa 'await' agar berjalan di background & tidak bikin UI nge-lag
+      // 7. Refresh data di background
       if (Get.isRegistered<DetailKasusParalegalController>()) {
         Get.find<DetailKasusParalegalController>().fetchDetailKasus(kasusId);
       }
@@ -106,6 +175,12 @@ class UpdateProgresController extends GetxController {
       }
       if (Get.isRegistered<HomeParalegalController>()) {
         Get.find<HomeParalegalController>().fetchDashboardData();
+      }
+      if (Get.isRegistered<NotifikasiWargaController>()) {
+        Get.find<NotifikasiWargaController>().fetchNotifications();
+      }
+      if (Get.isRegistered<NotifikasiParalegalController>()) {
+        Get.find<NotifikasiParalegalController>().fetchNotifications();
       }
 
     } catch (e) {
@@ -116,4 +191,4 @@ class UpdateProgresController extends GetxController {
       isLoading.value = false;
     }
   }
-}
+}

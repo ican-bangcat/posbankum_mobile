@@ -13,9 +13,13 @@ class NotifikasiParalegalView extends GetView<NotifikasiParalegalController> {
 
   @override
   Widget build(BuildContext context) {
-    if (!Get.isRegistered<NotifikasiParalegalController>()) {
-      Get.put(NotifikasiParalegalController());
-    }
+    final NotifikasiParalegalController controller = Get.isRegistered<NotifikasiParalegalController>()
+        ? Get.find<NotifikasiParalegalController>()
+        : Get.put(NotifikasiParalegalController());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.fetchNotifications();
+    });
 
     return Scaffold(
       backgroundColor: darkBlueColor,

@@ -39,7 +39,7 @@ void main() {
       final controller = FormPengaduanController(repository: mockRepository);
       controller.onInit();
       controller.nikC.text = '123'; // invalid length
-      controller.progressCount.value = 9; // force progress limit passing
+      controller.progressCount.value = 8; // force progress limit passing
 
       await controller.submitPengaduan();
 
@@ -48,7 +48,7 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
     });
 
-    testWidgets('submitPengaduan fails validation if progressCount is less than 9', (WidgetTester tester) async {
+    testWidgets('submitPengaduan fails validation if progressCount is less than 8', (WidgetTester tester) async {
       await tester.pumpWidget(GetMaterialApp(home: Container()));
       final controller = FormPengaduanController(repository: mockRepository);
       controller.onInit();

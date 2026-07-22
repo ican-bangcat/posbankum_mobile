@@ -41,6 +41,30 @@ class FormPengaduanController extends GetxController {
     judulLaporanC.addListener(calculateProgress);
     kronologiC.addListener(calculateProgress);
     lokasiC.addListener(calculateProgress);
+
+    loadUserProfileData();
+  }
+
+  Future<void> loadUserProfileData() async {
+    try {
+      final userData = await _repository.fetchProfile();
+      if (userData['masyarakat'] != null) {
+        final msk = userData['masyarakat'];
+        if (msk['nik'] != null && msk['nik'].toString().isNotEmpty) {
+          if (nikC.text.isEmpty) {
+            nikC.text = msk['nik'].toString();
+          }
+        }
+      }
+      if (userData['nomor_telepon'] != null && userData['nomor_telepon'].toString().isNotEmpty) {
+        if (noHpC.text.isEmpty) {
+          noHpC.text = userData['nomor_telepon'].toString();
+        }
+      }
+      calculateProgress();
+    } catch (_) {
+      // Abaikan error saat autofill background
+    }
   }
 
   @override
@@ -59,7 +83,6 @@ class FormPengaduanController extends GetxController {
   void calculateProgress() {
     int count = 0;
     if (nikC.text.trim().isNotEmpty) count++;
-    if (namaLurahC.text.trim().isNotEmpty) count++;
     if (noHpC.text.trim().isNotEmpty) count++;
     if (tglKejadianC.text.trim().isNotEmpty) count++;
     if (waktuKejadianC.text.trim().isNotEmpty) count++;
@@ -189,8 +212,8 @@ class FormPengaduanController extends GetxController {
       return;
     }
 
-    if (progressCount.value < 9) {
-      Get.snackbar("Error", "Mohon lengkapi semua data wajib (${progressCount.value}/9 Lengkap)", backgroundColor: Colors.red, colorText: Colors.white);
+    if (progressCount.value < 8) {
+      Get.snackbar("Error", "Mohon lengkapi semua data wajib (${progressCount.value}/8 Lengkap)", backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
 
@@ -211,7 +234,10 @@ class FormPengaduanController extends GetxController {
 
       String prioritasOtomatis = _determinePriority(selectedKategori!);
       String customId = _generatePengaduanId();
-      String gabunganKronologi = 'Nama Lurah: ${namaLurahC.text.trim()}\n\nKronologi:\n${kronologiC.text.trim()}';
+      String namaLurahText = namaLurahC.text.trim();
+      String gabunganKronologi = namaLurahText.isNotEmpty
+          ? 'Nama Lurah: $namaLurahText\n\nKronologi:\n${kronologiC.text.trim()}'
+          : kronologiC.text.trim();
 
       final responseData = await _repository.submitPengaduan({
         'nomor_pengaduan': customId,

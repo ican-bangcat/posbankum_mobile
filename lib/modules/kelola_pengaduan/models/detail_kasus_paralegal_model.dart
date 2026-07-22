@@ -2,29 +2,41 @@ import '../../../app/data/services/api_service.dart';
 
 // ✅ Model khusus untuk Timeline
 class ProgresItem {
+  final String? idTimeline;
   final String title;
   final String deskripsi;
   final DateTime tanggal;
+  final List<LampiranItem> lampiranList;
 
-  ProgresItem({required this.title, required this.deskripsi, required this.tanggal});
+  ProgresItem({
+    this.idTimeline,
+    required this.title,
+    required this.deskripsi,
+    required this.tanggal,
+    this.lampiranList = const [],
+  });
 
-  factory ProgresItem.fromJson(Map<String, dynamic> json) {
+  factory ProgresItem.fromJson(Map<String, dynamic> json, {List<LampiranItem> lampiranList = const []}) {
     final dateStr = json['created_at'] ?? json['tanggal'];
     return ProgresItem(
+      idTimeline: json['id_timeline']?.toString(),
       title: json['title']?.toString() ?? 'Update Progres',
       deskripsi: json['deskripsi']?.toString() ?? '',
       tanggal: dateStr != null ? DateTime.parse(dateStr.toString()).toLocal() : DateTime.now(),
+      lampiranList: lampiranList,
     );
   }
 }
 
 // ✅ Model Khusus Lampiran
 class LampiranItem {
+  final String? idTimeline;
   final String namaFile;
   final String _pathFile;
   final String? mimeType;
 
   LampiranItem({
+    this.idTimeline,
     required this.namaFile,
     required String pathFile,
     this.mimeType,
@@ -118,6 +130,7 @@ class DetailKasusModel {
       nikPelapor: json['nik']?.toString() ?? '-',
       namaLurah: parsedLurah,
       lampiranList: lampiranData.map((e) => LampiranItem(
+        idTimeline: e['id_timeline']?.toString(),
         namaFile: e['nama_file']?.toString() ?? 'File Terlampir',
         pathFile: e['path_file']?.toString() ?? '',
         mimeType: e['mime_type']?.toString(),

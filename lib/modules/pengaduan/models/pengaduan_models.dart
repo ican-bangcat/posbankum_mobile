@@ -36,25 +36,31 @@ class PengaduanItem {
 }
 
 class TimelineItem {
+  final String? idTimeline;
   final String title;
   final String? tanggal;
   final String? description;
   final bool isActive;
+  final List<LampiranItem> lampiranList;
 
   TimelineItem({
+    this.idTimeline,
     required this.title,
     this.tanggal,
     this.description,
     this.isActive = true,
+    this.lampiranList = const [],
   });
 }
 
 class LampiranItem {
+  final String? idTimeline;
   final String namaFile;
   final String _pathFile;
   final String? mimeType;
 
   LampiranItem({
+    this.idTimeline,
     required this.namaFile,
     required String pathFile,
     this.mimeType,
@@ -174,11 +180,18 @@ class DetailKasus {
         final dt = DateTime.parse(dateStr.toString()).toLocal();
         tgl = _toIndonesianDate(dt);
       }
+      final tId = t['id_timeline']?.toString();
+      final tLampiran = (tId != null && tId.isNotEmpty)
+          ? lampiranUrlsDB.where((l) => l.idTimeline == tId).toList()
+          : <LampiranItem>[];
+
       generatedTimeline.add(TimelineItem(
+        idTimeline: tId,
         title: t['title'] ?? 'Update Progres',
         tanggal: tgl,
         description: t['deskripsi'],
         isActive: true,
+        lampiranList: tLampiran,
       ));
     }
 

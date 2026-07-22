@@ -321,6 +321,31 @@ class DetailKasusView extends GetView<DetailKasusController> {
                           "${item.tanggal ?? ''} ${item.description != null && item.description!.isNotEmpty ? '• ${item.description}' : ''}",
                           style: const TextStyle(fontSize: 12, color: textSecondary, height: 1.4, fontFamily: 'Poppins')
                       ),
+                      if (item.lampiranList.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: () => _showLampiranBottomSheet(item.title, item.lampiranList),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFFBFDBFE)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.attach_file, size: 14, color: Color(0xFF2563EB)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${item.lampiranList.length} File Lampiran • Klik untuk lihat',
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF2563EB), fontFamily: 'Poppins'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -979,6 +1004,31 @@ class DetailKasusView extends GetView<DetailKasusController> {
                         const SizedBox(height: 4),
                         Text(item.description!, style: const TextStyle(fontSize: 12, color: textSecondary, height: 1.5, fontFamily: 'Poppins')),
                       ],
+                      if (item.lampiranList.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: () => _showLampiranBottomSheet(item.title, item.lampiranList),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFFBFDBFE)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.attach_file, size: 14, color: Color(0xFF2563EB)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${item.lampiranList.length} File Lampiran • Klik untuk lihat',
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF2563EB), fontFamily: 'Poppins'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -987,6 +1037,53 @@ class DetailKasusView extends GetView<DetailKasusController> {
           ),
         );
       }),
+    );
+  }
+
+  void _showLampiranBottomSheet(String title, List<LampiranItem> lampiranList) {
+    Get.bottomSheet(
+      Container(
+        constraints: BoxConstraints(maxHeight: Get.height * 0.75),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.attach_file, color: Color(0xFF2A2E5E), size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Lampiran: $title',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF0F172A), fontFamily: 'Poppins'),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: _buildDokumenGrid(lampiranList),
+              ),
+            ),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
     );
   }
 
