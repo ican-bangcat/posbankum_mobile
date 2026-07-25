@@ -206,99 +206,102 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Icon Badge Hijau
-              Container(
-                width: 68,
-                height: 68,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFDCFCE7),
-                  shape: BoxShape.circle,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon Badge Hijau
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFDCFCE7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_circle_outline_rounded,
+                    color: Color(0xFF16A34A),
+                    size: 36,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.check_circle_outline_rounded,
-                  color: Color(0xFF16A34A),
-                  size: 36,
+                const SizedBox(height: 20),
+                
+                // Title
+                const Text(
+                  'Ambil Kasus Ini?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E2452),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              
-              // Title
-              const Text(
-                'Ambil Kasus Ini?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1E2452),
+                const SizedBox(height: 12),
+                
+                // Body Description
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.5),
+                    children: [
+                      const TextSpan(text: 'Kamu akan bertanggung jawab menangani kasus "'),
+                      TextSpan(
+                        text: kasus.judul,
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E2452)),
+                      ),
+                      const TextSpan(text: '".\nTindakan ini tidak dapat dibatalkan.'),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              
-              // Body Description
-              RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
-                  style: const TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.5),
+                const SizedBox(height: 28),
+                
+                // Action Buttons
+                Row(
                   children: [
-                    const TextSpan(text: 'Kamu akan bertanggung jawab menangani kasus "'),
-                    TextSpan(
-                      text: kasus.judul,
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E2452)),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(color: Color(0xFF475569), fontWeight: FontWeight.w700, fontSize: 15),
+                        ),
+                      ),
                     ),
-                    const TextSpan(text: '".\nTindakan ini tidak dapat dibatalkan.'),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Obx(() => ElevatedButton(
+                        onPressed: controller.isUpdating.value
+                            ? null
+                            : () {
+                                Get.back();
+                                controller.ambilKasus(kasus.id);
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1E2452),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        child: controller.isUpdating.value
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                            : const Text(
+                                'Ya, Ambil',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
+                              ),
+                      )),
+                    ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 28),
-              
-              // Action Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Get.back(),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: const Text(
-                        'Batal',
-                        style: TextStyle(color: Color(0xFF475569), fontWeight: FontWeight.w700, fontSize: 15),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Obx(() => ElevatedButton(
-                      onPressed: controller.isUpdating.value
-                          ? null
-                          : () {
-                              Get.back();
-                              controller.ambilKasus(kasus.id);
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1E2452),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        elevation: 0,
-                      ),
-                      child: controller.isUpdating.value
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                          : const Text(
-                              'Ya, Ambil',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
-                            ),
-                    )),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -313,139 +316,131 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Indicator Pill
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFCBD5E1),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Icon Badge Merah
-              Container(
-                width: 64,
-                height: 64,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFEF2F2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.cancel_outlined,
-                  color: Color(0xFFEF4444),
-                  size: 32,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Title & Subtitle
-              const Text(
-                'Tolak Kasus Ini?',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1E2452)),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Berikan alasan penolakan kasus ini.',
-                style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-              ),
-              const SizedBox(height: 20),
-
-              // Header Section Label
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'ALASAN PENOLAKAN',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF64748B),
-                    letterSpacing: 0.5,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon Badge Merah
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFEF2F2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.cancel_outlined,
+                    color: Color(0xFFEF4444),
+                    size: 32,
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
+                const SizedBox(height: 16),
 
-              // Text Field Input
-              TextField(
-                controller: controller.alasanTolakC,
-                maxLines: 3,
-                onChanged: (val) {
-                  hasText.value = val.trim().isNotEmpty;
-                },
-                style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B)),
-                decoration: InputDecoration(
-                  hintText: 'Tulis alasan penolakan...',
-                  hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.all(14),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Color(0xFF1E2452), width: 1.5),
-                  ),
+                // Title & Subtitle
+                const Text(
+                  'Tolak Kasus Ini?',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1E2452)),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 6),
+                const Text(
+                  'Berikan alasan penolakan kasus ini.',
+                  style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+                ),
+                const SizedBox(height: 20),
 
-              // Action Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        controller.alasanTolakC.clear();
-                        Get.back();
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: const Text(
-                        'Batal',
-                        style: TextStyle(color: Color(0xFF475569), fontWeight: FontWeight.w700, fontSize: 15),
-                      ),
+                // Header Section Label
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'ALASAN PENOLAKAN',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF64748B),
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Obx(() => ElevatedButton(
-                      onPressed: (!hasText.value || controller.isUpdating.value)
-                          ? null
-                          : () => controller.tolakKasus(idPengaduan),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: hasText.value ? const Color(0xFFEF4444) : const Color(0xFFF1F5F9),
-                        disabledBackgroundColor: const Color(0xFFF1F5F9),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        elevation: 0,
-                      ),
-                      child: controller.isUpdating.value
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                          : Text(
-                              'Ya, Tolak',
-                              style: TextStyle(
-                                color: hasText.value ? Colors.white : const Color(0xFF94A3B8),
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
-                              ),
-                            ),
-                    )),
+                ),
+                const SizedBox(height: 8),
+
+                // Text Field Input
+                TextField(
+                  controller: controller.alasanTolakC,
+                  maxLines: 3,
+                  onChanged: (val) {
+                    hasText.value = val.trim().isNotEmpty;
+                  },
+                  style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B)),
+                  decoration: InputDecoration(
+                    hintText: 'Tulis alasan penolakan...',
+                    hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.all(14),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFF1E2452), width: 1.5),
+                    ),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 24),
+
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          controller.alasanTolakC.clear();
+                          Get.back();
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(color: Color(0xFF475569), fontWeight: FontWeight.w700, fontSize: 15),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Obx(() => ElevatedButton(
+                        onPressed: (!hasText.value || controller.isUpdating.value)
+                            ? null
+                            : () => controller.tolakKasus(idPengaduan),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: hasText.value ? const Color(0xFFEF4444) : const Color(0xFFF1F5F9),
+                          disabledBackgroundColor: const Color(0xFFF1F5F9),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        child: controller.isUpdating.value
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                            : Text(
+                                'Ya, Tolak',
+                                style: TextStyle(
+                                  color: hasText.value ? Colors.white : const Color(0xFF94A3B8),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                ),
+                              ),
+                      )),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -497,102 +492,105 @@ class DetailKasusParalegalView extends GetView<DetailKasusParalegalController> {
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Icon Badge Merah (Lock)
-              Container(
-                width: 68,
-                height: 68,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFEF2F2),
-                  shape: BoxShape.circle,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon Badge Merah (Lock)
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFEF2F2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.lock_outline_rounded,
+                    color: Color(0xFFEF4444),
+                    size: 32,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.lock_outline_rounded,
-                  color: Color(0xFFEF4444),
-                  size: 32,
+                const SizedBox(height: 20),
+                
+                // Title
+                const Text(
+                  'Tutup Kasus Ini?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E2452),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              
-              // Title
-              const Text(
-                'Tutup Kasus Ini?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1E2452),
+                const SizedBox(height: 12),
+                
+                // Body Description
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.5),
+                    children: [
+                      const TextSpan(text: 'Kasus "'),
+                      TextSpan(
+                        text: kasus.judul,
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E2452)),
+                      ),
+                      const TextSpan(text: '" akan ditandai selesai dan tidak dapat diperbarui kembali.'),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              
-              // Body Description
-              RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
-                  style: const TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.5),
+                const SizedBox(height: 28),
+                
+                // Action Buttons
+                Row(
                   children: [
-                    const TextSpan(text: 'Kasus "'),
-                    TextSpan(
-                      text: kasus.judul,
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E2452)),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(color: Color(0xFF475569), fontWeight: FontWeight.w700, fontSize: 15),
+                        ),
+                      ),
                     ),
-                    const TextSpan(text: '" akan ditandai selesai dan tidak dapat diperbarui kembali.'),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Obx(() => ElevatedButton(
+                        onPressed: controller.isUpdating.value
+                            ? null
+                            : () {
+                                controller.tutupKasus(
+                                  id: kasus.id,
+                                  status: 'selesai',
+                                  catatan: 'Kasus telah diselesaikan dan ditutup oleh paralegal.',
+                                );
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFEF4444),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        child: controller.isUpdating.value
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                            : const Text(
+                                'Ya, Tutup',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
+                              ),
+                      )),
+                    ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 28),
-              
-              // Action Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Get.back(),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: const Text(
-                        'Batal',
-                        style: TextStyle(color: Color(0xFF475569), fontWeight: FontWeight.w700, fontSize: 15),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Obx(() => ElevatedButton(
-                      onPressed: controller.isUpdating.value
-                          ? null
-                          : () {
-                              controller.tutupKasus(
-                                id: kasus.id,
-                                status: 'selesai',
-                                catatan: 'Kasus telah diselesaikan dan ditutup oleh paralegal.',
-                              );
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEF4444),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        elevation: 0,
-                      ),
-                      child: controller.isUpdating.value
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                          : const Text(
-                              'Ya, Tutup',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
-                            ),
-                    )),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
