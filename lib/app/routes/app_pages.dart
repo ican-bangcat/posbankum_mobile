@@ -5,7 +5,6 @@ import '../../modules/splash/controllers/splash_controller.dart';
 import '../../modules/onboarding/views/onboarding_screen.dart';
 import '../../modules/onboarding/controllers/onboarding_controller.dart';
 import '../../modules/auth/views/register_view.dart';
-import '../../modules/auth/views/welcome_view.dart';
 import '../../modules/auth/views/login_view.dart';
 import '../../modules/warga_dashboard/views/home_warga_view.dart';
 import '../../modules/paralegal_dashboard/views/home_paralegal_view.dart';
@@ -90,16 +89,9 @@ class AppPages {
 
     GetPage(
       name: AppRoutes.LOGIN,
-      page: () => const WelcomeView(),
+      page: () => const LoginView(),
       transition: Transition.fadeIn,
       transitionDuration: const Duration(milliseconds: 400),
-    ),
-
-    GetPage(
-      name: AppRoutes.LOGIN_FORM,
-      page: () => const LoginView(),
-      transition: Transition.rightToLeft,
-      transitionDuration: const Duration(milliseconds: 300),
     ),
 
     // Home Masyarakat
