@@ -52,7 +52,7 @@ class PosbankumApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // Menggunakan GetMaterialApp untuk mengaktifkan manajemen state dan rute dari GetX
     return GetMaterialApp(
-      title: 'Posbankum Mobile',
+      title: 'SIBAPAK',
       debugShowCheckedModeBanner: false, // Menyembunyikan indikator mode debug
       initialBinding: BindingsBuilder(() {
         Get.put(AuthController(), permanent: true);
