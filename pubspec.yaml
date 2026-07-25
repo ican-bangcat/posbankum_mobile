@@ -77,13 +77,11 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/images/logo/logo_outline.png"
 
-# Native Splash Screen Configuration
+# Native Splash Screen Configuration (Clean White for Direct Launch into Dynamic Splash)
 flutter_native_splash:
   color: "#ffffff"
-  image: "assets/images/logo/logo_outline.png"
   android_12:
     color: "#ffffff"
-    image: "assets/images/logo/logo_outline.png"
 
 flutter:
   uses-material-design: true
