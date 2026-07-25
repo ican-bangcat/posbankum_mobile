@@ -133,9 +133,8 @@ class NotifikasiWargaView extends GetView<NotifikasiWargaController> {
             ),
           ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
   Widget _buildHeader() {
     const Color whiteBgColor = Color(0xFFF2F4FB);
