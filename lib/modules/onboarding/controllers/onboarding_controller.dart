@@ -5,10 +5,14 @@ import '../../../app/routes/app_routes.dart';  // ✅ BENAR
 
 /// Onboarding Controller
 /// Menghandle page controller dan navigasi onboarding
-class OnboardingController extends GetxController {
+class OnboardingController extends GetxController with GetSingleTickerProviderStateMixin {
   final PageController pageController = PageController();
   final storage = GetStorage();
   
+  late AnimationController entranceController;
+  late Animation<double> shrinkProgress;
+  late Animation<double> uiOpacity;
+
   // Current page index
   var currentPage = 0.obs;
   
@@ -40,6 +44,27 @@ class OnboardingController extends GetxController {
     pageController.addListener(() {
       currentPage.value = pageController.page?.round() ?? 0;
     });
+
+    entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+
+    shrinkProgress = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: entranceController,
+        curve: Curves.easeInOutCubic,
+      ),
+    );
+
+    uiOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: entranceController,
+        curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
+      ),
+    );
+
+    entranceController.forward();
   }
 
   /// Next page
@@ -78,6 +103,7 @@ class OnboardingController extends GetxController {
   @override
   void onClose() {
     pageController.dispose();
+    entranceController.dispose();
     super.onClose();
   }
 }

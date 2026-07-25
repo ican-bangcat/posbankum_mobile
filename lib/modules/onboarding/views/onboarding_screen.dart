@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -5,7 +6,7 @@ import '../controllers/onboarding_controller.dart';
 import '../../../app/themes/app_colors.dart';
 import '../../../app/themes/app_text_styles.dart';
 
-/// Onboarding Screen - Super Smooth Animations
+/// Onboarding Screen - Super Smooth Animations dengan Transisi Mengecil dari Splash
 class OnboardingScreen extends GetView<OnboardingController> {
   const OnboardingScreen({super.key});
 
@@ -14,29 +15,54 @@ class OnboardingScreen extends GetView<OnboardingController> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 650),
-            child: Column(
+        child: AnimatedBuilder(
+          animation: controller.entranceController,
+          builder: (context, child) {
+            final isDone = controller.shrinkProgress.value >= 1.0;
+            return Stack(
               children: [
-                _buildSkipButton(),
-                Expanded(
-                  child: PageView.builder(
-                    controller: controller.pageController,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: controller.totalPages,
-                    onPageChanged: (index) => controller.currentPage.value = index,
-                    itemBuilder: (context, index) => _OnboardingPage(
-                      data: controller.pages[index],
-                      pageIndex: index,
-                      currentPage: controller.currentPage,
+                // 1. KONTEN ONBOARDING (Fade-in saat navy mengecil)
+                FadeTransition(
+                  opacity: controller.uiOpacity,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 650),
+                      child: Column(
+                        children: [
+                          _buildSkipButton(),
+                          Expanded(
+                            child: PageView.builder(
+                              controller: controller.pageController,
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: controller.totalPages,
+                              onPageChanged: (index) => controller.currentPage.value = index,
+                              itemBuilder: (context, index) => _OnboardingPage(
+                                data: controller.pages[index],
+                                pageIndex: index,
+                                currentPage: controller.currentPage,
+                              ),
+                            ),
+                          ),
+                          _buildBottomSection(),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                _buildBottomSection(),
+
+                // 2. NAVY OVERLAY TRANSITION (Mengecil dari Penuh ke Lingkaran Onboarding 1)
+                if (!isDone)
+                  ClipPath(
+                    clipper: ReverseRadialShrinkClipper(controller.shrinkProgress.value),
+                    child: Container(
+                      color: AppColors.primary,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  ),
               ],
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
@@ -254,5 +280,48 @@ class _SmoothButtonState extends State<_SmoothButton> with SingleTickerProviderS
         ),
       ),
     );
+  }
+}
+
+/// Custom Clipper untuk Efek Navy Mengecil dari Layar Penuh ke Lingkaran Onboarding 1
+class ReverseRadialShrinkClipper extends CustomClipper<Path> {
+  final double progress;
+
+  ReverseRadialShrinkClipper(this.progress);
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    if (progress >= 1.0) {
+      return path; // Kosong / Selesai
+    }
+
+    // Pusat lingkaran mascot Onboarding 1 (tengah horizontal, Y sekitar 165px dari top)
+    final targetCenter = Offset(size.width / 2, 165.0);
+    const targetRadius = 125.0; // Lingkaran diameter 250px
+
+    final maxRadius = sqrt(size.width * size.width + size.height * size.height);
+    // Interpolasi radius dari layar penuh (0.0) ke lingkaran kecil (1.0)
+    final currentRadius = maxRadius - ((maxRadius - targetRadius) * progress);
+
+    final currentCenter = Offset.lerp(
+      Offset(size.width / 2, size.height / 2),
+      targetCenter,
+      progress,
+    )!;
+
+    path.addOval(
+      Rect.fromCircle(
+        center: currentCenter,
+        radius: currentRadius,
+      ),
+    );
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant ReverseRadialShrinkClipper oldClipper) {
+    return oldClipper.progress != progress;
   }
 }
