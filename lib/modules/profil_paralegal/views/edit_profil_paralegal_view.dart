@@ -92,7 +92,7 @@ class EditProfilParalegalView extends GetView<EditProfilParalegalController> {
                                   ),
                                 ),
                                 Obx(() => GestureDetector(
-                                  onTap: controller.isSaving.value ? null : () => controller.simpanProfil(),
+                                  onTap: controller.isSaving.value ? null : () => _showSimpanKonfirmasiDialog(context),
                                   child: Text(
                                     controller.isSaving.value ? '...' : 'Simpan',
                                     style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
@@ -161,7 +161,7 @@ class EditProfilParalegalView extends GetView<EditProfilParalegalController> {
                               )),
 
                               const SizedBox(height: 40),
-                              _buildBigSaveButton(),
+                              _buildBigSaveButton(context),
                             ],
                           ),
                         ),
@@ -366,9 +366,9 @@ class EditProfilParalegalView extends GetView<EditProfilParalegalController> {
     );
   }
 
-  Widget _buildBigSaveButton() {
+  Widget _buildBigSaveButton(BuildContext context) {
     return Obx(() => GestureDetector(
-      onTap: controller.isSaving.value ? null : () => controller.simpanProfil(),
+      onTap: controller.isSaving.value ? null : () => _showSimpanKonfirmasiDialog(context),
       child: Container(
         height: 54,
         width: double.infinity,
@@ -391,5 +391,189 @@ class EditProfilParalegalView extends GetView<EditProfilParalegalController> {
         ),
       ),
     ));
+  }
+
+  void _showSimpanKonfirmasiDialog(BuildContext context) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        clipBehavior: Clip.hardEdge,
+        backgroundColor: Colors.white,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header Gradient dengan Dekorasi lingkaran & Badge Edit
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 28),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF2B3A67), Color(0xFF4A61A8)],
+                  ),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Lingkaran dekoratif soft
+                    Positioned(
+                      top: -20, right: -20,
+                      child: Container(
+                        width: 100, height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.08),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: -30, left: -20,
+                      child: Container(
+                        width: 120, height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.06),
+                        ),
+                      ),
+                    ),
+
+                    Column(
+                      children: [
+                        // Badge Ikon Dokumen / Edit
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+                          ),
+                          child: const Icon(
+                            Icons.edit_note_rounded,
+                            color: Colors.white,
+                            size: 38,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Title Header
+                        const Text(
+                          'Simpan Perubahan?',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Body Content
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Apakah Anda yakin ingin menyimpan perubahan data profil? Data lama akan digantikan dengan data baru.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF64748B),
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Info Warning Box
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.info_outline_rounded, color: Color(0xFF475569), size: 20),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Perubahan akan langsung berlaku dan terlihat oleh sistem.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF475569),
+                                fontWeight: FontWeight.w500,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Action Buttons
+                    Obx(() => SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: controller.isSaving.value
+                            ? null
+                            : () {
+                                Get.back();
+                                controller.simpanProfil();
+                              },
+                        icon: const Icon(Icons.save_outlined, color: Colors.white, size: 20),
+                        label: controller.isSaving.value
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                            : const Text(
+                                'Ya, Simpan Sekarang',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
+                              ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4A61A8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                      ),
+                    )),
+                    const SizedBox(height: 12),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 }
