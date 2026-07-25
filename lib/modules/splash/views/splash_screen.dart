@@ -101,53 +101,17 @@ class SplashScreen extends GetView<SplashController> {
     );
   }
 
-  /// Layout Horizontal: Logo Elang (kiri) + Teks Posbankum Provinsi Riau (kanan)
+  /// Logo gabungan presisi dari Figma (Maskot + Teks Posbankum Provinsi Riau)
   Widget _buildHorizontalLogoRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // Maskot Elang Putih
-        Image.asset(
-          ImageConstants.logoWhite,
-          width: 90,
-          height: 90,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) => const Icon(
-            Icons.gavel_rounded,
-            size: 70,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(width: 16),
-        // Teks Posbankum Provinsi Riau
-        const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Posbankum',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 0.5,
-                height: 1.1,
-              ),
-            ),
-            SizedBox(height: 2),
-            Text(
-              'Provinsi Riau',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w300,
-                color: Colors.white70,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
-        ),
-      ],
+    return Image.asset(
+      ImageConstants.logoWhite,
+      width: 250,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) => const Icon(
+        Icons.gavel_rounded,
+        size: 80,
+        color: Colors.white,
+      ),
     );
   }
 }
