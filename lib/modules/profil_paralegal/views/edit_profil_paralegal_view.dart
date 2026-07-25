@@ -415,62 +415,36 @@ class EditProfilParalegalView extends GetView<EditProfilParalegalController> {
                     colors: [Color(0xFF2B3A67), Color(0xFF4A61A8)],
                   ),
                 ),
-                child: Stack(
-                  alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Lingkaran dekoratif soft
-                    Positioned(
-                      top: -20, right: -20,
-                      child: Container(
-                        width: 100, height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.08),
-                        ),
+                    // Badge Ikon Dokumen / Edit
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+                      ),
+                      child: const Icon(
+                        Icons.edit_note_rounded,
+                        color: Colors.white,
+                        size: 38,
                       ),
                     ),
-                    Positioned(
-                      bottom: -30, left: -20,
-                      child: Container(
-                        width: 120, height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.06),
-                        ),
+                    const SizedBox(height: 16),
+
+                    // Title Header
+                    const Text(
+                      'Simpan Perubahan?',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.3,
                       ),
-                    ),
-
-                    Column(
-                      children: [
-                        // Badge Ikon Dokumen / Edit
-                        Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
-                          ),
-                          child: const Icon(
-                            Icons.edit_note_rounded,
-                            color: Colors.white,
-                            size: 38,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Title Header
-                        const Text(
-                          'Simpan Perubahan?',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),

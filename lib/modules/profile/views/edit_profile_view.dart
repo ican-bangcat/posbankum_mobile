@@ -549,35 +549,11 @@ class EditProfileView extends GetView<EditProfileController> {
                     colors: [Color(0xFF2B3A67), Color(0xFF4A61A8)],
                   ),
                 ),
-                child: Stack(
-                  alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Lingkaran dekoratif soft
-                    Positioned(
-                      top: -20, right: -20,
-                      child: Container(
-                        width: 100, height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.08),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: -30, left: -20,
-                      child: Container(
-                        width: 120, height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.06),
-                        ),
-                      ),
-                    ),
-
-                    Column(
-                      children: [
-                        // Badge Ikon Dokumen / Edit
-                        Container(
+                    // Badge Ikon Dokumen / Edit
+                    Container(
                           width: 64,
                           height: 64,
                           decoration: BoxDecoration(
@@ -605,8 +581,6 @@ class EditProfileView extends GetView<EditProfileController> {
                           ),
                         ),
                       ],
-                    ),
-                  ],
                 ),
               ),
 
