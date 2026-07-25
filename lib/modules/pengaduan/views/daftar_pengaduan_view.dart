@@ -57,13 +57,13 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
                             ),
                           ),
                         ),
-                        SafeArea(
+                        const SafeArea(
                           bottom: false,
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+                            padding: EdgeInsets.fromLTRB(20, 16, 20, 30),
                             child: Row(
                               children: [
-                                const Text(
+                                Text(
                                   'Pengaduan Saya',
                                   style: TextStyle(
                                     color: Colors.white,
