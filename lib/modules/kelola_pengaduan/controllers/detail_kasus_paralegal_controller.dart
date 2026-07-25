@@ -192,11 +192,8 @@ class DetailKasusParalegalController extends GetxController {
     }
   }
 
-  Future<void> tutupKasus({required String id, required String status, required String catatan}) async {
-    if (catatan.trim().isEmpty) {
-      Get.snackbar('Peringatan', 'Catatan penutupan wajib diisi!', backgroundColor: Colors.orange.shade700, colorText: Colors.white);
-      return;
-    }
+  Future<void> tutupKasus({required String id, String status = 'selesai', String catatan = ''}) async {
+    final finalCatatan = catatan.trim().isEmpty ? 'Kasus telah diselesaikan dan ditutup oleh paralegal.' : catatan.trim();
 
     try {
       isUpdating.value = true;
@@ -206,7 +203,7 @@ class DetailKasusParalegalController extends GetxController {
         '/pengaduan/$id/status',
         data: {
           'status': status,
-          'catatan_internal': catatan.trim(),
+          'catatan_internal': finalCatatan,
         },
       );
 
@@ -221,8 +218,8 @@ class DetailKasusParalegalController extends GetxController {
         data: {
           'title': isSelesai ? 'Kasus Selesai' : 'Kasus Dibatalkan',
           'deskripsi': isSelesai 
-              ? 'Catatan Penyelesaian: ${catatan.trim()}' 
-              : 'Alasan Pembatalan: ${catatan.trim()}',
+              ? 'Catatan Penyelesaian: $finalCatatan' 
+              : 'Alasan Pembatalan: $finalCatatan',
         },
       );
 
