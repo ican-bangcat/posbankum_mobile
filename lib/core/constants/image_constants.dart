@@ -10,18 +10,23 @@ class ImageConstants {
   static const String logoFull = '$_basePath/logo/logo_full.png';
   static const String logoPosbankum = '$_basePath/logo/logo_posbankum.png';  // Logo bundar full color
 
-  // Logo SVG (Vektor HD Bebas Pecah)
-  static const String logoOutlineSvg = '$_basePath/logo/logo_outline.svg';
-  static const String logoWhiteSvg = '$_basePath/logo/logo_white.svg';
+  // Logo SVG (Vektor HD Bebas Pecah - Clean Self-Explanatory Naming)
+  static const String logoOutlineSvg = '$_basePath/logo/logo_splash_outline.svg';
+  static const String logoWhiteSvg = '$_basePath/logo/logo_splash_white.svg';
 
-  // Onboarding
+  // Onboarding PNG
   static const String onboarding1 = '$_basePath/onboarding/onboarding_1.png';
   static const String onboarding2 = '$_basePath/onboarding/onboarding_2.png';
   static const String onboarding3 = '$_basePath/onboarding/onboarding_3.png';
 
+  // Onboarding SVG
+  static const String onboarding1Svg = '$_basePath/onboarding/onboarding_1.svg';
+  static const String onboarding2Svg = '$_basePath/onboarding/onboarding_2.svg';
+  static const String onboarding3Svg = '$_basePath/onboarding/onboarding_3.svg';
+
   // Icons & Illustrations
   static const String buildingIllustration = '$_basePath/icons/building_illustration.png';   // Untuk splash screen
-  static const String buildingIllustrationSvg = '$_basePath/icons/building_illustration.svg'; // Vektor SVG
+  static const String buildingIllustrationSvg = '$_basePath/logo/illustration_building_splash.svg'; // Vektor SVG Splash Screen
   static const String buildingIllustration2 = '$_basePath/icons/building_illustration2.png'; // Untuk main login
   
   // Icons untuk form (opsional)
