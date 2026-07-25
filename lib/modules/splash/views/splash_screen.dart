@@ -121,10 +121,10 @@ class SplashScreen extends GetView<SplashController> {
         ),
         const SizedBox(width: 16),
         // Teks Posbankum Provinsi Riau
-        Column(
+        const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
               'Posbankum',
               style: TextStyle(
