@@ -24,7 +24,8 @@ class ImageConstants {
   static const String onboarding2Svg = '$_basePath/onboarding/onboarding_2.svg';
   static const String onboarding3Svg = '$_basePath/onboarding/onboarding_3.svg';
 
-  // Icons & Illustrations
+  // Icons & Backgrounds
+  static const String headerBgWarga = '$_basePath/backgrounds/bg_header_warga.png';
   static const String buildingIllustration = '$_basePath/icons/building_illustration.png';   // Untuk splash screen
   static const String buildingIllustrationSvg = '$_basePath/logo/illustration_building_splash.svg'; // Vektor SVG Splash Screen
   static const String buildingIllustration2 = '$_basePath/icons/building_illustration2.png'; // Untuk main login

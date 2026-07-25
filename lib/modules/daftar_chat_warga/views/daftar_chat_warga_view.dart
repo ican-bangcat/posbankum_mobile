@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../controllers/daftar_chat_warga_controller.dart';
 import '../models/chat_room_warga_model.dart';
+import '../../../core/constants/image_constants.dart';
 
 class DaftarChatWargaView extends GetView<DaftarChatWargaController> {
   const DaftarChatWargaView({super.key});
@@ -213,7 +214,7 @@ class DaftarChatWargaView extends GetView<DaftarChatWargaController> {
                 child: Opacity(
                   opacity: 0.8,
                   child: Image.asset(
-                    'assets/images/icons/building_illustration3.png',
+                    ImageConstants.headerBgWarga,
                     width: 300,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) =>

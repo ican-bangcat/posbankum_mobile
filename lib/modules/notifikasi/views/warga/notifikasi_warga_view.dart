@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/notifikasi_warga_controller.dart';
 import '../../models/notifikasi_model.dart';
+import '../../../../core/constants/image_constants.dart';
 
 class NotifikasiWargaView extends GetView<NotifikasiWargaController> {
   const NotifikasiWargaView({super.key});
@@ -23,12 +24,11 @@ class NotifikasiWargaView extends GetView<NotifikasiWargaController> {
 
     return Scaffold(
       backgroundColor: darkBlueColor,
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 650),
-            child: Column(
-              children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 650),
+          child: Column(
+            children: [
                 // ── HEADER ──
                 _buildHeader(),
       
@@ -164,7 +164,7 @@ class NotifikasiWargaView extends GetView<NotifikasiWargaController> {
                 child: Opacity(
                   opacity: 0.8,
                   child: Image.asset(
-                    'assets/images/icons/building_illustration3.png',
+                    ImageConstants.headerBgWarga,
                     width: 300,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) =>

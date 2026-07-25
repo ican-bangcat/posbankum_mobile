@@ -103,6 +103,7 @@ flutter:
     - assets/images/icons/building_illustration.png
    # - assets/images/icons/bg_wave_success.svg
     - assets/images/icons/success_icon_check.png
+    - assets/images/backgrounds/
     - assets/images/backgrounds/bokeh_overlay.svg
     # Mascot
 #    - assets/images/mascot/

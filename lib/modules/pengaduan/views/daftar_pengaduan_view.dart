@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/daftar_pengaduan_controller.dart';
 import '../controllers/detail_kasus_controller.dart';
 import '../models/pengaduan_models.dart';
+import '../../../core/constants/image_constants.dart';
 
 class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
   const DaftarPengaduanView({super.key});
@@ -47,7 +48,7 @@ class DaftarPengaduanView extends GetView<DaftarPengaduanController> {
                           child: Opacity(
                             opacity: 0.8,
                             child: Image.asset(
-                              'assets/images/icons/building_illustration3.png',
+                              ImageConstants.headerBgWarga,
                               width: 300,
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) =>
