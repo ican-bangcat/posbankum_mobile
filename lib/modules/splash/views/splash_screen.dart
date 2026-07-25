@@ -1,11 +1,11 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../controllers/splash_controller.dart';
 import '../../../app/themes/app_colors.dart';
 import '../../../core/constants/image_constants.dart';
 
-/// Splash Screen dengan 4 tahap animasi
+/// Splash Screen dengan Animasi Wave Reveal Kiri Bawah & Layout Horizontal Estetik
 class SplashScreen extends GetView<SplashController> {
   const SplashScreen({super.key});
 
@@ -14,175 +14,173 @@ class SplashScreen extends GetView<SplashController> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 650),
-            child: Obx(() {
-              if (controller.showStep1.value) {
-                return _buildStep1();
-              }
-              
-              if (controller.showStep2.value || 
-                  controller.showStep3.value || 
-                  controller.showStep4.value) {
-                return _buildNavyBackground();
-              }
-      
-              return Container(color: Colors.white);
-            }),
+        child: AnimatedBuilder(
+          animation: controller.animController,
+          builder: (context, child) {
+            return Stack(
+              children: [
+                // 1. LAYAR PUTIH AWAL (Logo Elang besar di tengah)
+                _buildWhiteStep(),
+
+                // 2. LAYAR NAVY DENGAN EFEK OMBAK (Wave Reveal dari Kiri Bawah)
+                ClipPath(
+                  clipper: BottomLeftWaveClipper(controller.waveAnimation.value),
+                  child: Container(
+                    color: AppColors.primary,
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: Stack(
+                      children: [
+                        // Logo + Teks Horizontal di Tengah Layar
+                        Center(
+                          child: FadeTransition(
+                            opacity: controller.navyContentOpacity,
+                            child: SlideTransition(
+                              position: controller.navyContentSlide,
+                              child: _buildHorizontalLogoRow(),
+                            ),
+                          ),
+                        ),
+
+                        // Building Illustration di Dasar Layar
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: FadeTransition(
+                            opacity: controller.buildingOpacity,
+                            child: SlideTransition(
+                              position: controller.buildingSlide,
+                              child: Image.asset(
+                                ImageConstants.buildingIllustration,
+                                width: double.infinity,
+                                height: 160,
+                                fit: BoxFit.cover,
+                                alignment: Alignment.bottomCenter,
+                                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Layar Putih Awal - Logo Elang besar di tengah
+  Widget _buildWhiteStep() {
+    return Center(
+      child: FadeTransition(
+        opacity: controller.step1LogoOpacity,
+        child: ScaleTransition(
+          scale: controller.step1LogoScale,
+          child: Image.asset(
+            ImageConstants.logoOutline,
+            width: 170,
+            height: 170,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => Container(
+              width: 160,
+              height: 160,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.primary, width: 3),
+              ),
+              child: const Icon(Icons.gavel, size: 80, color: AppColors.primary),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStep1() {
-    return Container(
-      color: Colors.white,
-      child: Center(
-        child: Obx(() => AnimatedOpacity(
-          opacity: controller.logoOpacity.value,
-          duration: const Duration(milliseconds: 500),
-          child: AnimatedScale(
-            scale: controller.logoScale.value,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeOutBack,
-            child: SvgPicture.asset(
-              ImageConstants.logoOutlineSvg,
-              width: 160,
-              height: 160,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return Image.asset(
-                  ImageConstants.logoOutline,
-                  width: 160,
-                  height: 160,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 160,
-                      height: 160,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.primary, width: 3),
-                      ),
-                      child: const Icon(
-                        Icons.shield_outlined,
-                        size: 80,
-                        color: AppColors.primary,
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+  /// Layout Horizontal: Logo Elang (kiri) + Teks Posbankum Provinsi Riau (kanan)
+  Widget _buildHorizontalLogoRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Maskot Elang Putih
+        Image.asset(
+          ImageConstants.logoWhite,
+          width: 90,
+          height: 90,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => const Icon(
+            Icons.gavel_rounded,
+            size: 70,
+            color: Colors.white,
           ),
-        )),
-      ),
+        ),
+        const SizedBox(width: 16),
+        // Teks Posbankum Provinsi Riau
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'Posbankum',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 0.5,
+                height: 1.1,
+              ),
+            ),
+            SizedBox(height: 2),
+            Text(
+              'Provinsi Riau',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w300,
+                color: Colors.white70,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
+}
 
-  Widget _buildNavyBackground() {
-    return Container(
-      color: AppColors.primary,
-      child: Column(
-        children: [
-          // Center content - HANYA LOGO (LEBIH BESAR), TANPA TEXT
-          Expanded(
-            child: Center(
-              child: Obx(() => AnimatedOpacity(
-                opacity: controller.showStep3.value 
-                    ? controller.logoOpacity.value 
-                    : 0.0,
-                duration: const Duration(milliseconds: 600),
-                child: AnimatedScale(
-                  scale: controller.showStep3.value 
-                      ? controller.logoScale.value 
-                      : 0.8,
-                  duration: const Duration(milliseconds: 600),
-                  curve: Curves.easeOutBack,
-                  child: SvgPicture.asset(
-                    ImageConstants.logoWhiteSvg,
-                    width: 200,
-                    height: 200,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Image.asset(
-                        ImageConstants.logoWhite,
-                        width: 200,
-                        height: 200,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 200,
-                            height: 200,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                            ),
-                            child: const Icon(
-                              Icons.shield,
-                              size: 120,
-                              color: AppColors.primary,
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              )),
-            ),
-          ),
-          
-          // Building illustration - PAS DI BAWAH
-          Obx(() => controller.showStep4.value
-              ? AnimatedOpacity(
-                  opacity: controller.illustrationOpacity.value,
-                  duration: const Duration(milliseconds: 800),
-                  child: AnimatedSlide(
-                    offset: controller.illustrationOpacity.value > 0
-                        ? Offset.zero
-                        : const Offset(0, 0.3),
-                    duration: const Duration(milliseconds: 800),
-                    curve: Curves.easeOutCubic,
-                    child: SvgPicture.asset(
-                      ImageConstants.buildingIllustrationSvg,
-                      width: double.infinity,
-                      height: 150,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.bottomCenter,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Image.asset(
-                          ImageConstants.buildingIllustration,
-                          width: double.infinity,
-                          height: 150,
-                          fit: BoxFit.cover,
-                          alignment: Alignment.bottomCenter,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              height: 150,
-                              width: double.infinity,
-                              padding: const EdgeInsets.only(bottom: 20),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: const [
-                                  Icon(Icons.gavel, color: Colors.white24, size: 50),
-                                  SizedBox(width: 20),
-                                  Icon(Icons.account_balance, color: Colors.white24, size: 60),
-                                  SizedBox(width: 20),
-                                  Icon(Icons.location_city, color: Colors.white24, size: 55),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                )
-              : const SizedBox.shrink()),
-        ],
+/// Custom Clipper untuk Efek Ombak / Ripple dari Kiri Bawah Layar
+class BottomLeftWaveClipper extends CustomClipper<Path> {
+  final double progress;
+
+  BottomLeftWaveClipper(this.progress);
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    if (progress <= 0.0) {
+      return path; // Kosong
+    }
+
+    // Jarak maksimum dari sudut kiri bawah ke sudut kanan atas
+    final maxRadius = sqrt(size.width * size.width + size.height * size.height);
+    final currentRadius = maxRadius * progress;
+
+    path.addOval(
+      Rect.fromCircle(
+        center: Offset(0, size.height), // Sudut Kiri Bawah
+        radius: currentRadius,
       ),
     );
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant BottomLeftWaveClipper oldClipper) {
+    return oldClipper.progress != progress;
   }
 }

@@ -1,57 +1,92 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../app/routes/app_routes.dart';
 
 /// Splash Controller - Handle animasi splash screen dan navigation logic
-class SplashController extends GetxController {
+class SplashController extends GetxController with GetSingleTickerProviderStateMixin {
   final storage = GetStorage();
-  
-  var showStep1 = false.obs;
-  var showStep2 = false.obs;
-  var showStep3 = false.obs;
-  var showStep4 = false.obs;
 
-  var logoOpacity = 0.0.obs;
-  var textOpacity = 0.0.obs;
-  var illustrationOpacity = 0.0.obs;
-  var logoScale = 0.0.obs;
+  late AnimationController animController;
+  late Animation<double> waveAnimation;
+  late Animation<double> step1LogoScale;
+  late Animation<double> step1LogoOpacity;
+  late Animation<double> navyContentOpacity;
+  late Animation<Offset> navyContentSlide;
+  late Animation<double> buildingOpacity;
+  late Animation<Offset> buildingSlide;
+
+  var isWaveStarted = false.obs;
 
   @override
   void onInit() {
     super.onInit();
+
+    animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    );
+
+    // 0.0 - 0.25: Step 1 (Logo Elang muncul di layar putih)
+    step1LogoScale = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: animController,
+        curve: const Interval(0.0, 0.20, curve: Curves.easeOutBack),
+      ),
+    );
+
+    step1LogoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: animController,
+        curve: const Interval(0.0, 0.15, curve: Curves.easeIn),
+      ),
+    );
+
+    // 0.25 - 0.50: Wave Navy dari kiri bawah mengembang memenuhi layar
+    waveAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: animController,
+        curve: const Interval(0.25, 0.50, curve: Curves.easeInOutCubic),
+      ),
+    );
+
+    // 0.45 - 0.70: Content Navy (Logo + Teks Horizontal muncul di tengah)
+    navyContentOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: animController,
+        curve: const Interval(0.48, 0.68, curve: Curves.easeOut),
+      ),
+    );
+
+    navyContentSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
+      CurvedAnimation(
+        parent: animController,
+        curve: const Interval(0.48, 0.70, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    // 0.65 - 0.90: Building illustration meluncur dari bawah dasar layar
+    buildingOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: animController,
+        curve: const Interval(0.65, 0.85, curve: Curves.easeOut),
+      ),
+    );
+
+    buildingSlide = Tween<Offset>(begin: const Offset(0, 0.35), end: Offset.zero).animate(
+      CurvedAnimation(
+        parent: animController,
+        curve: const Interval(0.65, 0.90, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    // Start playback
     startSplashAnimation();
   }
 
   void startSplashAnimation() async {
-    // Step 1: Logo outline (0.8s)
-    await Future.delayed(const Duration(milliseconds: 100));
-    showStep1.value = true;
-    logoScale.value = 0.8;
-    logoOpacity.value = 1.0;
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    logoOpacity.value = 0.0;
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    // Step 2: Navy background (0.5s)
-    showStep1.value = false;
-    showStep2.value = true;
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // Step 3: Logo + text (1.2s)
-    showStep3.value = true;
-    logoScale.value = 1.0;
-    logoOpacity.value = 1.0;
-    await Future.delayed(const Duration(milliseconds: 300));
-    textOpacity.value = 1.0;
-    await Future.delayed(const Duration(milliseconds: 900));
-
-    // Step 4: Building illustration (1.2s)
-    showStep4.value = true;
-    illustrationOpacity.value = 1.0;
-    await Future.delayed(const Duration(milliseconds: 1200));
-
-    // Navigate berdasarkan status
+    await animController.forward();
+    await Future.delayed(const Duration(milliseconds: 400));
     navigateToNext();
   }
 
@@ -63,15 +98,11 @@ class SplashController extends GetxController {
     final isLoggedIn = storage.read('is_logged_in') ?? false;
     final role = storage.read('role') ?? '';
     
-    // Logic navigation:
     if (isLoggedIn) {
-      // Redirect berdasarkan role jika sudah login
       _redirectBasedOnRole(role);
     } else if (hasSeenOnboarding) {
-      // Jika sudah pernah onboarding tapi belum login → ke Login
       Get.offAllNamed(AppRoutes.LOGIN);
     } else {
-      // Jika belum pernah onboarding → ke Onboarding
       Get.offAllNamed(AppRoutes.ONBOARDING);
     }
   }
@@ -89,6 +120,7 @@ class SplashController extends GetxController {
 
   @override
   void onClose() {
+    animController.dispose();
     super.onClose();
   }
 }
