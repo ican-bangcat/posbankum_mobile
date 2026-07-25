@@ -168,7 +168,7 @@ class UpdateProgresView extends StatelessWidget {
                                 width: double.infinity,
                                 height: 54,
                                 child: ElevatedButton(
-                                  onPressed: isLoading ? null : () => controller.simpanProgres(isSelesai: false),
+                                  onPressed: isLoading ? null : () => _showSimpanProgresDialog(context),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF2A2E5E),
                                     disabledBackgroundColor: const Color(0xFF2A2E5E).withOpacity(0.5),
@@ -187,7 +187,7 @@ class UpdateProgresView extends StatelessWidget {
                                 width: double.infinity,
                                 height: 54,
                                 child: ElevatedButton.icon(
-                                  onPressed: isLoading ? null : () => _konfirmasiSelesai(),
+                                  onPressed: isLoading ? null : () => _showSimpanSelesaiDialog(context),
                                   icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
                                   label: const Text(
                                     'Simpan & Selesaikan Kasus',
@@ -217,103 +217,248 @@ class UpdateProgresView extends StatelessWidget {
     );
   }
 
-  void _konfirmasiSelesai() {
+  void _showSimpanProgresDialog(BuildContext context) {
+    if (controller.judulController.text.trim().isEmpty) {
+      Get.snackbar('Peringatan', 'Judul / Tahapan Progres wajib diisi!', backgroundColor: Colors.orange.shade700, colorText: Colors.white);
+      return;
+    }
+    if (controller.catatanController.text.trim().isEmpty) {
+      Get.snackbar('Peringatan', 'Catatan / Tindakan wajib diisi!', backgroundColor: Colors.orange.shade700, colorText: Colors.white);
+      return;
+    }
+
+    final String namaJudulProgres = controller.judulController.text.trim();
+
     Get.dialog(
       Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFECFDF5),
-                  shape: BoxShape.circle,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon Badge Biru Muda
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFEEF2FF),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.assignment_outlined,
+                    color: Color(0xFF3B82F6),
+                    size: 34,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.check_circle_outline_rounded,
-                  color: Color(0xFF10B981),
-                  size: 48,
+                const SizedBox(height: 20),
+
+                // Title
+                const Text(
+                  'Simpan Progres?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E2554),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Selesaikan Kasus?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF0F172A),
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Apakah Anda yakin ingin menyelesaikan kasus ini? Status kasus akan diubah menjadi Selesai dan tindakan ini tidak dapat dibatalkan.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF64748B),
-                  height: 1.5,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              const SizedBox(height: 32),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Get.back(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF1F5F9),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
+                const SizedBox(height: 12),
+
+                // Body Description
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.5),
+                    children: [
+                      const TextSpan(text: 'Progres "'),
+                      TextSpan(
+                        text: namaJudulProgres,
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E2554)),
                       ),
-                      child: const Text(
-                        'Batal',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF475569),
-                          fontFamily: 'Poppins',
+                      const TextSpan(text: '" akan disimpan ke riwayat kasus.'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(color: Color(0xFF475569), fontWeight: FontWeight.w700, fontSize: 15),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Get.back();
-                        controller.simpanProgres(isSelesai: true);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF10B981),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Ya, Selesai',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          fontFamily: 'Poppins',
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Obx(() => ElevatedButton(
+                        onPressed: controller.isLoading.value
+                            ? null
+                            : () {
+                                Get.back();
+                                controller.simpanProgres(isSelesai: false);
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1E2554),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
                         ),
-                      ),
+                        child: controller.isLoading.value
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                            : const Text(
+                                'Ya, Simpan',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
+                              ),
+                      )),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
+      barrierDismissible: false,
+    );
+  }
+
+  void _showSimpanSelesaiDialog(BuildContext context) {
+    if (controller.judulController.text.trim().isEmpty) {
+      Get.snackbar('Peringatan', 'Judul / Tahapan Progres wajib diisi!', backgroundColor: Colors.orange.shade700, colorText: Colors.white);
+      return;
+    }
+    if (controller.catatanController.text.trim().isEmpty) {
+      Get.snackbar('Peringatan', 'Catatan / Tindakan wajib diisi!', backgroundColor: Colors.orange.shade700, colorText: Colors.white);
+      return;
+    }
+
+    final String namaKasus = (controller.namaKasus.trim().isNotEmpty && controller.namaKasus != 'Kasus')
+        ? controller.namaKasus
+        : 'Kasus Ini';
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        backgroundColor: Colors.white,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon Badge Hijau
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFDCFCE7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_circle_outline_rounded,
+                    color: Color(0xFF16A34A),
+                    size: 36,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Title
+                const Text(
+                  'Simpan & Selesaikan Kasus?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E2554),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Body Description
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.5),
+                    children: [
+                      const TextSpan(text: 'Progres akan disimpan dan kasus "'),
+                      TextSpan(
+                        text: namaKasus,
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E2554)),
+                      ),
+                      const TextSpan(text: '" akan ditandai '),
+                      const TextSpan(
+                        text: 'Selesai',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF16A34A)),
+                      ),
+                      const TextSpan(text: '.\nTindakan ini tidak bisa dibatalkan.'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(color: Color(0xFF475569), fontWeight: FontWeight.w700, fontSize: 15),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Obx(() => ElevatedButton(
+                        onPressed: controller.isLoading.value
+                            ? null
+                            : () {
+                                Get.back();
+                                controller.simpanProgres(isSelesai: true);
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF16A34A),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        child: controller.isLoading.value
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                            : const Text(
+                                'Ya, Selesaikan',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
+                              ),
+                      )),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 
